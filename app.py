@@ -31,21 +31,35 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 3. ดึงข้อมูลจริงและจัดการแปลงลิงก์รูปภาพอัตโนมัติ ---
-@st.cache_data(ttl=5) # ดึงข้อมูลใหม่จาก Google Sheets ทุกๆ 5 วินาที แก้ชีทปุ๊บรูปเปลี่ยนปั๊บ
+@st.cache_data(ttl=5) # ดึงข้อมูลใหม่จาก Google Sheets ทุกๆ 5 วินาที
 def load_data():
     def fix_google_drive_link(url):
-        if pd.isna(url) or not isinstance(url, str) or url.strip() == "":
+        if pd.isna(url):
             return ""
+        
+        # แปลงค่าเป็น String และล้างช่องว่างหัวท้าย
+        url_str = str(url).strip()
+        
+        # 🚨 [ดักจับบั๊กเลข 0] ถ้าในชีทเป็นเลข 0, ค่าว่าง หรือข้อความ nan ให้ตีเป็นค่าว่างทันที
+        if url_str == "" or url_str == "0" or url_str == "0.0" or url_str.lower() == "nan":
+            return ""
+        
         # ค้นหา ID ของรูปภาพจากลิงก์ Google Drive เพื่อแปลงเป็น Direct Link อัตโนมัติ
-        import re
-        match = re.search(r'/d/([a-zA-Z0-9-_]+)', url)
-        if match:
-            return f"https://docs.google.com/uc?export=view&id={match.group(1)}"
-        return url
+        if "drive.google.com" in url_str:
+            import re
+            match = re.search(r'/d/([a-zA-Z0-9-_]+)', url_str)
+            if match:
+                return f"https://docs.google.com/uc?export=view&id={match.group(1)}"
+        
+        # ถ้าเป็นลิงก์ทั่วไปที่ขึ้นต้นด้วย http ให้ส่งกลับไปตรงๆ
+        if url_str.startswith("http"):
+            return url_str
+            
+        return "" # ถ้าเป็นข้อความอื่นๆ ที่ไม่ใช่ลิงก์ ให้ตีเป็นค่าว่าง
 
     try:
-        # 🚨 [สำคัญที่สุด] เปลี่ยนข้อความด้านล่างนี้ให้เป็นลิงก์ CSV จาก Google Sheets ของคุณที่ได้จาก Publish to Web
-        sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKG0qbzmx-G-7tiRrW1Sv4IgwhBsLjKVEU7SsoMY3ZP2ZjShP3kCL1Ue74C7sZOdATeFtWO-NGbQ4z/pub?output=csv"
+        # 🚨 [สำคัญที่สุด] นำลิงก์ CSV ที่เพิ่งก๊อปปี้มาล่าสุดสดๆ ร้อนๆ มาวางแทนที่ด้านล่างนี้ครับ
+        sheet_url = "นำลิงก์_CSV_ที่ลงท้ายด้วย_pub?output=csv_มาวางตรงนี้"
         
         df = pd.read_csv(sheet_url)
         df.columns = df.columns.str.strip() # ล้างช่องว่างหัวตาราง
@@ -67,8 +81,13 @@ asset_input = query_params.get("asset", None)
 # --- 5. แสดงผลบนหน้าจอแอป ---
 if asset_input:
     if not df.empty and 'Asset No.' in df.columns:
+        # ล้างค่า Asset No. ในตารางให้เป็นข้อความและตัดจุดทศนิยมออกเผื่อ Excel แปลงเลข
         df['Asset No.'] = df['Asset No.'].astype(str).str.strip()
-        result = df[df['Asset No.'] == str(asset_input).strip()]
+        df['Asset No.'] = df['Asset No.'].apply(lambda x: x.split('.')[0] if '.' in x else x)
+        
+        # ล้างค่าที่รับมาจากกล้องมือถือ
+        target_asset = str(asset_input).strip().split('.')[0]
+        result = df[df['Asset No.'] == target_asset]
         
         if not result.empty:
             row = result.iloc[0]
@@ -89,15 +108,15 @@ if asset_input:
             tab1, tab2, tab3 = st.tabs(["รูปหลัก", "รูปมุมที่ 2", "รูปมุมที่ 3"])
             
             with tab1:
-                if 'Picture 1' in row and row['Picture 1']:
+                if 'Picture 1' in row and row['Picture 1'] != "":
                     st.image(row['Picture 1'], use_container_width=True)
                 else: st.info("ไม่มีรูปภาพหลักในระบบ")
             with tab2:
-                if 'Picture 2' in row and row['Picture 2']:
+                if 'Picture 2' in row and row['Picture 2'] != "":
                     st.image(row['Picture 2'], use_container_width=True)
                 else: st.caption("ไม่ได้ระบุรูปภาพมุมที่ 2")
             with tab3:
-                if 'Picture 3' in row and row['Picture 3']:
+                if 'Picture 3' in row and row['Picture 3'] != "":
                     st.image(row['Picture 3'], use_container_width=True)
                 else: st.caption("ไม่ได้ระบุรูปภาพมุมที่ 3")
         else:

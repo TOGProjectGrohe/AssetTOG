@@ -45,7 +45,7 @@ def load_data():
 
     try:
         # 🚨 [สำคัญที่สุด] เปลี่ยนข้อความด้านล่างนี้ให้เป็นลิงก์ CSV จาก Google Sheets ของคุณที่ได้จาก Publish to Web
-        sheet_url = "https://docs.google.com/spreadsheets/d/1SX67ouV5CetLxiC1lhxMJ07Lstk2iGauY-qoFodTW1w/edit?usp=sharing"
+        sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKG0qbzmx-G-7tiRrW1Sv4IgwhBsLjKVEU7SsoMY3ZP2ZjShP3kCL1Ue74C7sZOdATeFtWO-NGbQ4z/pub?output=csv"
         
         df = pd.read_csv(sheet_url)
         df.columns = df.columns.str.strip() # ล้างช่องว่างหัวตาราง

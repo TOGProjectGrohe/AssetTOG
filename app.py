@@ -59,7 +59,7 @@ def load_data():
 
     try:
         # 🚨 [สำคัญที่สุด] นำลิงก์ CSV ที่เพิ่งก๊อปปี้มาล่าสุดสดๆ ร้อนๆ มาวางแทนที่ด้านล่างนี้ครับ
-        sheet_url = "นำลิงก์_CSV_ที่ลงท้ายด้วย_pub?output=csv_มาวางตรงนี้"
+        sheet_url = "นhttps://docs.google.com/spreadsheets/d/e/2PACX-1vTKG0qbzmx-G-7tiRrW1Sv4IgwhBsLjKVEU7SsoMY3ZP2ZjShP3kCL1Ue74C7sZOdATeFtWO-NGbQ4z/pub?output=csv"
         
         df = pd.read_csv(sheet_url)
         df.columns = df.columns.str.strip() # ล้างช่องว่างหัวตาราง

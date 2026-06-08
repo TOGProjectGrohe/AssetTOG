@@ -88,7 +88,7 @@ def refresh_app():
 
 # --- 🛑 STEP 1: หน้าล็อกอินพนักงาน ---
 if st.session_state.step == 1:
-    st.title("📱 ยืนยันตัวตนผู้ตรวจสอบ")
+    st.title("📱 ยืนยันตัวตนผู้ตรวจสอบ1111111")
     st.markdown('<div class="status-badge">ขั้นตอนที่ 1: สแกน/กรอกไอดีพนักงาน</div>', unsafe_allow_html=True)
     
     emp_input = st.text_input("กรอกรหัสพนักงานแล้วกด Enter บนคีย์บอร์ด:", value=url_emp if url_emp else "")

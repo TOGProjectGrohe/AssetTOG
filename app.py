@@ -46,7 +46,7 @@ def load_base_data():
             if c in df_asset.columns: df_asset[c] = df_asset[c].apply(fix_link)
             
         # ลิงก์ CSV ไฟล์รายชื่อพนักงาน (Employee จากไฟล์หลัก)
-        emp_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKG0qbzmx-G-7tiRrW1Sv4IgwhBsLjKVEU7SsoMY3ZP2ZjShP3kCL1Ue74C7sZOdATeFtWO-NGbQ4z/pub?gid=1965823485&single=true&output=csv"
+        emp_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRL_hlhh4MYI3wmq0UserMHRiD7DWID5LsLtWqLCv7aA-N8bSOOvjOy2fSYWXMAzh5BxqfntPqop9Jv/pub?gid=0&single=true&output=csv"
         df_emp = pd.read_csv(emp_url)
         df_emp.columns = df_emp.columns.str.strip()
         

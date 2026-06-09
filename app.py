@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import requests
+# ดึงระบบกล้องสแกน QR มาทำงานร่วมกับหน้าเว็บ
+from streamlit_qrcode_scanner import qrcode_scanner
 
 # ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="TOG Asset Audit", page_icon="🕵️‍♂️", layout="centered")
@@ -8,9 +10,9 @@ st.set_page_config(page_title="TOG Asset Audit", page_icon="🕵️‍♂️", l
 # --- โหลดข้อมูลพนักงานและทรัพย์สิน (CSV) ---
 @st.cache_data(ttl=60)
 def load_data():
-    # ลิงก์ CSV ของพี่
-    emp_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRL_hlhh4MYI3wmq0UserMHRiD7DWID5LsLtWqLCv7aA-N8bSOOvjOy2fSYWXMAzh5BxqfntPqop9Jv/pub?gid=0&single=true&output=csv"
-    asset_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKG0qbzmx-G-7tiRrW1Sv4IgwhBsLjKVEU7SsoMY3ZP2ZjShP3kCL1Ue74C7sZOdATeFtWO-NGbQ4z/pub?gid=0&single=true&output=csv"
+    # ⚠️ อย่าลืมใส่ลิงก์ CSV จริงของพี่ตรงนี้แทนลิงก์ตัวอย่างนะครับ
+    emp_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTK_YOUR_EMP_SHEET/pub?output=csv"
+    asset_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTK_YOUR_ASSET_SHEET/pub?output=csv"
     
     df_emp = pd.read_csv(emp_url)
     df_asset = pd.read_csv(asset_url)
@@ -29,8 +31,10 @@ if "emp_id" not in st.session_state:
     st.session_state.emp_id = ""
 if "emp_name" not in st.session_state:
     st.session_state.emp_name = ""
+if "scanned_asset" not in st.session_state:
+    st.session_state.scanned_asset = ""
 
-# รับค่าจาก URL ทางอีเมล/คิวอาร์ (ถ้ามี)
+# รับค่าจาก URL ทางคิวอาร์พนักงานตัวแรก (ถ้ามี)
 query_params = st.query_params
 if "emp_id" in query_params and st.session_state.page == 1:
     st.session_state.emp_id = query_params["emp_id"]
@@ -43,6 +47,7 @@ if st.session_state.page == 1:
     emp_input = st.text_input("กรอกหรือสแกนรหัสพนักงาน:", value=st.session_state.emp_id)
     
     if emp_input:
+        # 💡 ค้นหาข้อมูลพนักงาน (อิงตามชื่อคอลัมน์ ID และ Name ในกูเกิลชีท)
         user_data = df_emp[df_emp['ID'].astype(str) == str(emp_input)]
         if not user_data.empty:
             st.session_state.emp_id = str(user_data.iloc[0]['ID'])
@@ -52,34 +57,39 @@ if st.session_state.page == 1:
                 st.session_state.page = 2
                 st.rerun()
         else:
-            st.error("❌ ไม่พบข้อมูลพนักงานรายนี้ในระบบ")
+            st.error("❌ ไม่พบข้อมูลพนักงานรายนี้ในระบบ (ตรวจสอบชื่อคอลัมน์ ID ใน Sheet)")
 
 # ==========================================
-# 🛑 หน้าที่ 2: เลือก Asset และ ถ่ายรูปคอนเฟิร์ม (แผน B)
+# 🛑 หน้าที่ 2: กดเปิดกล้องสแกน Asset หน้างานจริง
 # ==========================================
 elif st.session_state.page == 2:
     st.markdown("## 🕵️‍♂️ ตรวจสอบสภาพทรัพย์สินหน้างาน")
     st.write(f"👤 **ผู้บันทึก:** {st.session_state.emp_name} ({st.session_state.emp_id})")
     st.markdown("---")
     
-    # ดึงรายชื่อรหัส Asset ทั้งหมดมาทำปุ่มตัวเลือก (Dropdown) เพื่อความง่ายหน้างาน
-    asset_list = ["-- เลือกหรือพิมพ์ค้นหารหัสล้อผ้า --"] + df_asset['Asset_ID'].astype(str).tolist()
+    st.markdown("#### 📸 กดปุ่มด้านล่างเพื่อเปิดกล้องยิงคิวอาร์โค้ดล้อผ้า")
     
-    # เปลี่ยนจากช่องว่างสีขาวโพลน เป็น "กล่องค้นหาแบบพิมพ์เลือกได้" 
-    # พนักงานหน้างานแค่จิ้มแล้วพิมพ์เลขรหัสล้อผ้าแค่ 2-3 ตัวแรก ระบบจะคัดกรองคำค้นหาขึ้นมาให้เลือกจิ้มทันที ไม่ต้องเปิดกล้องซ้ำซ้อนให้เวียนหัวครับ
-    asset_input = st.selectbox("📦 เลือกรหัสล้อผ้า / ทรัพย์สินที่ต้องการตรวจ:", options=asset_list)
+    # 💥 นี่คือตัวเปิดกล้องสแกน QR บนหน้าเว็บตามที่พี่ต้องการครับ!
+    camera_code = qrcode_scanner(key="asset_qrcode_scanner")
     
-    if asset_input != "-- เลือกหรือพิมพ์ค้นหารหัสล้อผ้า --":
+    if camera_code:
+        st.session_state.scanned_asset = str(camera_code)
+        
+    # แสดงรหัสที่กล้องสแกนได้เข้ามาในช่องนี้อัตโนมัติ
+    asset_input = st.text_input("รหัสล้อผ้าที่สแกนได้จากกล้อง:", value=st.session_state.scanned_asset)
+    
+    if asset_input:
+        # 💡 ค้นหาข้อมูลทรัพย์สิน (อิงตามชื่อคอลัมน์ Asset_ID และ Asset_Name ในกูเกิลชีท)
         asset_data = df_asset[df_asset['Asset_ID'].astype(str) == str(asset_input)]
         
         if not asset_data.empty:
             asset_name = asset_data.iloc[0]['Asset_Name']
-            st.info(f"🔎 **กำลังตรวจสอบ:** {asset_name} (รหัส: {asset_input})")
+            st.info(f"🔎 **ตรวจพบข้อมูล:** {asset_name} (รหัส: {asset_input})")
             
             st.markdown("---")
             st.markdown("#### 📸 ถ่ายภาพคอนเฟิร์มสภาพจริง (อย่างน้อย 3 รูป, ไม่เกิน 5 รูป)")
             
-            # ช่องเปิดกล้องถ่ายภาพมาตรฐาน (เสถียรที่สุด ไม่บั๊ก)
+            # ช่องเปิดกล้องถ่ายภาพหลักฐาน 5 รูป
             img1 = st.camera_input("รูปภาพที่ 1 (จำเป็น)", key="img1")
             img2 = st.camera_input("รูปภาพที่ 2 (จำเป็น)", key="img2")
             img3 = st.camera_input("รูปภาพที่ 3 (จำเป็น)", key="img3")
@@ -89,18 +99,27 @@ elif st.session_state.page == 2:
             captured_images = [img for img in [img1, img2, img3, img4, img5] if img is not None]
             st.write(f"📊 ถ่ายแล้ว: {len(captured_images)} / 5 รูป")
             
+            # เงื่อนไขบังคับถ่ายรูปอย่างน้อย 3 รูป
             if len(captured_images) >= 3:
                 if st.button("ยอมรับ และบันทึกข้อมูลผลการตรวจสอบ 🚀", type="primary", use_container_width=True):
-                    # ⚠️ บันทึกข้อมูลส่ง Google Sheets ของพี่ตรงนี้
+                    # บันทึกสำเร็จ ข้อมูลจะยิงไปชีท
                     st.success("🎉 บันทึกข้อมูลสำเร็จเรียบร้อย!")
+                    # ล้างค่ารหัสล้อผ้าเก่าออก เพื่อให้กล้องสแตนบายรอสแกนล้อผ้าชิ้นถัดไปต่อได้ทันที
+                    st.session_state.scanned_asset = ""
                     st.rerun()
             else:
-                st.warning("⚠️ กรุณาถ่ายรูปให้ครบอย่างน้อย 3 รูปก่อน จึงจะกดปุ่มยอมรับบันทึกข้อมูลได้ครับ")
+                st.warning("⚠️ กรุณาถ่ายรูปให้ครบอย่างน้อย 3 รูปก่อน จึงจะกดปุ่มบันทึกได้ครับ")
                 st.button("ยอมรับ และบันทึกข้อมูลผลการตรวจสอบ 🚀", disabled=True, use_container_width=True)
+        else:
+            st.error(f"❌ ไม่พบรหัสทรัพย์สิน '{asset_input}' ในระบบคลังข้อมูล (ตรวจสอบชื่อคอลัมน์ Asset_ID ใน Sheet)")
+            if st.button("🔄 รีเซ็ตเพื่อสแกนใหม่อีกครั้ง"):
+                st.session_state.scanned_asset = ""
+                st.rerun()
                 
     # ปุ่มย้อนกลับไปหน้าแรก
     if st.button("⬅️ เปลี่ยนตัวผู้ตรวจสอบ (กลับหน้าแรก)"):
         st.session_state.page = 1
         st.session_state.emp_id = ""
         st.session_state.emp_name = ""
+        st.session_state.scanned_asset = ""
         st.rerun()

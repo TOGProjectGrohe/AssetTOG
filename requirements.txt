@@ -1,1 +1,3 @@
 streamlit-qrcode-scanner
+pandas
+pytz

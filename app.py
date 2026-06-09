@@ -11,8 +11,8 @@ st.set_page_config(page_title="TOG Asset Audit", page_icon="🕵️‍♂️", l
 @st.cache_data(ttl=60)
 def load_data():
     # ⚠️ อย่าลืมใส่ลิงก์ CSV จริงของพี่ตรงนี้แทนลิงก์ตัวอย่างนะครับ
-    emp_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTK_YOUR_EMP_SHEET/pub?output=csv"
-    asset_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTK_YOUR_ASSET_SHEET/pub?output=csv"
+    emp_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRL_hlhh4MYI3wmq0UserMHRiD7DWID5LsLtWqLCv7aA-N8bSOOvjOy2fSYWXMAzh5BxqfntPqop9Jv/pub?gid=0&single=true&output=csv"
+    asset_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKG0qbzmx-G-7tiRrW1Sv4IgwhBsLjKVEU7SsoMY3ZP2ZjShP3kCL1Ue74C7sZOdATeFtWO-NGbQ4z/pub?gid=0&single=true&output=csv"
     
     df_emp = pd.read_csv(emp_url)
     df_asset = pd.read_csv(asset_url)

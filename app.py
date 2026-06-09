@@ -10,7 +10,6 @@ st.set_page_config(page_title="TOG Asset Audit", page_icon="🕵️‍♂️", l
 # --- โหลดข้อมูลพนักงานและทรัพย์สิน (CSV) ---
 @st.cache_data(ttl=60)
 def load_data():
-    # ลิงก์ CSV จริงจากกูเกิลชีทของพี่
     emp_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRL_hlhh4MYI3wmq0UserMHRiD7DWID5LsLtWqLCv7aA-N8bSOOvjOy2fSYWXMAzh5BxqfntPqop9Jv/pub?gid=0&single=true&output=csv"
     asset_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKG0qbzmx-G-7tiRrW1Sv4IgwhBsLjKVEU7SsoMY3ZP2ZjShP3kCL1Ue74C7sZOdATeFtWO-NGbQ4z/pub?gid=0&single=true&output=csv"
     
@@ -40,21 +39,19 @@ if "emp_id" in query_params and st.session_state.page == 1:
     st.session_state.emp_id = query_params["emp_id"]
 
 # ==========================================
-# 🛑 หน้าที่ 1: ยืนยันตัวตนผู้ตรวจสอบ (+ โชว์รูปน้องแมว/พนักงาน)
+# 🛑 หน้าที่ 1: ยืนยันตัวตนผู้ตรวจสอบ
 # ==========================================
 if st.session_state.page == 1:
     st.markdown("## 📱 ยืนยันตัวตนผู้ตรวจสอบ")
     emp_input = st.text_input("กรอกหรือสแกนรหัสพนักงาน:", value=st.session_state.emp_id)
     
     if emp_input:
-        user_data = df_emp[df_emp['ID'].astype(str) == str(emp_input)]
+        user_data = df_emp[df_emp['ID'].astype(str).str.strip() == str(emp_input).strip()]
         if not user_data.empty:
             st.session_state.emp_id = str(user_data.iloc[0]['ID'])
             st.session_state.emp_name = str(user_data.iloc[0]['Name'])
-            
             st.success(f"✅ ตรวจพบข้อมูล: {st.session_state.emp_name}")
             
-            # 🐈 💥 ดึงรูปจากคอลัมน์ "Picture GL" ตามตารางจริงของพี่มาโชว์ 💥
             if 'Picture GL' in user_data.columns and pd.notna(user_data.iloc[0]['Picture GL']):
                 st.image(user_data.iloc[0]['Picture GL'], caption=f"รูปโปรไฟล์: {st.session_state.emp_name}", width=200)
             
@@ -65,31 +62,37 @@ if st.session_state.page == 1:
             st.error("❌ ไม่พบข้อมูลพนักงานรายนี้ในระบบ (ตรวจสอบชื่อคอลัมน์ ID ใน Sheet)")
 
 # ==========================================
-# 🛑 หน้าที่ 2: กดเปิดกล้องสแกน Asset หน้างานจริง (+ โชว์รูปล้อผ้าเก่า)
+# 🛑 หน้าที่ 2: กดเปิดกล้องสแกน Asset หน้างานจริง (+ แก้บั๊กกล้องตีกัน)
 # ==========================================
 elif st.session_state.page == 2:
     st.markdown("## 🕵️‍♂️ ตรวจสอบสภาพทรัพย์สินหน้างาน")
     st.write(f"👤 **ผู้บันทึก:** {st.session_state.emp_name} ({st.session_state.emp_id})")
     st.markdown("---")
     
-    st.markdown("#### 📸 เปิดกล้องยิงคิวอาร์โค้ดล้อผ้าตรงนี้")
-    
-    # ดึงระบบกล้องสแกนคิวอาร์บนหน้าเว็บ
-    camera_code = qrcode_scanner(key="asset_qrcode_scanner")
-    
-    if camera_code:
-        actual_code = str(camera_code)
-        if "asset=" in actual_code:
-            st.session_state.scanned_asset = actual_code.split("asset=")[-1]
-        else:
-            st.session_state.scanned_asset = actual_code
-        st.rerun()
+    # 💥 แก้จุดนี้: ถ้ายังไม่มีการสแกนรหัสล้อผ้า ให้โชว์กล้องสแกน QR 💥
+    if not st.session_state.scanned_asset:
+        st.markdown("#### 📸 เปิดกล้องยิงคิวอาร์โค้ดล้อผ้าตรงนี้")
+        camera_code = qrcode_scanner(key="asset_qrcode_scanner")
         
+        if camera_code:
+            actual_code = str(camera_code).strip()
+            if "asset=" in actual_code:
+                st.session_state.scanned_asset = actual_code.split("asset=")[-1]
+            else:
+                st.session_state.scanned_asset = actual_code
+            st.rerun()  # รีรันทันทีเพื่อ "ซ่อนกล้องสแกน" และคืนสิทธิ์กล้องให้ระบบ
+            
     # ช่องแสดงรหัส (สแกนคิวอาร์มา หรือคีย์ด้วยมือ เลขจะมาโชว์ที่นี่)
     asset_input = st.text_input("รหัสล้อผ้าที่ระบบจับได้ (หรือพิมพ์มือ):", value=st.session_state.scanned_asset)
     
     if asset_input:
-        asset_data = df_asset[df_asset['Asset_ID'].astype(str) == str(asset_input)]
+        # บังคับอัปเดตค่าอินพุตกลับเข้าเซสชัน
+        st.session_state.scanned_asset = asset_input
+        
+        df_asset['Asset_ID_Str'] = df_asset['Asset_ID'].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
+        search_value = str(asset_input).strip().split('.')[0]
+        
+        asset_data = df_asset[df_asset['Asset_ID_Str'] == search_value]
         
         if not asset_data.empty:
             asset_name = asset_data.iloc[0]['Asset_Name']
@@ -98,15 +101,19 @@ elif st.session_state.page == 2:
             st.info(f"🔎 **ตรวจพบข้อมูล:** {asset_name} (รหัส: {asset_input})")
             st.caption(f"📍 **พิกัดคลัง:** {asset_location}")
             
-            # 🛞 💥 ดึงรูปจากคอลัมน์ "Picture 1" ตามตารางจริงของพี่มาโชว์อ้างอิงทันที! 💥
             if 'Picture 1' in asset_data.columns and pd.notna(asset_data.iloc[0]['Picture 1']):
                 st.markdown("##### 🖼️ รูปล้อผ้าอ้างอิงในคลังปัจจุบัน:")
                 st.image(asset_data.iloc[0]['Picture 1'], caption=f"รูปอ้างอิงของรหัส: {asset_input}", width=350)
             
+            # ปุ่มกดยกเลิก/สแกนใหม่ เผื่อพนักงานเดินไปสแกนล้อผ้าผิดชิ้น
+            if st.button("🔄 เคลียร์ค่าเพื่อเปิดกล้องสแกนชิ้นใหม่"):
+                st.session_state.scanned_asset = ""
+                st.rerun()
+                
             st.markdown("---")
             st.markdown("#### 📸 ถ่ายภาพคอนเฟิร์มสภาพจริง (อย่างน้อย 3 รูป, ไม่เกิน 5 รูป)")
             
-            # ช่องเปิดกล้องถ่ายภาพหน้างานจริง 5 รูป
+            # 📸 คราวนี้ช่องถ่ายรูป 5 ช่องนี้จะทำงานได้ 100% เพราะกล้องสแกนด้านบนโดนสั่งปิดไปแล้ว!
             img1 = st.camera_input("รูปภาพที่ 1 (จำเป็น)", key="img1")
             img2 = st.camera_input("รูปภาพที่ 2 (จำเป็น)", key="img2")
             img3 = st.camera_input("รูปภาพที่ 3 (จำเป็น)", key="img3")
@@ -116,10 +123,8 @@ elif st.session_state.page == 2:
             captured_images = [img for img in [img1, img2, img3, img4, img5] if img is not None]
             st.write(f"📊 ถ่ายแล้ว: {len(captured_images)} / 5 รูป")
             
-            # เงื่อนไขการกดส่งงาน (ต้องได้อย่างน้อย 3 รูป)
             if len(captured_images) >= 3:
                 if st.button("ยอมรับ และบันทึกข้อมูลผลการตรวจสอบ 🚀", type="primary", use_container_width=True):
-                    # บันทึกข้อมูลสำเร็จ
                     st.success("🎉 บันทึกข้อมูลสำเร็จเรียบร้อย!")
                     st.session_state.scanned_asset = ""
                     st.rerun()
@@ -127,7 +132,7 @@ elif st.session_state.page == 2:
                 st.warning("⚠️ กรุณาถ่ายรูปให้ครบอย่างน้อย 3 รูปก่อน จึงจะกดปุ่มบันทึกได้ครับ")
                 st.button("ยอมรับ และบันทึกข้อมูลผลการตรวจสอบ 🚀", disabled=True, use_container_width=True)
         else:
-            st.error(f"❌ ไม่พบรหัสทรัพย์สิน '{asset_input}' ในระบบคลังข้อมูล (ตรวจสอบชื่อคอลัมน์ Asset_ID ใน Sheet)")
+            st.error(f"❌ ไม่พบรหัสทรัพย์สิน '{asset_input}' ในระบบคลังข้อมูล")
             if st.button("🔄 รีเซ็ตเพื่อสแกนใหม่อีกครั้ง"):
                 st.session_state.scanned_asset = ""
                 st.rerun()

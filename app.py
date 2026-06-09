@@ -10,7 +10,7 @@ st.set_page_config(page_title="TOG Asset Audit", page_icon="🕵️‍♂️", l
 # --- โหลดข้อมูลพนักงานและทรัพย์สิน (CSV) ---
 @st.cache_data(ttl=60)
 def load_data():
-    # ⚠️ อย่าลืมใส่ลิงก์ CSV จริงของพี่ตรงนี้แทนลิงก์ตัวอย่างนะครับ
+    # ลิงก์ CSV จริงของพี่
     emp_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRL_hlhh4MYI3wmq0UserMHRiD7DWID5LsLtWqLCv7aA-N8bSOOvjOy2fSYWXMAzh5BxqfntPqop9Jv/pub?gid=0&single=true&output=csv"
     asset_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTKG0qbzmx-G-7tiRrW1Sv4IgwhBsLjKVEU7SsoMY3ZP2ZjShP3kCL1Ue74C7sZOdATeFtWO-NGbQ4z/pub?gid=0&single=true&output=csv"
     
@@ -69,13 +69,22 @@ elif st.session_state.page == 2:
     
     st.markdown("#### 📸 กดปุ่มด้านล่างเพื่อเปิดกล้องยิงคิวอาร์โค้ดล้อผ้า")
     
-    # 💥 นี่คือตัวเปิดกล้องสแกน QR บนหน้าเว็บตามที่พี่ต้องการครับ!
+    # เปิดกล้องสแกน QR บนหน้าเว็บ
     camera_code = qrcode_scanner(key="asset_qrcode_scanner")
     
+    # 💥💥💥 ท่อนโค้ดที่ผมแก้ไขเพิ่มคำสั่ง "ตัดเชือกลิงก์ยาว" ทิ้งครับ 💥💥💥
     if camera_code:
-        st.session_state.scanned_asset = str(camera_code)
+        actual_code = str(camera_code)
+        # ตรวจสอบ: ถ้ามีลิงก์ยาวปนมา (มีคำว่า asset=) ให้ตัดเอาเฉพาะรหัสที่อยู่หลังเครื่องหมาย = ทันที
+        if "asset=" in actual_code:
+            st.session_state.scanned_asset = actual_code.split("asset=")[-1]
+        else:
+            # ถ้าไม่มีลิงก์ปนมา เป็นรหัสสั้นๆ อยู่แล้ว ก็ใช้รหัสนั้นตรงๆ
+            st.session_state.scanned_asset = actual_code
+        st.rerun()
+    # 💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥
         
-    # แสดงรหัสที่กล้องสแกนได้เข้ามาในช่องนี้อัตโนมัติ
+    # แสดงรหัสที่กล้องสแกนได้เข้ามาในช่องนี้อัตโนมัติ (เป็นรหัสสั้นๆ แล้ว)
     asset_input = st.text_input("รหัสล้อผ้าที่สแกนได้จากกล้อง:", value=st.session_state.scanned_asset)
     
     if asset_input:

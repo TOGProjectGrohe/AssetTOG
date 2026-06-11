@@ -1,17 +1,16 @@
 import streamlit as st
-import cv2
 import numpy as np
 from PIL import Image
 from roboflow import Roboflow
 
 # ==================================================================
-# 🚨 [โน้ตหัวข้อสำคัญ] จุดที่พี่วิรัตน์ต้องเปลี่ยน WORDING ให้ตรงกับที่เทรนจริง 🚨
+# 🔴 [โน้ตหัวข้อสำคัญ] จุดที่เปลี่ยน WORDING ให้ตรงกับการเทรนจริง 🔴
 # ==================================================================
-# 📌 จุดที่ 1 (บรรทัดที่ 34): เปลี่ยนรหัส API KEY ส่วนตัวของพี่วิรัตน์
-# 📌 จุดที่ 2 (บรรทัดที่ 35): เช็กชื่อโปรเจกต์ (เช่น "test11-domtn") ให้ตรงกับบนเว็บ
-# 📌 จุดที่ 3 (บรรทัดที่ 36): เลขเวอร์ชัน ต้องเป็นเลข .version(5) ล่าสุดที่พวกเราเพิ่งอบเสร็จ
-# 📌 จุดที่ 4 (บรรทัดที่ 46): ตัวแปร TARGET_CLASSES ต้องเปลี่ยนจากของเดิมอุตสาหกรรม 
-#                             ให้เป็นคลาสปากกาจริง คือ ["Pink", "Green"] (ห้ามสะกดผิดเด็ดขาด!)
+# ✅ จุดที่ 1: หยอด Private API Key ของจริงเรียบร้อย (rf_E8O0kMpxK...)
+# ✅ จุดที่ 2: ชื่อโปรเจกต์ตรงตามคลังฐานข้อมูลแล้ว ("test11-domtn")
+# ✅ จุดที่ 3: ดึงสมองกลเวอร์ชันล่าสุดเรียบร้อยแล้ว (.version(5))
+# ✅ จุดที่ 4: ตั้งค่ากลุ่มคลาสเป้าหมายเป็นปากกาจริงแล้ว ["Pink", "Green"]
+# 🛠️ [ตรรกะใหม่]: ปรับ Wording การตรวจเช็กสีห้ามซ้ำซ้อน ดักทางพนักงานโกงยัดสีเดิมมา 2 แท่ง
 # ==================================================================
 
 # CONFIGURATION & INITIALIZATION
@@ -21,10 +20,8 @@ st.set_page_config(page_title="AI Smart Inspection v5", layout="wide")
 @st.cache_resource
 def init_roboflow_model():
     try:
-        # 🔴 [จุดเปลี่ยนที่ 1]: เอา Private API Key ลับยาวๆ ของพี่มาแปะในเครื่องหมายคำพูดแทนที่คำเดิม
-        # 🔴 [จุดเปลี่ยนที่ 2]: คำว่า "test11-domtn" ต้องสะกดตรงตามชื่อโปรเจกต์บนหน้าเว็บเป๊ะๆ
-        # 🔴 [จุดเปลี่ยนที่ 3]: เลขในวงเล็บ .version(5) ต้องตรงกับเวอร์ชันล่าสุดที่พี่ต้องการรันทดสอบ
-        rf = Roboflow(api_key="ใส่_API_KEY_ของพี่ตรงนี้") 
+        # 🔴 [จุดเปลี่ยนที่ 1-3]: หยอดรหัสกุญแจลับ และเลขเวอร์ชัน 5 ตัวล่าสุดเรียบร้อยแล้ว
+        rf = Roboflow(api_key="rf_E8O0kMpxKZXtOz2ol6VsvabOJgo1") 
         project = rf.workspace().project("test11-domtn")
         model = project.version(5).model
         return model
@@ -34,8 +31,8 @@ def init_roboflow_model():
 
 model = init_roboflow_model()
 
-# 🔴 [จุดเปลี่ยนที่ 4]: ตัวแปรกลุ่มคลาสเป้าหมาย ต้องเปลี่ยน Wording ให้เป็นคำเดียวกับที่ตีกรอบเป๊ะๆ
-# ตัวอย่าง: เดิมเป็นไอเทมอุตสาหกรรม -> ตอนนี้ต้องเป็นกลุ่มปากกา ["Pink", "Green"] เท่านั้น!
+# 🔴 [จุดเปลี่ยนที่ 4]: ตัวแปรกลุ่มคลาสเป้าหมาย เปลี่ยน Wording ให้แมตช์กับปากกาจริงเป๊ะๆ
+# คำว่า "Pink" และ "Green" ต้องสะกดตัวใหญ่ตัวเล็กตามคลังตีกรอบบนเว็บห้ามเพี้ยนเด็ดขาด!
 TARGET_CLASSES = ["Pink", "Green"]
 
 if "sim_status" not in st.session_state:
@@ -44,73 +41,71 @@ if "sim_count" not in st.session_state:
     st.session_state.sim_count = 0
 
 # UI DESIGN: DASHBOARD
-st.title("🏭 AI Smart Inspection Dashboard (v5 Real-time)")
-st.write("สถานีทดสอบระบบตรวจจับวัตถุสแกนภาพสด - แยกแยะปากกา Pink / Green ชัดเจน")
+st.title("🏭 AI Smart Inspection Dashboard (v5 Cloud Setup)")
+st.write("สถานีทดสอบระบบตรวจจับวัตถุสแกนภาพสด - ผ่านระบบกล้องเบราว์เซอร์ปลอดภัย 100%")
 st.markdown("---")
 
 col_cam, col_result = st.columns([3, 2])
 
 with col_cam:
-    st.subheader("📸 ข้อ 4: หน้าต่างดึงภาพจากกล้องสด & AI v5")
+    st.subheader("📸 ข้อ 4: หน้าต่างดึงภาพจากกล้องเว็บแคม")
     
-    run_cam = st.checkbox("📸 สับสวิตช์เปิดกล้องอุตสาหกรรม (USB)", value=False)
-    st_frame = st.image([]) 
-    
-    cam_index = st.number_input("🔄 เลือกอินเด็กซ์กล้อง (ถ้าภาพไม่ขึ้นลองเปลี่ยนเป็น 0, 1, 2)", min_value=0, max_value=5, value=0)
+    # 💡 ปรับมาใช้กล้องถ่ายภาพผ่านเบราว์เซอร์แทน cv2.VideoCapture เพื่อทะลวงบล็อกระบบรักษาความปลอดภัยของคลาวด์
+    img_file = st.camera_input("📸 เล็งปากกาชมพู-เขียวให้อยู่ในหน้าจอ แล้วกดถ่ายภาพเพื่อส่งให้ AI ตรวจได้เลยครับพี่!")
 
-    if run_cam and model is not None:
-        cap = cv2.VideoCapture(cam_index)
+    if img_file is not None and model is not None:
+        pil_img = Image.open(img_file)
         
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                st.write("❌ ไม่สามารถดึงภาพจากกล้องได้ ตรวจสอบสายต่อ USB ครับพี่")
-                break
+        # ส่งภาพไปให้สมองกล AI v5 สแกนตรวจจับ (ตั้งค่าความมั่นใจไว้ที่ 30%)
+        predictions = model.predict(pil_img, confidence=30).json()
+        
+        draw_img = pil_img.copy()
+        import collections
+        from PIL import ImageDraw, ImageFont
+        draw = ImageDraw.Draw(draw_img)
+        
+        # 🛠️ ใช้ระบบ Set เพื่อล็อกชื่อคลาสแบบไม่ซ้ำสี ป้องกันพนักงานยัดชมพูมา 2 แท่งแล้วระบบเอ๋อให้ผ่าน
+        detected_set = set()
+        detected_count = 0
+        
+        if "predictions" in predictions:
+            for det in predictions["predictions"]:
+                x = det["x"]
+                y = det["y"]
+                w = det["width"]
+                h = det["height"]
+                label = det["class"] # 🔴 ระบบดึง Wording ชื่อคลาสที่ AI พ่นออกมาออโต้ ("Pink" หรือ "Green")
+                conf = det["confidence"]
                 
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            pil_img = Image.fromarray(frame_rgb)
-            
-            # สั่งให้โมเดล v5 ประมวลผลภาพสด
-            predictions = model.predict(pil_img, confidence=30).json()
-            
-            draw_frame = frame.copy()
-            detected_items = []
-            
-            if "predictions" in predictions:
-                for det in predictions["predictions"]:
-                    x = int(det["x"])
-                    y = int(det["y"])
-                    w = int(det["width"])
-                    h = int(det["height"])
-                    label = det["class"]  # 💡 ระบบดึงชื่อที่ AI พ่นออกมา (เช่น "Pink" หรือ "Green")
-                    conf = det["confidence"]
-                    
-                    detected_items.append(label)
-                    
-                    # คำนวณพิกัดเพื่อวาดกรอบ
-                    x1, y1 = int(x - w/2), int(y - h/2)
-                    x2, y2 = int(x + w/2), int(y + h/2)
-                    
-                    # วาดกรอบและแสดงข้อความชื่อคลาส (Pink / Green) ตามที่ AI ตรวจเจอสดๆ
-                    cv2.rectangle(draw_frame, (x1, y1), (x2, y2), (0, 165, 255), 3)
-                    cv2.putText(draw_frame, f"{label} {conf:.2f}", (x1, y1 - 10), 
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 165, 255), 2)
-            
-            # อัปเดตยอดการนับวัตถุอัตโนมัติ
-            st.session_state.sim_count = len(detected_items)
-            if len(detected_items) >= 2:
-                st.session_state.sim_status = "OK"
-            elif len(detected_items) == 1:
-                st.session_state.sim_status = "NG"
-            else:
-                st.session_state.sim_status = "READY"
+                detected_set.add(label)
+                detected_count += 1
                 
-            final_frame = cv2.cvtColor(draw_frame, cv2.COLOR_BGR2RGB)
-            st_frame.image(final_frame, channels="RGB", use_container_width=True)
+                # คำนวณพิกัดเพื่อขีดเส้นกรอบสี่เหลี่ยมลงบนรูปภาพ
+                x1 = int(x - w/2)
+                y1 = int(y - h/2)
+                x2 = int(x + w/2)
+                y2 = int(y + h/2)
+                
+                # วาดเส้นกรอบหนา ๆ ครอบวัตถุทุกชิ้นพร้อมกัน (ไม่จำกัดโควตาชิ้นงานแล้ว)
+                draw.rectangle([x1, y1, x2, y2], outline="#ff5722", width=6)
+                
+                # พ่นข้อความ Wording ชื่อสีพร้อมเปอร์เซ็นต์ความแม่นยำแปะบนตัวกล่องชิ้นงาน
+                text_content = f"{label} {conf*100:.1f}%"
+                draw.text((x1 + 5, y1 + 5), text_content, fill="#ffffff")
+                
+        # อัปเดตยอดการนับวัตถุจริงโชว์บนหน้าจอ
+        st.session_state.sim_count = detected_count
+        
+        # 🛠️ ปรับตรรกะเหล็ก: ต้องตรวจเจอคำว่า "Pink" และคำว่า "Green" พร้อมกันคู่กันจริง ๆ ถึงจะขึ้น PASS
+        if "Pink" in detected_set and "Green" in detected_set:
+            st.session_state.sim_status = "OK"
+        elif detected_count > 0:
+            st.session_state.sim_status = "NG" # เจอชิ้นเดียว หรือเจอสีซ้ำกัน ปรับเป็นของขาดทันที!
+        else:
+            st.session_state.sim_status = "READY"
             
-        cap.release()
-    else:
-        st_frame.image("https://images.unsplash.com/photo-1531747118685-ca8fa6e08806?q=80&w=640", use_container_width=True)
+        # แสดงรูปภาพที่ AI ตีกรอบพ่นข้อความเสร็จเรียบร้อยแล้วขึ้นหน้าจอแดชบอร์ด
+        st.image(draw_img, caption="🎯 ผลลัพธ์การสแกนตรวจจับจากสมองกล AI v5", use_container_width=True)
 
 with col_result:
     st.subheader("📊 ข้อ 5: ตรรกะระบบ ผิด-ถูก (OK/NG) คำนวณจาก AI")
@@ -121,23 +116,26 @@ with col_result:
         st.markdown(
             "<div style='background-color:#11caa0; padding:20px; border-radius:10px; text-align:center;'> "
             "<h1 style='color:white; margin:0;'>PASS (OK)</h1>"
-            "<p style='color:white; margin:0; font-size:18px;'>ยอดเยี่ยม! ตรวจพบปากกาครบทั้งสองสีคู่กัน</p>"
+            "<p style='color:white; margin:0; font-size:18px;'>ยอดเยี่ยม! ตรวจพบปากกาครบทั้งสองสีคู่กันอย่างถูกต้อง</p>"
             "</div>", unsafe_allow_html=True
         )
     elif st.session_state.sim_status == "NG":
         st.markdown(
             "<div style='background-color:#ef4444; padding:20px; border-radius:10px; text-align:center;'> "
             "<h1 style='color:white; margin:0;'>REJECT (NG) 🚨</h1>"
-            "<p style='color:white; margin:0; font-size:18px;'>พบสิ่งผิดปกติ! วัตถุขาดหายไปหนึ่งสี (ของไม่ครบ)</p>"
+            "<p style='color:white; margin:0; font-size:18px;'>พบสิ่งผิดปกติ! วัตถุขาดหายไปบางสี หรือชิ้นงานไม่ครบถ้วนตาม Standard</p>"
             "</div>", unsafe_allow_html=True
         )
     else:
         st.markdown(
             "<div style='background-color:#64748b; padding:20px; border-radius:10px; text-align:center;'> "
             "<h1 style='color:white; margin:0;'>SYSTEM READY</h1>"
-            "<p style='color:white; margin:0; font-size:18px;'>รอกล่องถัดไปเข้าจุดสแกนภาพ</p>"
+            "<p style='color:white; margin:0; font-size:18px;'>รอกล่องถัดไปเข้าจุดถ่ายภาพสแกนชิ้นงาน</p>"
             "</div>", unsafe_allow_html=True
         )
 
     st.write("")
-    st.metric(label="จำนวนปากกาทีระบบสแกนเจอในกล่อง", value=f"{st.session_state.sim_count} / 2 แท่ง")
+    st.metric(label="... จำนวนปากกาทีระบบสแกนเจอในกล่อง ณ ตอนนี้ ...", value=f"{st.session_state.sim_count} แท่ง")
+    
+    # แสดงสถานะแยกแยะอัปเดตสดตามจริงอ้างอิงจากรายชื่อ Set
+    st.write("**สถานะการแยกแยะ

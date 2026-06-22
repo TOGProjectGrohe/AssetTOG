@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมเพื่อคุมดีไซน์เอง
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ถล่ม CSS ชั้นลึกสุดของ Streamlit (ทุบกล่องขาวส่วนเกินทิ้ง และลากปุ่มมาตรงกลาง)
+# 2. 🛠️ ถล่ม CSS บังคับปุ่ม Dashboard ขยายใหญ่เต็มจอ และล้างบางขอบขาวส่วนเกินทั้งหมด
 st.markdown("""
     <style>
     /* ซ่อนแถบเมนูข้างและส่วนหัวเดิมของ Streamlit */
@@ -69,7 +69,7 @@ st.markdown("""
         margin-bottom: 5px !important;
     }
 
-    /* 🎯 ล้างบางแท่งขาวรีๆ คั่นกลาง โดยการสั่งห้าม Element ชั้นในสร้างพื้นหลังขาวเด็ดขาด */
+    /* ล้างบางแท่งขาวรีๆ คั่นกลางของ Streamlit */
     div[data-testid="element-container"] {
         background-color: transparent !important;
         background: transparent !important;
@@ -82,37 +82,34 @@ st.markdown("""
         background: transparent !important;
     }
     
-    /* 🎯 สั่งจัดตัวหนังสือให้อยู่ตรงกลางหน้าจอมือถือ */
+    /* จัดข้อความถามก่อนล็อกอินให้อยู่ตรงกลาง */
     .center-text-only {
         color: #2c3e50 !important;
         font-size: 15px !important;
         font-weight: 500 !important;
         text-align: center !important;
-        margin-top: 35px !important;
+        margin-top: 45px !important;
         margin-bottom: 15px !important;
         width: 100% !important;
         display: block !important;
     }
 
-    /* 🎯 จัดปุ่มกดของ Streamlit ให้อยู่กึ่งกลางหน้าจอมือถือเป๊ะๆ ไม่ชิดซ้าย */
+    /* 🎯 สั่งให้บล็อกปุ่มขยายตัวเต็มความกว้างหน้าจอมือถือ */
     div.stButton {
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
+        display: block !important;
         width: 100% !important;
-        text-align: center !important;
     }
 
-    /* ดีไซน์ปุ่มน้ำเงินโค้งมน ล็อกขนาด และสั่งให้อยู่กึ่งกลาง */
+    /* 🎯 ปรับปรุงตามสั่ง: ขยายปุ่ม Dashboard สีน้ำเงินให้ใหญ่ยาวเต็มหน้าจอและโค้งมนสวยงาม */
     div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
         border-radius: 25px !important;
-        padding: 12px 0px !important;
+        padding: 14px 0px !important;
         font-weight: bold !important;
+        font-size: 16px !important;
         border: none !important;
-        width: 260px !important; /* บังคับขนาดปุ่มให้สวยกำลังดี */
-        margin: 0 auto !important; /* ดึงมาอยู่ตรงกลาง */
+        width: 100% !important; /* ขยายใหญ่เต็มจอ */
         display: block !important;
     }
     div.stButton > button:hover {
@@ -167,7 +164,7 @@ if st.session_state.page == 'login':
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 3. โซนปุ่มดูภาพรวมด้านล่าง (บังคับตัวอักษรและปุ่มน้ำเงินอยู่ตรงกลางแบบเด็ดขาด)
+    # 3. โซนปุ่มดูภาพรวมด้านล่าง (ปุ่มยาวใหญ่เต็มจอและข้อความอยู่ตรงกลางเป๊ะ)
     st.markdown('<span class="center-text-only">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</span>', unsafe_allow_html=True)
     if st.button("📊 ดูภาพรวม Dashboard"):
         st.session_state.page = 'dashboard'

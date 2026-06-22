@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -5,7 +6,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมเพื่อคุมดีไซน์เอง
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ถล่ม CSS บังคับปุ่ม Dashboard ขยายใหญ่เต็มจอ และล้างบางขอบขาวส่วนเกินทั้งหมด
+# 2. 🛠️ ถล่ม CSS บังคับปุ่ม Dashboard ขยายใหญ่เต็มจอ สีฟ้าสดใส และล้างบางขอบขาวส่วนเกินทั้งหมด
 st.markdown("""
     <style>
     /* ซ่อนแถบเมนูข้างและส่วนหัวเดิมของ Streamlit */
@@ -69,7 +70,7 @@ st.markdown("""
         margin-bottom: 5px !important;
     }
 
-    /* ล้างบางแท่งขาวรีๆ คั่นกลางของ Streamlit */
+    /* ล้างบางแท่งขาวรีๆ คั่นกลาง และรีเซ็ตพื้นหลังส่วนเกินของ Streamlit */
     div[data-testid="element-container"] {
         background-color: transparent !important;
         background: transparent !important;
@@ -82,35 +83,39 @@ st.markdown("""
         background: transparent !important;
     }
     
-    /* จัดข้อความถามก่อนล็อกอินให้อยู่ตรงกลาง */
+    /* จัดข้อความถามก่อนล็อกอินให้อยู่ตรงกลางหน้าจอ */
     .center-text-only {
         color: #2c3e50 !important;
-        font-size: 15px !important;
+        font-size: 16px !important;
         font-weight: 500 !important;
         text-align: center !important;
-        margin-top: 45px !important;
-        margin-bottom: 15px !important;
+        margin-top: 50px !important;
+        margin-bottom: 20px !important;
         width: 100% !important;
         display: block !important;
     }
 
-    /* 🎯 สั่งให้บล็อกปุ่มขยายตัวเต็มความกว้างหน้าจอมือถือ */
+    /* 🎯 จัดการ Container ของปุ่มให้เป็นแบบ Block เพื่อให้ขยายได้เต็มความกว้าง */
     div.stButton {
         display: block !important;
         width: 100% !important;
+        text-align: center !important;
     }
 
-    /* 🎯 ปรับปรุงตามสั่ง: ขยายปุ่ม Dashboard สีน้ำเงินให้ใหญ่ยาวเต็มหน้าจอและโค้งมนสวยงาม */
+    /* 🎯 ปรับปรุงตามสั่ง: ขยายปุ่ม Dashboard สีฟ้าให้ใหญ่ยาวเต็มหน้าจอมือถือและอยู่ตรงกลางเป๊ะๆ */
     div.stButton > button {
-        background-color: #007bc3 !important;
+        background-color: #007bc3 !important; /* สีฟ้า/น้ำเงิน สดใสตามรูป */
         color: white !important;
-        border-radius: 25px !important;
+        border-radius: 30px !important; /* ปรับให้โค้งมนเรียบเนียนขึ้น */
         padding: 14px 0px !important;
         font-weight: bold !important;
         font-size: 16px !important;
         border: none !important;
-        width: 100% !important; /* ขยายใหญ่เต็มจอ */
+        width: 100% !important; /* ขยายให้ยาวสุดขอบการ์ดซ้าย-ขวา */
+        max-width: 100% !important;
         display: block !important;
+        margin: 0 auto !important; /* บังคับอยู่ตรงกลาง */
+        box-shadow: 0 4px 12px rgba(0, 123, 195, 0.3) !important; /* เพิ่มมิติให้ปุ่มเด่นขึ้น */
     }
     div.stButton > button:hover {
         background-color: #0c2340 !important;
@@ -164,7 +169,7 @@ if st.session_state.page == 'login':
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 3. โซนปุ่มดูภาพรวมด้านล่าง (ปุ่มยาวใหญ่เต็มจอและข้อความอยู่ตรงกลางเป๊ะ)
+    # 3. โซนปุ่มดูภาพรวมด้านล่าง (ปุ่มสีฟ้ายาวใหญ่เต็มหน้าจอ และตัวหนังสืออยู่กึ่งกลางเป๊ะ)
     st.markdown('<span class="center-text-only">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</span>', unsafe_allow_html=True)
     if st.button("📊 ดูภาพรวม Dashboard"):
         st.session_state.page = 'dashboard'

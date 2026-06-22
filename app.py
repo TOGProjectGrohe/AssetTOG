@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมเพื่อคุมดีไซน์เอง
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. ฝัง CSS ดีไซน์โทนสีส้มพาสเทลอุ่นสบายตา และล็อกให้อยู่ในกรอบมือถืออย่างสมบูรณ์
+# 2. ฝัง CSS ดีไซน์โทนสีส้มพาสเทลอุ่นสบายตา และจัดตำแหน่งข้อมูลให้ตรงกลางสวยงาม
 st.markdown("""
     <style>
     /* ซ่อนแถบเมนูข้างของ Streamlit */
@@ -59,6 +59,21 @@ st.markdown("""
         color: #2c3e50 !important;
     }
     
+    /* บังคับให้ส่วนข้อความและปุ่ม Dashboard ล่างสุดอยู่ตรงกลางเสมอ */
+    .center-action-zone {
+        text-align: center !important;
+        width: 100% !important;
+        margin-top: 25px !important;
+        padding: 0 10px !important;
+    }
+    
+    .center-text {
+        color: #2c3e50 !important;
+        font-weight: 500 !important;
+        margin-bottom: 12px !important;
+        font-size: 15px !important;
+    }
+    
     /* ตกแต่งปุ่มกดหลักให้โค้งมนเป็นสีน้ำเงิน/ฟ้า เพื่อให้ตัดกับสีส้มได้อย่างสวยงามและเด่นชัด */
     div.stButton > button {
         width: 100% !important;
@@ -93,7 +108,7 @@ df = load_data()
 if 'page' not in st.session_state:
     st.session_state.page = 'login'
 
-# ---------------- ส่วนหัวของแอปตามสั่ง (วงกลมดำ, คำว่ายินดีต้อนรับ, TOG App) ----------------
+# ---------------- ส่วนหัวของแอป (วงกลมดำ, คำว่ายินดีต้อนรับ, TOG App) ----------------
 st.markdown("""
 <div class="bank-header">
     <div class="tog-circle-logo">TOG</div>
@@ -112,8 +127,9 @@ with main_container:
     if st.session_state.page == 'login':
         st.markdown('<div class="menu-card" style="background: rgba(255,255,255,0.2) !important; border: 1px solid rgba(255,255,255,0.3) !important; color: white !important; text-align:center; padding: 12px; margin-bottom: 25px;"><b>✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</b></div>', unsafe_allow_html=True)
         
+        # กล่องส่วนพนักงานเข้าใช้งาน
         st.markdown('<div class="menu-card">', unsafe_allow_html=True)
-        st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50;'>🖪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
         enable_camera = st.checkbox("เปิดสิทธิ์ใช้งานกล้องถ่ายรูป")
         if enable_camera:
             picture = st.camera_input("สแกน QR Code พนักงานของคุณ")
@@ -122,8 +138,9 @@ with main_container:
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
         
-        st.markdown('<div class="menu-card" style="text-align:center;">', unsafe_allow_html=True)
-        st.markdown("<p style='color:#5a6b7c; margin-bottom:15px;'>ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</p>", unsafe_allow_html=True)
+        # 🎯 ปรับปรุงจุดนี้ตามสั่ง: ยุบการ์ดเดิมทิ้งเพื่อไล่เส้นสีขาวออก และจัดระเบียบปุ่มให้อยู่ตรงกลางแอป
+        st.markdown('<div class="center-action-zone">', unsafe_allow_html=True)
+        st.markdown('<p class="center-text">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</p>', unsafe_allow_html=True)
         if st.button("📊 ดูภาพรวม Dashboard"):
             st.session_state.page = 'dashboard'
             st.rerun()
@@ -138,7 +155,7 @@ with main_container:
             col_value = df.columns[1] if len(df.columns) > 1 else df.columns[0]
             top_10 = df.sort_values(by=col_value, ascending=False).head(10)
             
-            # 1. แสดงกราฟแท่ง (ใช้โทนสี Oranges ให้เข้ากับแอป)
+            # 1. แสดงกราฟแท่ง
             fig_bar = px.bar(top_10, x=col_name, y=col_value, color=col_value, color_continuous_scale="Oranges")
             fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180, showlegend=False, coloraxis_showscale=False)
             st.plotly_chart(fig_bar, use_container_width=True)
@@ -153,7 +170,7 @@ with main_container:
 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # 3. จัดวาง 2 ปุ่มหลักด้านล่างภายในกรอบส้ม
+        # 3. จัดวาง 2 ปุ่มหลักด้านล่าง
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
             if st.button("🔍 ดูข้อมูลย้อนหลัง"):

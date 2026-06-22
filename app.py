@@ -5,23 +5,25 @@ import plotly.express as px
 # ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมเพื่อคุมดีไซน์เอง
 st.set_page_config(page_title="TOG NEXT", layout="centered", initial_sidebar_state="collapsed")
 
-# ปรับแต่งสไตล์ CSS ให้เนื้อหาทั้งหมดอยู่ภายในกรอบมือถืออย่างถูกต้อง
+# 🛠️ ปรับปรุง CSS ขยายขนาดกรอบสีฟ้าให้คลุมพื้นที่ทั้งหมด และล็อกเนื้อหาให้อยู่ตรงกลางสวยๆ
 st.markdown("""
     <style>
     /* ซ่อนแถบเมนูข้างของ Streamlit */
     [data-testid="stSidebar"] {display: none;}
     [data-testid="collapsedControl"] {display: none;}
     
-    /* จำลองกรอบโทรศัพท์มือถือ */
+    /* จำลองกรอบโทรศัพท์มือถือที่ยืดหยุ่นตามความสูงของเนื้อหา */
     .mobile-container {
         max-width: 410px;
-        margin: 0 auto;
-        background: linear-gradient(180deg, #00a3e0 0%, #f4f9fc 25%, #f4f9fc 100%);
+        margin: 20px auto;
+        background: linear-gradient(180deg, #00a3e0 0%, #dbeafe 35%, #f4f9fc 100%);
         border: 12px solid #1e293b;
         border-radius: 40px;
-        padding: 24px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        min-height: 820px;
+        padding: 28px 24px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+        min-height: 780px; /* ความสูงขั้นต่ำ */
+        height: auto;       /* ให้ยืดขยายตามเนื้อหาอัตโนมัติ */
+        overflow: hidden;
         font-family: 'Helvetica Neue', sans-serif;
     }
     
@@ -43,9 +45,9 @@ st.markdown("""
     .menu-card {
         background-color: white;
         border-radius: 18px;
-        padding: 18px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-        margin-bottom: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+        margin-bottom: 18px;
     }
     
     /* ตกแต่งปุ่มกดหลักให้โค้งมนสไตล์แอปธนาคาร */
@@ -54,7 +56,7 @@ st.markdown("""
         background-color: #007bc3;
         color: white;
         border-radius: 25px;
-        padding: 10px 20px;
+        padding: 11px 20px;
         font-weight: bold;
         border: none;
         transition: 0.3s;
@@ -83,7 +85,7 @@ df = load_data()
 if 'page' not in st.session_state:
     st.session_state.page = 'login'
 
-# 🟢 [จุดสำคัญ] เริ่มต้นเปิดกล่องโทรศัพท์มือถือ (ครอบคลุมเนื้อหาทั้งหมดด้านล่าง)
+# เริ่มต้นเปิดกล่องโทรศัพท์มือถือ (ครอบคลุมเนื้อหาทั้งหมดด้านล่าง)
 st.markdown('<div class="mobile-container">', unsafe_allow_html=True)
 
 # ---------------- ส่วนหัวของแอป (Header) ----------------
@@ -102,10 +104,10 @@ st.markdown("""
 
 # ---------------- หน้าแรก: สแกนเข้าใช้งาน / ดูภาพรวม ----------------
 if st.session_state.page == 'login':
-    st.markdown('<div class="menu-card" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: white; text-align:center; padding: 10px;"><b>✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</b></div>', unsafe_allow_html=True)
+    st.markdown('<div class="menu-card" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: white; text-align:center; padding: 12px; margin-bottom: 25px;"><b>✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</b></div>', unsafe_allow_html=True)
     
     st.markdown('<div class="menu-card">', unsafe_allow_html=True)
-    st.markdown("<h3 style='font-size:18px; margin-top:0;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='font-size:18px; margin-top:0; color:#0c2340;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
     enable_camera = st.checkbox("เปิดสิทธิ์ใช้งานกล้องถ่ายรูป")
     if enable_camera:
         picture = st.camera_input("สแกน QR Code พนักงานของคุณ")
@@ -115,7 +117,7 @@ if st.session_state.page == 'login':
     st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="menu-card" style="text-align:center;">', unsafe_allow_html=True)
-    st.write("ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?")
+    st.markdown("<p style='color:#475569; margin-bottom:15px;'>ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</p>", unsafe_allow_html=True)
     if st.button("📊 ดูภาพรวม Dashboard"):
         st.session_state.page = 'dashboard'
         st.rerun()
@@ -164,38 +166,9 @@ elif st.session_state.page == 'dashboard':
 
 # ---------------- หน้าย่อย: ดูข้อมูลย้อนหลัง Before/After ----------------
 elif st.session_state.page == 'history':
-    st.markdown('<div class="menu-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px;">🔍 ประวัติ Before & After</h4></div>', unsafe_allow_html=True)
+    st.markdown('<div class="menu-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px; color:#0c2340;">🔍 ประวัติ Before & After</h4></div>', unsafe_allow_html=True)
     
     st.markdown('<div class="menu-card">', unsafe_allow_html=True)
     st.write("📸 ภาพเปรียบเทียบผลงาน")
     st.error("🔴 ก่อนแก้ไข (Before)")
-    st.image("https://via.placeholder.com/400x250.png?text=Before+Image", use_container_width=True)
-    st.success("🟢 หลังแก้ไข (After)")
-    st.image("https://via.placeholder.com/400x250.png?text=After+Image", use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    if st.button("🏠 กลับหน้าหลัก"):
-        st.session_state.page = 'dashboard'
-        st.rerun()
-
-# ---------------- หน้าย่อย: ฟอร์มเพิ่ม Improvement ----------------
-elif st.session_state.page == 'add_new':
-    st.markdown('<div class="menu-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px;">📝 บันทึก Improvement ใหม่</h4></div>', unsafe_allow_html=True)
-    
-    st.markdown('<div class="menu-card">', unsafe_allow_html=True)
-    with st.form("mobile_form"):
-        title = st.text_input("ชื่อหัวข้อการปรับปรุง")
-        detail = st.text_area("รายละเอียดการแก้ไข")
-        f_before = st.file_uploader("ภาพก่อนแก้ไข", type=["jpg","png"])
-        f_after = st.file_uploader("ภาพหลังแก้ไข", type=["jpg","png"])
-        
-        if st.form_submit_button("🚀 บันทึกข้อมูล"):
-            st.success("ส่งข้อมูลเข้า Google Sheet สำเร็จ!")
-    st.markdown('</div>', unsafe_allow_html=True)
-            
-    if st.button("🏠 กลับหน้าหลัก", key="back_home"):
-        st.session_state.page = 'dashboard'
-        st.rerun()
-
-# 🔴 [จุดสำคัญ] ย้ายคำสั่งปิดกล่องโทรศัพท์มือถือมาไว้ล่างสุด เพื่อให้ทุกอย่างถูกกักไว้ข้างในกรอบ
-st.markdown('</div>', unsafe_allow_html=True)
+    st.image("https

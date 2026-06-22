@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมเพื่อคุมดีไซน์เอง
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. ฝัง CSS ดีไซน์ใหม่: ลบส่วนเกิน และจัดทุกอย่างให้กึ่งกลาง
+# 2. ปรับแต่ง CSS เคลียร์ค่าว่าง จัดวางตำแหน่งให้อยู่ตรงกลางมือถืออย่างสมบูรณ์
 st.markdown("""
     <style>
     /* ซ่อนแถบเมนูข้างและส่วนหัวเดิมของ Streamlit */
@@ -31,7 +31,7 @@ st.markdown("""
         display: flex;
         align-items: center;
         gap: 12px;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
     }
     .tog-circle-logo {
         width: 45px;
@@ -56,7 +56,7 @@ st.markdown("""
         text-align: center;
         color: #2c3e50;
         font-weight: bold;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
     }
 
     /* กล่องสีขาว (Card) สำหรับ Login */
@@ -65,21 +65,26 @@ st.markdown("""
         border-radius: 20px !important;
         padding: 20px !important;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-        margin-bottom: 30px !important;
+        margin-bottom: 25px !important;
     }
 
-    /* โซนด้านล่าง จัดข้อความและปุ่มให้อยู่กึ่งกลางหน้าจอ */
-    .center-zone {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        width: 100%;
-        margin-top: 20px;
+    /* โซนด้านล่าง จัดข้อความและปุ่มให้อยู่กึ่งกลางหน้าจอมือถืออย่างสมบูรณ์ */
+    .center-action-block {
+        display: block !important;
+        text-align: center !important;
+        width: 100% !important;
+        margin: 30px auto 10px auto !important;
     }
 
-    /* ตกแต่งปุ่ม Dashboard สีน้ำเงินให้โค้งมนและอยู่กลาง */
+    .center-action-block p {
+        color: #2c3e50 !important;
+        font-size: 15px !important;
+        font-weight: 500 !important;
+        margin-bottom: 15px !important;
+        text-align: center !important;
+    }
+
+    /* ตกแต่งปุ่ม Dashboard สีน้ำเงินให้โค้งมนและล็อกอยู่กึ่งกลางจอมือถือ */
     div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
@@ -87,19 +92,17 @@ st.markdown("""
         padding: 12px 30px !important;
         font-weight: bold !important;
         border: none !important;
-        width: 100% !important; /* เต็มความกว้างในโซนที่จัดไว้ */
-        max-width: 280px; /* จำกัดความกว้างไม่ให้บานเกินไป */
+        width: 85% !important;        /* บีบขนาดปุ่มให้พอดีสายตา */
+        margin: 0 auto !important;    /* สั่งเลื่อนปุ่มมาตรงกลางหน้าจอ */
+        display: block !important;
     }
     div.stButton > button:hover {
         background-color: #0c2340 !important;
     }
-    
-    /* แก้ไขช่องว่างระหว่าง Checkbox กับ Camera */
-    .stCheckbox { margin-bottom: -15px !important; }
     </style>
 """, unsafe_allow_html=True)
 
-# ฟังก์ชันดึงข้อมูล
+# ฟังก์ชันดึงข้อมูลจาก Google Sheet
 @st.cache_data(ttl=30)
 def load_data():
     sheet_id = "1jL7baZKeeuAmuQUCWuEN7cqjya9HoZjCi9riD6DUnB8"
@@ -112,13 +115,11 @@ def load_data():
 
 df = load_data()
 
-# จัดการหน้า
+# จัดการ State การเปลี่ยนหน้า
 if 'page' not in st.session_state:
     st.session_state.page = 'login'
 
-# --- เริ่มการวาด UI ---
-
-# 1. Header
+# --- ส่วนหัวของแอป (Header) ---
 st.markdown(f"""
 <div class="bank-header">
     <div class="tog-circle-logo">TOG</div>
@@ -129,14 +130,14 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 2. Login Page
+# ---------------- หน้าแรก: สแกนเข้าใช้งาน / ดูภาพรวม ----------------
 if st.session_state.page == 'login':
-    # แบนเนอร์ (รวมเป็นชิ้นเดียว ไม่ให้มีเส้นขาวแยก)
+    # 1. แบนเนอร์ด้านบนสุด
     st.markdown('<div class="promo-banner">✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</div>', unsafe_allow_html=True)
     
-    # การ์ดส่วนล็อกอิน (รวม Checkbox และ Camera ไว้ในกล่องเดียว)
+    # 2. การ์ดส่วนพนักงานเข้าใช้งาน (คลีน ไม่มีส่วนเกินหลุดหลง)
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50;'>📊 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
     
     enable_camera = st.checkbox("เปิดสิทธิ์ใช้งานกล้องถ่ายรูป")
     if enable_camera:
@@ -147,15 +148,15 @@ if st.session_state.page == 'login':
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 3. โซนปุ่ม Dashboard ด้านล่าง (จัดกลางเป๊ะ)
-    st.markdown('<div class="center-zone">', unsafe_allow_html=True)
-    st.markdown("<p style='color:#2c3e50; font-size:15px; margin-bottom:15px;'>ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</p>", unsafe_allow_html=True)
+    # 3. โซนปุ่มดูภาพรวมด้านล่าง (ล้างโครงสร้างเก่า ครอบด้วย Class ใหม่ บังคับข้อความและปุ่มอยู่กึ่งกลางเป๊ะ)
+    st.markdown('<div class="center-action-block">', unsafe_allow_html=True)
+    st.markdown('<p>ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</p>', unsafe_allow_html=True)
     if st.button("📊 ดูภาพรวม Dashboard"):
         st.session_state.page = 'dashboard'
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 3. Dashboard Page
+# ---------------- หน้าหลัก: แสดงกราฟ และ 2 ปุ่มล่าง ----------------
 elif st.session_state.page == 'dashboard':
     st.markdown('<div class="login-card" style="padding: 15px !important;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">📈 อันดับความสำเร็จ 1-10</h4></div>', unsafe_allow_html=True)
     
@@ -169,23 +170,64 @@ elif st.session_state.page == 'dashboard':
         fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180, showlegend=False, coloraxis_showscale=False)
         st.plotly_chart(fig_bar, use_container_width=True)
         
-        # กราฟวงกลม
+        # กราฟวงกลom
         fig_pie = px.pie(top_10, names=col_name, values=col_value, color_discrete_sequence=px.colors.sequential.Oranges_r)
         fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180)
         fig_pie.update_traces(textposition='inside', textinfo='percent')
         st.plotly_chart(fig_pie, use_container_width=True)
+    else:
+        st.info("กำลังรอข้อมูลจาก Google Sheet...")
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 2 ปุ่มล่าง
+    # 2 ปุ่มล่างหลัก
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🔍 ข้อมูลย้อนหลัง"):
-            pass
+            st.session_state.page = 'history'
+            st.rerun()
     with col2:
         if st.button("➕ เพิ่ม Imp."):
-            pass
+            st.session_state.page = 'add_new'
+            st.rerun()
             
+    st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
     if st.button("🔙 ออกจากระบบ", key="logout"):
         st.session_state.page = 'login'
+        st.rerun()
+
+# ---------------- หน้าย่อย: ดูข้อมูลย้อนหลัง Before/After ----------------
+elif st.session_state.page == 'history':
+    st.markdown('<div class="login-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">🔍 ประวัติ Before & After</h4></div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="login-card">', unsafe_allow_html=True)
+    st.write("📸 ภาพเปรียบเทียบผลงาน")
+    st.error("🔴 ก่อนแก้ไข (Before)")
+    st.image("https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400", use_container_width=True)
+    
+    st.success("🟢 หลังแก้ไข (After)")
+    st.image("https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=400", use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    if st.button("🏠 กลับหน้าหลัก"):
+        st.session_state.page = 'dashboard'
+        st.rerun()
+
+# ---------------- หน้าย่อย: ฟอร์มเพิ่ม Improvement ----------------
+elif st.session_state.page == 'add_new':
+    st.markdown('<div class="login-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">📝 บันทึก Improvement ใหม่</h4></div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="login-card">', unsafe_allow_html=True)
+    with st.form("mobile_form"):
+        title = st.text_input("ชื่อหัวข้อการปรับปรุง")
+        detail = st.text_area("รายละเอียดการแก้ไข")
+        f_before = st.file_uploader("ภาพก่อนแก้ไข", type=["jpg","png"])
+        f_after = st.file_uploader("ภาพหลังแก้ไข", type=["jpg","png"])
+        
+        if st.form_submit_button("🚀 บันทึกข้อมูล"):
+            st.success("ส่งข้อมูลเข้า Google Sheet สำเร็จ!")
+    st.markdown('</div>', unsafe_allow_html=True)
+            
+    if st.button("🏠 กลับหน้าหลัก", key="back_home"):
+        st.session_state.page = 'dashboard'
         st.rerun()

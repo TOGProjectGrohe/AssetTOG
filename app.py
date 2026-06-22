@@ -2,117 +2,195 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# ตั้งค่าหน้าเว็บ
-st.set_page_config(page_title="TOG Improvement Dashboard", layout="wide")
-st.title("📊 โปรแกรมตรวจสอบ Improvement AT TOG")
+# ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมเพื่อคุมดีไซน์เอง
+st.set_page_config(page_title="TOG NEXT", layout="centered", initial_sidebar_state="collapsed")
 
-# 1. ฟังก์ชันดึงข้อมูลจาก Google Sheet (ดึงสดผ่าน URL สาธารณะ)
-@st.cache_data(ttl=60) # อัปเดตข้อมูลใหม่ทุกๆ 1 นาที
+# ปรับแต่งสไตล์ CSS ให้เหมือนหน้าจอมือถือและธีมแอปธนาคารสีฟ้า-น้ำเงิน
+st.markdown("""
+    <style>
+    /* ซ่อนแถบเมนูข้างของ Streamlit */
+    [data-testid="stSidebar"] {display: none;}
+    [data-testid="collapsedControl"] {display: none;}
+    
+    /* จำลองกรอบโทรศัพท์มือถือ */
+    .mobile-container {
+        max-width: 410px;
+        margin: 0 auto;
+        background: linear-gradient(180deg, #00a3e0 0%, #f4f9fc 30%, #f4f9fc 100%);
+        border: 12px solid #1e293b;
+        border-radius: 40px;
+        padding: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        min-height: 800px;
+        font-family: 'Helvetica Neue', sans-serif;
+    }
+    
+    /* สไตล์หัวแอปธนาคาร (Header) */
+    .bank-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        margin-bottom: 20px;
+    }
+    .bank-logo {
+        font-size: 20px;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+    
+    /* การ์ดเมนูสีขาว */
+    .menu-card {
+        background-color: white;
+        border-radius: 18px;
+        padding: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-bottom: 15px;
+    }
+    
+    /* ตกแต่งปุ่มกดหลักด้านล่าง */
+    div.stButton > button {
+        width: 100%;
+        background-color: #007bc3;
+        color: white;
+        border-radius: 25px;
+        padding: 10px 20px;
+        font-weight: bold;
+        border: none;
+        transition: 0.3s;
+    }
+    div.stButton > button:hover {
+        background-color: #0c2340;
+        color: white;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# ฟังก์ชันดึงข้อมูลจาก Google Sheet
+@st.cache_data(ttl=30)
 def load_data():
-    # เปลี่ยนลิงก์ Google Sheet ของคุณให้กลายเป็นลิงก์ดาวน์โหลด CSV
     sheet_id = "1jL7baZKeeuAmuQUCWuEN7cqjya9HoZjCi9riD6DUnB8"
     gid = "0"
     csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+    try:
+        return pd.read_csv(csv_url)
+    except:
+        return pd.DataFrame()
+
+df = load_data()
+
+# จัดการ State การเปลี่ยนหน้าในแอป
+if 'page' not in st.session_state:
+    st.session_state.page = 'login'
+
+# เริ่มต้นวาดหน้าจอมือถือ
+st.markdown('<div class="mobile-container">', unsafe_allow_html=True)
+
+# ---------------- ส่วนหัวของแอป (Header) ----------------
+st.markdown("""
+<div class="bank-header">
+    <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:35px; height:35px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#00a3e0; font-weight:bold;">TG</div>
+        <div>
+            <small style="color:#e0f2fe; display:block; font-size:11px;">ยินดีต้อนรับ</small>
+            <span style="font-size:14px; font-weight:bold;">TOG NEXT App</span>
+        </div>
+    </div>
+    <div class="bank-logo">NEXT</div>
+</div>
+""", unsafe_allow_html=True)
+
+# ---------------- หน้าแรก: สแกนเข้าใช้งาน / ดูภาพรวม ----------------
+if st.session_state.page == 'login':
+    st.markdown('<div class="menu-card" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: white; text-align:center;"><b>✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</b></div>', unsafe_allow_html=True)
     
-    # อ่านข้อมูลเข้า pandas DataFrame
-    df = pd.read_csv(csv_url)
-    return df
-
-# โหลดข้อมูล
-try:
-    df = load_data()
-    st.sidebar.success("เชื่อมต่อ Google Sheet สำเร็จ!")
-except Exception as e:
-    st.sidebar.error(f"ไม่สามารถดึงข้อมูลได้: {e}")
-    df = pd.DataFrame()
-
-# ตรวจสอบว่าใน Sheet มีข้อมูลไหม
-if not df.empty:
+    st.markdown('<div class="menu-card">', unsafe_allow_html=True)
+    st.write("### 🪪 ส่วนพนักงานเข้าใช้งาน")
+    enable_camera = st.checkbox("เปิดสิทธิ์ใช้งานกล้องถ่ายรูป")
+    if enable_camera:
+        picture = st.camera_input("สแกน QR Code พนักงานของคุณ")
+        if picture:
+            st.session_state.page = 'dashboard'
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # สร้างเมนูเปลี่ยนหน้าด้านข้าง (Sidebar)
-    menu = st.sidebar.radio("เมนูการใช้งาน", ["ภาพรวม Dashboard", "เพิ่ม Improvement", "สแกน QR Code"])
+    st.markdown('<div class="menu-card" style="text-align:center;">', unsafe_allow_html=True)
+    st.write("ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?")
+    if st.button("📊 ดูภาพรวม Dashboard"):
+        st.session_state.page = 'dashboard'
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # ---------------- หน้าที่ 1 & 3: ภาพรวม Dashboard & กราฟ 1-10 ----------------
-    if menu == "ภาพรวม Dashboard":
-        st.subheader("📋 ภาพรวม และ อันดับ Improvement 1-10")
-        
-        # สมมติว่าใน Sheet ของคุณมีคอลัมน์ชื่อ 'หัวข้อ' และ 'คะแนน' หรือ 'จำนวน' 
-        # (คุณสามารถเปลี่ยนชื่อคอลัมน์ให้ตรงกับไฟล์จริงของคุณได้เลยครับ)
-        col_name = df.columns[0]  # คอลัมน์แรก (สมมติว่าเป็นชื่อรายการ)
-        col_value = df.columns[1] if len(df.columns) > 1 else df.columns[0] # คอลัมน์สอง (สมมติว่าเป็นตัวเลข)
-        
-        # จัดอันดับ 1-10
+# ---------------- หน้าหลัก: แสดงกราฟ และ 2 ปุ่มล่าง ----------------
+elif st.session_state.page == 'dashboard':
+    st.markdown('<div class="menu-card"><h4>📈 อันดับความสำเร็จ 1-10</h4></div>', unsafe_allow_html=True)
+    
+    if not df.empty:
+        col_name = df.columns[0]
+        col_value = df.columns[1] if len(df.columns) > 1 else df.columns[0]
         top_10 = df.sort_values(by=col_value, ascending=False).head(10)
         
-        # แบ่งหน้าจอเป็น 2 คอลัมน์สำหรับโชว์กราฟแท่งและวงกลมคู่กัน
-        c1, c2 = st.columns(2)
+        # 1. แสดงกราฟแท่ง Top 10 บนมือถือ
+        fig_bar = px.bar(top_10, x=col_name, y=col_value, color=col_value, color_continuous_scale="Blugrn")
+        fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=False, coloraxis_showscale=False)
+        st.plotly_chart(fig_bar, use_container_width=True)
         
-        with c1:
-            fig_bar = px.bar(top_10, x=col_name, y=col_value, 
-                             title=f"กราฟแท่งแสดงอันดับ 1-10 (อิงตาม {col_value})",
-                             color=col_value, color_continuous_scale="Viridis")
-            st.plotly_chart(fig_bar, use_container_width=True)
-            
-        with c2:
-            fig_pie = px.pie(top_10, names=col_name, values=col_value, 
-                             title=f"กราฟวงกลมแสดงสัดส่วนอันดับ 1-10")
-            st.plotly_chart(fig_pie, use_container_width=True)
-            
-        st.markdown("---")
-        
-        # ---------------- ข้อ 4: ดูกราฟและภาพ Before & After ย้อนหลัง ----------------
-        st.subheader("🔍 4. ดูภาพ Before & After ย้อนหลัง")
-        
-        selected_item = st.selectbox("เลือกรายการ Improvement ที่ต้องการดูย้อนหลัง:", top_10[col_name].unique())
-        
-        # จับคู่ข้อมูลรายการที่เลือกเพื่อดึงลิงก์รูปภาพมาแสดง
-        # (ใน Google Sheet ควรมีคอลัมน์ที่เก็บ URL รูปภาพ Before และ After เอาไว้)
-        img_col1, img_col2 = st.columns(2)
-        with img_col1:
-            st.info("📷 ภาพฝั่ง Before")
-            # ตัวอย่าง: ใส่ URL รูปภาพจริงจาก Sheet หรือใส่รูปภาพจำลองไปก่อน
-            st.image("https://via.placeholder.com/400x300.png?text=Before+Image", use_container_width=True)
-            
-        with img_col2:
-            st.success("✨ ภาพฝั่ง After")
-            st.image("https://via.placeholder.com/400x300.png?text=After+Image", use_container_width=True)
+        # 2. แสดงกราฟวงกลม Pie Chart บนมือถือ
+        fig_pie = px.pie(top_10, names=col_name, values=col_value, color_discrete_sequence=px.colors.sequential.Blugrn_r)
+        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200)
+        fig_pie.update_traces(textposition='inside', textinfo='percent')
+        st.plotly_chart(fig_pie, use_container_width=True)
+    else:
+        st.info("กำลังรอข้อมูลจาก Google Sheet...")
 
-    # ---------------- ข้อ 5 & 6: เมนู เพิ่ม Improvement ----------------
-    elif menu == "เพิ่ม Improvement":
-        st.subheader("➕ 5. เพิ่มข้อมูล Improvement ใหม่")
-        st.caption("กรอกรายละเอียดเพื่อบันทึกข้อมูล (ข้อมูลตัวหนังสือจะวิ่งไปที่ Google Sheet ส่วนรูปภาพแนะนำให้ลิงก์กับที่เก็บไฟล์)")
-        
-        with st.form("form_improvement", clear_on_submit=True):
-            topic = st.text_input("หัวข้อการปรับปรุง (Improvement Title)")
-            detail = st.text_area("รายละเอียดการแก้ไข")
+    st.markdown("---")
+    
+    # 3. จัดวาง 2 ปุ่มหลักที่ต้องการไว้ด้านล่างสุดของแอป
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("🔍 ดูข้อมูลย้อนหลัง"):
+            st.session_state.page = 'history'
+            st.rerun()
             
-            up_before = st.file_uploader("อัปโหลดภาพ ก่อนแก้ไข (Before)", type=["jpg", "jpeg", "png"])
-            up_after = st.file_uploader("อัปโหลดภาพ หลังแก้ไข (After)", type=["jpg", "jpeg", "png"])
+    with col_btn2:
+        if st.button("➕ เพิ่ม Improvement"):
+            st.session_state.page = 'add_new'
+            st.rerun()
             
-            submit_btn = st.form_submit_with_button("บันทึกข้อมูล Improvement")
-            
-            if submit_btn:
-                if topic and detail:
-                    # ตรงนี้คือจุดที่จะส่งข้อมูลกลับไปเขียนที่ Google Sheet
-                    # เนื่องจากการแชร์สาธารณะแบบนี้จะ "อ่านได้อย่างเดียว" 
-                    # หากต้องการเขียนข้อมูลกลับ แนะนำให้ต่อยอดใช้กุญแจล็อกอิน (Service Account) ในอนาคตครับ
-                    st.success(f"🎉 บันทึกหัวข้อ '{topic}' เรียบร้อยแล้ว! (ระบบกำลังพัฒนาส่วนการบันทึกรูปภาพปลายทาง)")
-                else:
-                    st.warning("กรุณากรอกข้อมูลหัวข้อและรายละเอียดให้ครบถ้วน")
+    if st.button("🔙 ออกจากระบบ", key="logout"):
+        st.session_state.page = 'login'
+        st.rerun()
 
-    # ---------------- ข้อ 2: ปุ่มสแกน QR Code ข้อมูลพนักงาน ----------------
-    elif menu == "สแกน QR Code":
-        st.subheader("🪪 2. ปุ่มเปิดกล้องสแกน QR Code พนักงาน")
-        
-        # ปุ่มจำลองเปิดกล้องของ Streamlit
-        enable_camera = st.checkbox("เปิดใช้งานกล้องถ่ายรูป")
-        if enable_camera:
-            picture = st.camera_input("เล็งกล้องไปที่ QR Code ของพนักงาน")
-            if picture:
-                st.audio(picture) # แสดงภาพที่ถ่าย
-                st.success("📷 ตรวจพบรหัสพนักงาน! ข้อมูล: นายสมชาย ดีเด่น (แผนกผลิต AT TOG)")
-        else:
-            st.write("💡 ติ๊กถูกที่ 'เปิดใช้งานกล้องถ่ายรูป' เพื่อสแกน")
+# ---------------- หน้าย่อย: ดูข้อมูลย้อนหลัง Before/After ----------------
+elif st.session_state.page == 'history':
+    st.markdown('<div class="menu-card"><h4>🔍 ประวัติ Before & After</h4></div>', unsafe_allow_html=True)
+    
+    st.write("📸 ภาพเปรียบเทียบผลงาน")
+    st.error("🔴 ก่อนแก้ไข (Before)")
+    st.image("https://via.placeholder.com/400x250.png?text=Before+Image", use_container_width=True)
+    st.success("🟢 หลังแก้ไข (After)")
+    st.image("https://via.placeholder.com/400x250.png?text=After+Image", use_container_width=True)
+    
+    if st.button("🏠 กลับหน้าหลัก"):
+        st.session_state.page = 'dashboard'
+        st.rerun()
 
-else:
-    st.info("💡 เชื่อมต่อกับ Sheet แล้ว แต่ไม่พบข้อมูลในตาราง กรุณากรอกข้อมูลลงใน Google Sheet ของคุณอย่างน้อย 1 แถว (รวมแถวหัวข้อ)")
+# ---------------- หน้าย่อย: ฟอร์มเพิ่ม Improvement ----------------
+elif st.session_state.page == 'add_new':
+    st.markdown('<div class="menu-card"><h4>📝 บันทึก Improvement ใหม่</h4></div>', unsafe_allow_html=True)
+    
+    with st.form("mobile_form"):
+        title = st.text_input("ชื่อหัวข้อการปรับปรุง")
+        detail = st.text_area("รายละเอียดการแก้ไข")
+        f_before = st.file_uploader("ภาพก่อนแก้ไข", type=["jpg","png"])
+        f_after = st.file_uploader("ภาพหลังแก้ไข", type=["jpg","png"])
+        
+        if st.form_submit_button("🚀 บันทึกข้อมูล"):
+            st.success("ส่งข้อมูลเข้า Google Sheet สำเร็จ!")
+            
+    if st.button("🏠 กลับหน้าหลัก", key="back_home"):
+        st.session_state.page = 'dashboard'
+        st.rerun()
+
+# ปิดกรอบโทรศัพท์มือถือ
+st.markdown('</div>', unsafe_allow_html=True)

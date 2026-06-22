@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 
 # 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมเพื่อคุมดีไซน์เอง
-st.set_page_config(page_title="TOG NEXT", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
 # 2. ฝัง CSS ดีไซน์โทนสีส้มพาสเทลอุ่นสบายตา และล็อกให้อยู่ในกรอบมือถืออย่างสมบูรณ์
 st.markdown("""
@@ -28,10 +28,25 @@ st.markdown("""
     /* สไตล์หัวแอป (Header) */
     .bank-header {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        color: white;
+        gap: 12px;
         margin-bottom: 25px;
+    }
+    
+    /* วงกลมสีดำ ตัวอักษรสีขาว TOG */
+    .tog-circle-logo {
+        width: 42px;
+        height: 42px;
+        background-color: #000000;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #ffffff;
+        font-family: 'Helvetica Neue', sans-serif;
+        font-weight: bold;
+        font-size: 14px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
     
     /* การ์ดเมนูสีขาวภายในกรอบ */
@@ -78,17 +93,14 @@ df = load_data()
 if 'page' not in st.session_state:
     st.session_state.page = 'login'
 
-# ---------------- ส่วนหัวของแอปโทนสีขาวบนพื้นส้ม (Header) ----------------
+# ---------------- ส่วนหัวของแอปตามสั่ง (วงกลมดำ, คำว่ายินดีต้อนรับ, TOG App) ----------------
 st.markdown("""
 <div class="bank-header">
-    <div style="display:flex; align-items:center; gap:10px;">
-        <div style="width:35px; height:35px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#ff8c42; font-weight:bold; font-size:14px;">TG</div>
-        <div>
-            <small style="color:#fff3eb; display:block; font-size:11px;">ยินดีต้อนรับ</small>
-            <span style="font-size:14px; font-weight:bold; color:white;">TOG NEXT App</span>
-        </div>
+    <div class="tog-circle-logo">TOG</div>
+    <div>
+        <small style="color:#fff3eb; display:block; font-size:11px; font-weight:300;">ยินดีต้อนรับ</small>
+        <span style="font-size:15px; font-weight:600; color:white; line-height:1.2;">TOG App</span>
     </div>
-    <div style="font-size: 20px; font-weight: bold; letter-spacing: 1px; color:white;">NEXT</div>
 </div>
 """, unsafe_allow_html=True)
 

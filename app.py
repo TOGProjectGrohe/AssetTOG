@@ -5,7 +5,7 @@ import plotly.express as px
 # ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมเพื่อคุมดีไซน์เอง
 st.set_page_config(page_title="TOG NEXT", layout="centered", initial_sidebar_state="collapsed")
 
-# 🛠️ ปรับปรุง CSS ขยายขนาดกรอบสีฟ้าให้คลุมพื้นที่ทั้งหมด และล็อกเนื้อหาให้อยู่ตรงกลางสวยๆ
+# ปรับปรุง CSS ขยายขนาดกรอบสีฟ้าให้คลุมพื้นที่ทั้งหมด และล็อกเนื้อหาให้อยู่ตรงกลางสวยๆ
 st.markdown("""
     <style>
     /* ซ่อนแถบเมนูข้างของ Streamlit */
@@ -118,57 +118,4 @@ if st.session_state.page == 'login':
     
     st.markdown('<div class="menu-card" style="text-align:center;">', unsafe_allow_html=True)
     st.markdown("<p style='color:#475569; margin-bottom:15px;'>ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</p>", unsafe_allow_html=True)
-    if st.button("📊 ดูภาพรวม Dashboard"):
-        st.session_state.page = 'dashboard'
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# ---------------- หน้าหลัก: แสดงกราฟ และ 2 ปุ่มล่าง ----------------
-elif st.session_state.page == 'dashboard':
-    st.markdown('<div class="menu-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px; color:#0c2340;">📈 อันดับความสำเร็จ 1-10</h4></div>', unsafe_allow_html=True)
-    
-    if not df.empty:
-        col_name = df.columns[0]
-        col_value = df.columns[1] if len(df.columns) > 1 else df.columns[0]
-        top_10 = df.sort_values(by=col_value, ascending=False).head(10)
-        
-        # 1. แสดงกราฟแท่ง Top 10 บนมือถือ
-        fig_bar = px.bar(top_10, x=col_name, y=col_value, color=col_value, color_continuous_scale="Blugrn")
-        fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180, showlegend=False, coloraxis_showscale=False)
-        st.plotly_chart(fig_bar, use_container_width=True)
-        
-        # 2. แสดงกราฟวงกลม Pie Chart บนมือถือ
-        fig_pie = px.pie(top_10, names=col_name, values=col_value, color_discrete_sequence=px.colors.sequential.Blugrn_r)
-        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180)
-        fig_pie.update_traces(textposition='inside', textinfo='percent')
-        st.plotly_chart(fig_pie, use_container_width=True)
-    else:
-        st.info("กำลังรอข้อมูลจาก Google Sheet...")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # 3. จัดวาง 2 ปุ่มหลักที่ต้องการไว้ด้านล่างสุดภายในกรอบ
-    col_btn1, col_btn2 = st.columns(2)
-    with col_btn1:
-        if st.button("🔍 ดูข้อมูลย้อนหลัง"):
-            st.session_state.page = 'history'
-            st.rerun()
-            
-    with col_btn2:
-        if st.button("➕ เพิ่ม Improvement"):
-            st.session_state.page = 'add_new'
-            st.rerun()
-            
-    st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
-    if st.button("🔙 ออกจากระบบ", key="logout"):
-        st.session_state.page = 'login'
-        st.rerun()
-
-# ---------------- หน้าย่อย: ดูข้อมูลย้อนหลัง Before/After ----------------
-elif st.session_state.page == 'history':
-    st.markdown('<div class="menu-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px; color:#0c2340;">🔍 ประวัติ Before & After</h4></div>', unsafe_allow_html=True)
-    
-    st.markdown('<div class="menu-card">', unsafe_allow_html=True)
-    st.write("📸 ภาพเปรียบเทียบผลงาน")
-    st.error("🔴 ก่อนแก้ไข (Before)")
-    st.image("https
+    if st.button("📊 ดูภาพรวม

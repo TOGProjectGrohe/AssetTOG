@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมเพื่อคุมดีไซน์เอง
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ถล่ม CSS ของ Streamlit บังคับปุ่มมาตรงกลาง และรีเซ็ตขอบขาวทั้งหมด
+# 2. 🛠️ ถล่ม CSS ชั้นลึกสุดของ Streamlit (ทุบกล่องขาวส่วนเกินทิ้ง และลากปุ่มมาตรงกลาง)
 st.markdown("""
     <style>
     /* ซ่อนแถบเมนูข้างและส่วนหัวเดิมของ Streamlit */
@@ -69,33 +69,41 @@ st.markdown("""
         margin-bottom: 5px !important;
     }
 
-    /* 🎯 ล้างบางบล็อกสีขาวและเส้นคั่นกลาง (ฆ่า Element ว่างของ Streamlit) */
-    [data-testid="stVerticalBlock"] > div {
+    /* 🎯 ล้างบางแท่งขาวรีๆ คั่นกลาง โดยการสั่งห้าม Element ชั้นในสร้างพื้นหลังขาวเด็ดขาด */
+    div[data-testid="element-container"] {
+        background-color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    div[data-testid="stVerticalBlock"] > div {
         padding: 0px !important;
         margin: 0px !important;
+        background: transparent !important;
     }
     
-    /* 🎯 โซนด้านล่าง บังคับตัวหนังสือให้อยู่ตรงกลาง */
+    /* 🎯 สั่งจัดตัวหนังสือให้อยู่ตรงกลางหน้าจอมือถือ */
     .center-text-only {
         color: #2c3e50 !important;
         font-size: 15px !important;
         font-weight: 500 !important;
         text-align: center !important;
-        margin-top: 30px !important;
+        margin-top: 35px !important;
         margin-bottom: 15px !important;
         width: 100% !important;
         display: block !important;
     }
 
-    /* 🎯 เจาะจงล็อกเป้าหมายปุ่มของ Streamlit ทุกปุ่มในหน้านี้ให้ย้ายมาอยู่ตรงกลางจอมือถือเป๊ะๆ */
+    /* 🎯 จัดปุ่มกดของ Streamlit ให้อยู่กึ่งกลางหน้าจอมือถือเป๊ะๆ ไม่ชิดซ้าย */
     div.stButton {
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
         width: 100% !important;
+        text-align: center !important;
     }
 
-    /* ดีไซน์ปุ่มน้ำเงินโค้งมนและล็อกขนาดให้สวยพอดี ไม่ชิดซ้าย */
+    /* ดีไซน์ปุ่มน้ำเงินโค้งมน ล็อกขนาด และสั่งให้อยู่กึ่งกลาง */
     div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
@@ -103,7 +111,8 @@ st.markdown("""
         padding: 12px 0px !important;
         font-weight: bold !important;
         border: none !important;
-        width: 260px !important; /* บังคับขนาดความกว้างปุ่ม */
+        width: 260px !important; /* บังคับขนาดปุ่มให้สวยกำลังดี */
+        margin: 0 auto !important; /* ดึงมาอยู่ตรงกลาง */
         display: block !important;
     }
     div.stButton > button:hover {
@@ -158,7 +167,7 @@ if st.session_state.page == 'login':
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 3. โซนปุ่มดูภาพรวมด้านล่าง (แยกส่วนอิสระเพื่อไม่ให้เกิดบล็อกขาวคั่นกลาง และใช้ CSS ล็อกกลางเป๊ะ)
+    # 3. โซนปุ่มดูภาพรวมด้านล่าง (บังคับตัวอักษรและปุ่มน้ำเงินอยู่ตรงกลางแบบเด็ดขาด)
     st.markdown('<span class="center-text-only">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</span>', unsafe_allow_html=True)
     if st.button("📊 ดูภาพรวม Dashboard"):
         st.session_state.page = 'dashboard'

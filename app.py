@@ -1,15 +1,14 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมเพื่อคุมดีไซน์เอง
+# 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมและจัดเนื้อหาให้อยู่ตรงกลาง
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ถล่ม CSS บังคับปุ่ม Dashboard ขยายใหญ่เต็มจอ สีฟ้าสดใส และล้างบางขอบขาวส่วนเกินทั้งหมด
+# 2. 🛠️ ปรับปรุงระบบ CSS ลึกถึงรากฐาน (ลบแท่งขาวคั่นกลาง และดึงปุ่มขยายเต็มจอมาไว้ตรงกลางเป๊ะ)
 st.markdown("""
     <style>
-    /* ซ่อนแถบเมนูข้างและส่วนหัวเดิมของ Streamlit */
+    /* ซ่อนแถบเมนูและส่วนหัวดั้งเดิมทั้งหมดของ Streamlit เพื่อคุมดีไซน์เอง */
     [data-testid="stSidebar"] {display: none !important;}
     [data-testid="collapsedControl"] {display: none !important;}
     header {visibility: hidden !important;}
@@ -70,54 +69,51 @@ st.markdown("""
         margin-bottom: 5px !important;
     }
 
-    /* ล้างบางแท่งขาวรีๆ คั่นกลาง และรีเซ็ตพื้นหลังส่วนเกินของ Streamlit */
-    div[data-testid="element-container"] {
+    /* 🎯 ล้างบางบล็อกสีขาวและเส้นคั่นกลางที่หลงเหลือจากระบบภายในของ Streamlit */
+    div[data-testid="element-container"], 
+    div[data-testid="stVerticalBlock"] > div,
+    div[data-testid="stVerticalBlock"] {
         background-color: transparent !important;
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-    }
-    div[data-testid="stVerticalBlock"] > div {
         padding: 0px !important;
         margin: 0px !important;
-        background: transparent !important;
     }
     
-    /* จัดข้อความถามก่อนล็อกอินให้อยู่ตรงกลางหน้าจอ */
-    .center-text-only {
+    /* โซนเนื้อหาและการจัดข้อความให้อยู่ตรงกลางจอมือถือ */
+    .center-content-wrapper {
+        text-align: center !important;
+        width: 100% !important;
+        display: block !important;
+        margin: 40px auto 15px auto !important;
+    }
+    
+    .center-title-text {
         color: #2c3e50 !important;
         font-size: 16px !important;
         font-weight: 500 !important;
-        text-align: center !important;
-        margin-top: 50px !important;
-        margin-bottom: 20px !important;
-        width: 100% !important;
-        display: block !important;
+        margin-bottom: 15px !important;
     }
 
-    /* 🎯 จัดการ Container ของปุ่มให้เป็นแบบ Block เพื่อให้ขยายได้เต็มความกว้าง */
-    div.stButton {
-        display: block !important;
-        width: 100% !important;
-        text-align: center !important;
-    }
-
-    /* 🎯 ปรับปรุงตามสั่ง: ขยายปุ่ม Dashboard สีฟ้าให้ใหญ่ยาวเต็มหน้าจอมือถือและอยู่ตรงกลางเป๊ะๆ */
-    div.stButton > button {
-        background-color: #007bc3 !important; /* สีฟ้า/น้ำเงิน สดใสตามรูป */
+    /* 🎯 สร้างดีไซน์ปุ่มแบบ Custom ล็อกตำแหน่งกึ่งกลางและขยายยาวเต็มความกว้างอย่างเด็ดขาด */
+    .custom-full-button {
+        background-color: #007bc3 !important;
         color: white !important;
-        border-radius: 30px !important; /* ปรับให้โค้งมนเรียบเนียนขึ้น */
+        border-radius: 30px !important;
         padding: 14px 0px !important;
         font-weight: bold !important;
         font-size: 16px !important;
         border: none !important;
-        width: 100% !important; /* ขยายให้ยาวสุดขอบการ์ดซ้าย-ขวา */
-        max-width: 100% !important;
+        width: 100% !important;
         display: block !important;
-        margin: 0 auto !important; /* บังคับอยู่ตรงกลาง */
-        box-shadow: 0 4px 12px rgba(0, 123, 195, 0.3) !important; /* เพิ่มมิติให้ปุ่มเด่นขึ้น */
+        text-align: center !important;
+        text-decoration: none !important;
+        box-shadow: 0 4px 12px rgba(0, 123, 195, 0.3) !important;
+        cursor: pointer;
+        transition: 0.3s;
     }
-    div.stButton > button:hover {
+    .custom-full-button:hover {
         background-color: #0c2340 !important;
     }
     </style>
@@ -136,9 +132,11 @@ def load_data():
 
 df = load_data()
 
-# จัดการ State การเปลี่ยนหน้า
-if 'page' not in st.session_state:
-    st.session_state.page = 'login'
+# ใช้ Query Parameters ในการเปลี่ยนหน้าเพื่อรองรับปุ่มลิงก์ HTML แบบ Custom
+if "nav" not in st.query_params:
+    st.query_params["nav"] = "login"
+
+current_page = st.query_params["nav"]
 
 # --- ส่วนหัวของแอป (Header) ---
 st.markdown(f"""
@@ -152,7 +150,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: สแกนเข้าใช้งาน / ดูภาพรวม ----------------
-if st.session_state.page == 'login':
+if current_page == "login":
     # 1. แบนเนอร์ด้านบนสุด
     st.markdown('<div class="promo-banner">✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</div>', unsafe_allow_html=True)
     
@@ -165,18 +163,20 @@ if st.session_state.page == 'login':
         st.markdown("<p style='font-size:13px; color:#64748b; margin-top:10px;'>สแกน QR Code พนักงานของคุณ</p>", unsafe_allow_html=True)
         picture = st.camera_input("", label_visibility="collapsed")
         if picture:
-            st.session_state.page = 'dashboard'
+            st.query_params["nav"] = "dashboard"
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 3. โซนปุ่มดูภาพรวมด้านล่าง (ปุ่มสีฟ้ายาวใหญ่เต็มหน้าจอ และตัวหนังสืออยู่กึ่งกลางเป๊ะ)
-    st.markdown('<span class="center-text-only">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</span>', unsafe_allow_html=True)
-    if st.button("📊 ดูภาพรวม Dashboard"):
-        st.session_state.page = 'dashboard'
-        st.rerun()
+    # 3. โซนปุ่มดูภาพรวมด้านล่าง (บังคับตัวหนังสือและปุ่มน้ำเงินอยู่ตรงกลางแบบเด็ดขาด 100%)
+    st.markdown("""
+        <div class="center-content-wrapper">
+            <div class="center-title-text">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div>
+            <a href="?nav=dashboard" target="_self" class="custom-full-button">📊 ดูภาพรวม Dashboard</a>
+        </div>
+    """, unsafe_allow_html=True)
 
 # ---------------- หน้าหลัก: แสดงกราฟ และ 2 ปุ่มล่าง ----------------
-elif st.session_state.page == 'dashboard':
+elif current_page == "dashboard":
     st.markdown('<div class="login-card" style="padding: 15px !important;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">📈 อันดับความสำเร็จ 1-10</h4></div>', unsafe_allow_html=True)
     
     if not df.empty:
@@ -202,21 +202,16 @@ elif st.session_state.page == 'dashboard':
     # 2 ปุ่มล่างหลัก
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🔍 ข้อมูลย้อนหลัง"):
-            st.session_state.page = 'history'
-            st.rerun()
+        # เปลี่ยนปุ่มย่อยด้านในให้ใช้ดีไซน์กลางด้วยลิงก์ HTML เพื่อความสวยงามที่สม่ำเสมอ
+        st.markdown('<a href="?nav=history" target="_self" class="custom-full-button" style="font-size:14px !important; padding:10px 0px !important;">🔍 ข้อมูลย้อนหลัง</a>', unsafe_allow_html=True)
     with col2:
-        if st.button("➕ เพิ่ม Imp."):
-            st.session_state.page = 'add_new'
-            st.rerun()
+        st.markdown('<a href="?nav=add_new" target="_self" class="custom-full-button" style="font-size:14px !important; padding:10px 0px !important;">➕ เพิ่ม Imp.</a>', unsafe_allow_html=True)
             
-    st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
-    if st.button("🔙 ออกจากระบบ", key="logout"):
-        st.session_state.page = 'login'
-        st.rerun()
+    st.markdown("<div style='margin-top:25px;'></div>", unsafe_allow_html=True)
+    st.markdown('<a href="?nav=login" target="_self" class="custom-full-button" style="background-color: #ef4444 !important; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;">🔙 ออกจากระบบ</a>', unsafe_allow_html=True)
 
 # ---------------- หน้าย่อย: ดูข้อมูลย้อนหลัง Before/After ----------------
-elif st.session_state.page == 'history':
+elif current_page == "history":
     st.markdown('<div class="login-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">🔍 ประวัติ Before & After</h4></div>', unsafe_allow_html=True)
     
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
@@ -228,12 +223,10 @@ elif st.session_state.page == 'history':
     st.image("https://images.unsplash.com/photo-158109335397-9583fe92d232?w=400", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    if st.button("🏠 กลับหน้าหลัก"):
-        st.session_state.page = 'dashboard'
-        st.rerun()
+    st.markdown('<a href="?nav=dashboard" target="_self" class="custom-full-button">🏠 กลับหน้าหลัก</a>', unsafe_allow_html=True)
 
 # ---------------- หน้าย่อย: ฟอร์มเพิ่ม Improvement ----------------
-elif st.session_state.page == 'add_new':
+elif current_page == "add_new":
     st.markdown('<div class="login-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">📝 บันทึก Improvement ใหม่</h4></div>', unsafe_allow_html=True)
     
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
@@ -247,6 +240,4 @@ elif st.session_state.page == 'add_new':
             st.success("ส่งข้อมูลเข้า Google Sheet สำเร็จ!")
     st.markdown('</div>', unsafe_allow_html=True)
             
-    if st.button("🏠 กลับหน้าหลัก", key="back_home"):
-        st.session_state.page = 'dashboard'
-        st.rerun()
+    st.markdown('<a href="?nav=dashboard" target="_self" class="custom-full-button">🏠 กลับหน้าหลัก</a>', unsafe_allow_html=True)

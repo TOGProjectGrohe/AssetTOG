@@ -5,13 +5,14 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมเพื่อคุมดีไซน์เอง
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. ปรับแต่ง CSS เคลียร์ค่าว่าง จัดวางตำแหน่งให้อยู่ตรงกลางมือถืออย่างสมบูรณ์
+# 2. 🛠️ ถล่ม CSS ของ Streamlit บังคับปุ่มมาตรงกลาง และรีเซ็ตขอบขาวทั้งหมด
 st.markdown("""
     <style>
     /* ซ่อนแถบเมนูข้างและส่วนหัวเดิมของ Streamlit */
     [data-testid="stSidebar"] {display: none !important;}
     [data-testid="collapsedControl"] {display: none !important;}
     header {visibility: hidden !important;}
+    [data-testid="stHeader"] {display: none !important;}
     
     /* กรอบมือถือสีส้มพาสเทล */
     .stApp {
@@ -65,35 +66,44 @@ st.markdown("""
         border-radius: 20px !important;
         padding: 20px !important;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-        margin-bottom: 25px !important;
+        margin-bottom: 5px !important;
     }
 
-    /* โซนด้านล่าง จัดข้อความและปุ่มให้อยู่กึ่งกลางหน้าจอมือถืออย่างสมบูรณ์ */
-    .center-action-block {
-        display: block !important;
-        text-align: center !important;
-        width: 100% !important;
-        margin: 30px auto 10px auto !important;
+    /* 🎯 ล้างบางบล็อกสีขาวและเส้นคั่นกลาง (ฆ่า Element ว่างของ Streamlit) */
+    [data-testid="stVerticalBlock"] > div {
+        padding: 0px !important;
+        margin: 0px !important;
     }
-
-    .center-action-block p {
+    
+    /* 🎯 โซนด้านล่าง บังคับตัวหนังสือให้อยู่ตรงกลาง */
+    .center-text-only {
         color: #2c3e50 !important;
         font-size: 15px !important;
         font-weight: 500 !important;
-        margin-bottom: 15px !important;
         text-align: center !important;
+        margin-top: 30px !important;
+        margin-bottom: 15px !important;
+        width: 100% !important;
+        display: block !important;
     }
 
-    /* ตกแต่งปุ่ม Dashboard สีน้ำเงินให้โค้งมนและล็อกอยู่กึ่งกลางจอมือถือ */
+    /* 🎯 เจาะจงล็อกเป้าหมายปุ่มของ Streamlit ทุกปุ่มในหน้านี้ให้ย้ายมาอยู่ตรงกลางจอมือถือเป๊ะๆ */
+    div.stButton {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+
+    /* ดีไซน์ปุ่มน้ำเงินโค้งมนและล็อกขนาดให้สวยพอดี ไม่ชิดซ้าย */
     div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
         border-radius: 25px !important;
-        padding: 12px 30px !important;
+        padding: 12px 0px !important;
         font-weight: bold !important;
         border: none !important;
-        width: 85% !important;        /* บีบขนาดปุ่มให้พอดีสายตา */
-        margin: 0 auto !important;    /* สั่งเลื่อนปุ่มมาตรงกลางหน้าจอ */
+        width: 260px !important; /* บังคับขนาดความกว้างปุ่ม */
         display: block !important;
     }
     div.stButton > button:hover {
@@ -135,7 +145,7 @@ if st.session_state.page == 'login':
     # 1. แบนเนอร์ด้านบนสุด
     st.markdown('<div class="promo-banner">✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</div>', unsafe_allow_html=True)
     
-    # 2. การ์ดส่วนพนักงานเข้าใช้งาน (คลีน ไม่มีส่วนเกินหลุดหลง)
+    # 2. การ์ดส่วนพนักงานเข้าใช้งาน
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
     
@@ -148,13 +158,11 @@ if st.session_state.page == 'login':
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 3. โซนปุ่มดูภาพรวมด้านล่าง (ล้างโครงสร้างเก่า ครอบด้วย Class ใหม่ บังคับข้อความและปุ่มอยู่กึ่งกลางเป๊ะ)
-    st.markdown('<div class="center-action-block">', unsafe_allow_html=True)
-    st.markdown('<p>ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</p>', unsafe_allow_html=True)
+    # 3. โซนปุ่มดูภาพรวมด้านล่าง (แยกส่วนอิสระเพื่อไม่ให้เกิดบล็อกขาวคั่นกลาง และใช้ CSS ล็อกกลางเป๊ะ)
+    st.markdown('<span class="center-text-only">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</span>', unsafe_allow_html=True)
     if st.button("📊 ดูภาพรวม Dashboard"):
         st.session_state.page = 'dashboard'
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------- หน้าหลัก: แสดงกราฟ และ 2 ปุ่มล่าง ----------------
 elif st.session_state.page == 'dashboard':
@@ -170,7 +178,7 @@ elif st.session_state.page == 'dashboard':
         fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180, showlegend=False, coloraxis_showscale=False)
         st.plotly_chart(fig_bar, use_container_width=True)
         
-        # กราฟวงกลom
+        # กราฟวงกลม
         fig_pie = px.pie(top_10, names=col_name, values=col_value, color_discrete_sequence=px.colors.sequential.Oranges_r)
         fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180)
         fig_pie.update_traces(textposition='inside', textinfo='percent')
@@ -206,7 +214,7 @@ elif st.session_state.page == 'history':
     st.image("https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400", use_container_width=True)
     
     st.success("🟢 หลังแก้ไข (After)")
-    st.image("https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=400", use_container_width=True)
+    st.image("https://images.unsplash.com/photo-158109335397-9583fe92d232?w=400", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     if st.button("🏠 กลับหน้าหลัก"):

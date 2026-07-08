@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ CSS ทลายบล็อกหลัก: แก้อาการปุ่มดื้อชิดซ้าย บังคับยืดเต็มกรอบการ์ดและอยู่ตรงกลาง 100%
+# 2. 🛠️ ชุดคำสั่ง CSS คุมธีม และสไตล์ปุ่ม HTML ฉบับจัดกึ่งกลางกริบเหมือนโลโก้ด้านบน
 st.markdown("""
     <style>
     /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
@@ -44,14 +44,10 @@ st.markdown("""
         height: auto !important;
     }
     
-    /* 🎯 ไม้ตายทลายบล็อกหลัก: ล้างค่าความกว้างสูงสุดและตัวกั้นของ Streamlit ที่บีบข้อมูลชิดซ้าย */
-    [data-testid="stMainBlockContainer"],
-    [data-testid="stVerticalBlock"],
-    [data-testid="stVerticalBlockRoot"],
+    /* เคลียร์ระยะห่างบล็อกของ Streamlit */
+    div[data-testid="stVerticalBlock"] > div,
     div[data-testid="element-container"],
-    .stColumn {
-        width: 100% !important;
-        max-width: 100% !important;
+    [data-testid="stVerticalBlock"] {
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
@@ -69,7 +65,7 @@ st.markdown("""
         width: 100% !important;
     }
 
-    /* 🎯 แถบนำทาง Home / Logout ล็อกตำแหน่งไว้ที่มุมบนสุด */
+    /* 🏠 แถบนำทาง Home / Logout ล็อกตำแหน่งไว้ที่มุมบนสุด */
     .custom-top-navbar {
         position: absolute !important;
         top: 18px !important;
@@ -94,7 +90,7 @@ st.markdown("""
         white-space: nowrap !important;
     }
 
-    /* จัดบล็อกโลโก้ TOG และข้อความต้อนรับให้อยู่ตรงกึ่งกลางหน้าจอ */
+    /* 🎯 จัดบล็อกโลโก้ TOG และข้อความต้อนรับให้อยู่ตรงกึ่งกลางหน้าจอแบบ 100% */
     .center-header-block {
         display: flex !important;
         flex-direction: column !important;
@@ -120,40 +116,35 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    /* 🎯 คำสั่งทุบสตรีมลิตเลเยอร์ในสุด: บังคับยืดแผงปุ่มเต็มจอ 100% ทุกมิติ */
-    div.stButton {
-        width: 100% !important;
-        display: block !important;
-        text-align: center !important;
-        margin: 10px 0 0 0 !important;
-    }
-    
-    div.stButton > button {
-        background-color: #007bc3 !important;
-        color: white !important;
-        border-radius: 30px !important;
-        padding: 14px 0px !important;  /* ถ่างความสูงปุ่ม */
-        font-weight: bold !important;
-        font-size: 16px !important;
-        border: none !important;
-        width: 100% !important;         /* กางพื้นหลังสีฟ้ายาวเต็มกรอบ */
-        display: block !important;
-        margin: 0 auto !important;       /* ล็อกตำแหน่งอยู่เซ็นเตอร์ */
-        box-shadow: 0 4px 12px rgba(0, 123, 195, 0.35) !important;
-    }
-
-    /* จัดระเบียบตัวอักษรและไอคอนภายในปุ่มชั้นในสุดให้เด้งมาอยู่ตรงกลาง */
-    div.stButton > button div, 
-    div.stButton > button p,
-    div.stButton > button span {
+    /* 🎯 🎯 🎯 ไม้ตายจัดปุ่มให้อยู่กึ่งกลาง: ใช้โครงสร้างบล็อก HTML แบบเดียวกับด้านบน */
+    .html-button-container {
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        text-align: center !important;
         width: 100% !important;
-        margin: 0 auto !important;
+        text-align: center !important;
+        margin-top: 15px !important;
     }
-    
+
+    /* ดีไซน์ปุ่มดูภาพรวม Dashboard ให้ยาวเต็มกรอบการ์ด และจัดตัวอักษรอยู่ตรงกลาง 100% */
+    .html-dashboard-btn {
+        background-color: #007bc3 !important;
+        color: white !important;
+        border-radius: 30px !important;
+        padding: 14px 0px !important;
+        font-weight: bold !important;
+        font-size: 15px !important;
+        text-decoration: none !important;
+        display: block !important;
+        width: 100% !important;            /* ขยายยาวเต็มพื้นที่การ์ด */
+        max-width: 340px !important;       /* ขนาดความยาวพอดีสมส่วน */
+        text-align: center !important;     /* 🎯 บังคับตัวอักษรอยู่ตรงกลาง */
+        box-shadow: 0 4px 12px rgba(0, 123, 195, 0.35) !important;
+    }
+    .html-dashboard-btn:hover {
+        background-color: #0c2340 !important;
+    }
+
     /* ระบบสไลด์กราฟซ้าย-ขวาบนมือถือ */
     .scrollable-graph-container {
         width: 100% !important;
@@ -201,7 +192,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- โลโก้ TOG และข้อความต้อนรับกึ่งกลาง ---
+# --- โลโก้ TOG และข้อความต้อนรับกึ่งกลาง (จุดที่เคยทำได้สำเร็จ) ---
 st.markdown("""
 <div class="center-header-block">
     <div class="tog-center-logo">TOG</div>
@@ -228,13 +219,15 @@ if current_page == "login":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ข้อความคำอธิบายเหนือปุ่มจัดกึ่งกลาง
+    # คำอธิบายเหนือปุ่มจัดกึ่งกลาง
     st.markdown('<div style="text-align: center; width: 100%; margin-top: 35px; margin-bottom: 15px;"><div style="color:#2c3e50; font-size:16px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div></div>', unsafe_allow_html=True)
     
-    # 🎯 ปุ่มเปิดภาพรวม Dashboard (รอบนี้ตีกรอบฟ้ายาวเต็มกรอบ และอักษรอยู่ตรงกลางกึ่งกลางแน่นอน 100%)
-    if st.button("📊 ดูภาพรวม Dashboard", key="btn_login_dash"):
-        st.query_params["nav"] = "dashboard"
-        st.rerun()
+    # 🎯 🎯 🎯 ปุ่มเปิดภาพรวม Dashboard เวอร์ชัน HTML แท้ (ใช้หลักการเดียวกับโลโก้ด้านบน บังคับอยู่ตรงกลาง 100%)
+    st.markdown("""
+    <div class="html-button-container">
+        <a href="?nav=dashboard" target="_self" class="html-dashboard-btn">📊 ดูภาพรวม Dashboard</a>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ---------------- หน้าสอง: Dashboard (3 กราฟแยกสี) ----------------
 elif current_page == "dashboard":

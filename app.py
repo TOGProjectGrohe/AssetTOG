@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่งดักทำลายป้ายแอดมิน (มงกุฎแดง/วงกลมเขียว) และคุมธีมมือถือให้เนียนกริบ
+# 2. 🛠️ ชุดคำสั่งดักทำลายป้ายแอดมิน และสร้างระบบ Scrollable เลื่อนซ้าย-ขวาสำหรับกราฟบนมือถือ
 st.markdown("""
     <style>
     /* 🚫 ซ่อนปุ่มแอดมิน, ปุ่มเครื่องมือ และป้าย Deploy ดั้งเดิมของ Streamlit ทั้งหมด */
@@ -28,10 +28,13 @@ st.markdown("""
     .st-emotion-cache-1wb763a,
     .st-emotion-cache-6q9sum,
     .st-emotion-cache-15z78k,
+    .st-emotion-cache-b9st7z,
+    .st-emotion-cache-h5g6vv,
     div[class*="st-emotion-cache-"] button[title="Manage app"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
+        height: 0 !important;
     }
 
     /* 📱 ดีไซน์คุมธีมหน้าจอมือถือ ส้มพาสเทลสวยงาม */
@@ -59,27 +62,6 @@ st.markdown("""
         margin: 0px !important;
     }
 
-    /* 🏷️ การจัดวาง Logo วงกลมสีดำ TOG ด้านบนหัวแอป */
-    .bank-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 25px;
-        margin-top: 10px;
-    }
-    .tog-circle-logo {
-        width: 45px;
-        height: 45px;
-        background-color: #000;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: #fff;
-        font-weight: bold;
-        font-size: 14px;
-    }
-
     /* 🪪 กล่องพื้นหลังขาว Card ครอบส่วนเนื้อหาสำคัญ */
     .login-card {
         background-color: white !important;
@@ -87,6 +69,22 @@ st.markdown("""
         padding: 15px !important;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
         margin-bottom: 15px !important;
+    }
+
+    /* 🎯 🛝 ไม้ตายสร้างกล่องเลื่อนสไลด์ ซ้าย-ขวา (Horizontal Scroll) สำหรับกราฟบนจอมือถือ */
+    .scrollable-graph-container {
+        width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        display: block !important;
+        margin-bottom: 20px !important;
+        -webkit-overflow-scrolling: touch; /* สไลด์ลื่นบน iOS */
+    }
+    
+    /* บังคับความกว้างกล่องกราฟด้านในให้ยาวเกินจอ เพื่อให้ใช้นิ้วปัดเลื่อนดูรหัสเต็มๆ ได้ */
+    .inner-graph-box {
+        width: 600px !important; /* ถ่างพื้นที่ออกไปด้านข้างให้พิมรหัสเต็มชื่อ */
+        display: block !important;
     }
 
     .bottom-wrapper {
@@ -130,17 +128,15 @@ def get_graph_data(target_error):
         raw_df = pd.read_csv(csv_url)
         raw_df.columns = raw_df.columns.str.strip()
         
-        # แปลงค่าเพื่อป้องกันข้อมูลผิดพลาด
         raw_df['errortype'] = pd.to_numeric(raw_df['errortype'], errors='coerce')
         raw_df['rework quantity'] = pd.to_numeric(raw_df['rework quantity'], errors='coerce').fillna(0)
         
-        # กรองเจาะจงเฉพาะรหัส errortype ที่ส่งเข้ามาในฟังก์ชัน
         filtered_df = raw_df[raw_df['errortype'] == target_error]
         
-        # จัดกลุ่มนับยอดรวม Rework แยกตามชิ้นงาน (Material)
         grouped_df = filtered_df.groupby('Material', as_index=False)['rework quantity'].sum()
         top_10 = grouped_df.sort_values(by='rework quantity', ascending=False).head(10)
         
+        # บังคับประเภทเป็น String ป้องกันแกน X เพี้ยนเป็นทศนิยมหรือค่า M
         top_10['Material'] = top_10['Material'].astype(str)
         return top_10
     except:
@@ -150,8 +146,8 @@ def get_graph_data(target_error):
 if 'page' not in st.session_state:
     st.session_state.page = 'login'
 
-# --- ส่วนโครงสร้างหัวเว็บแอป (Header) ---
-st.markdown(f"""
+# --- ส่วนหัวแอปพลิเคชัน (Header) ---
+st.markdown("""
 <div class="bank-header">
     <div class="tog-circle-logo">TOG</div>
     <div>
@@ -182,18 +178,32 @@ if st.session_state.page == 'login':
         st.session_state.page = 'dashboard'
         st.rerun()
 
-# ---------------- หน้าสอง: Dashboard (3 กราฟในหน้าเดียว) ----------------
+# ---------------- หน้าสอง: Dashboard (สไลด์เลื่อนซ้าย-ขวาได้ ชื่อเต็มชัดเจน) ----------------
 elif st.session_state.page == 'dashboard':
     st.markdown('<div style="text-align:center; font-size:20px; font-weight:bold; color:#2c3e50; margin-bottom:15px;">📊 สรุปภาพรวม Dashboard</div>', unsafe_allow_html=True)
+    st.caption("👉 ใช้นิ้วปัดเลื่อนซ้าย-ขวาที่ตัวกราฟ เพื่อดูอันดับชิ้นงานเพิ่มเติมได้")
 
     # 📈 กราฟชุดที่ 1: รหัสความผิดพลาด 260
     st.markdown('<div class="login-card"><b>🔥 อันดับชิ้นงานสูงสุด อาการ 260 (Rough Lines)</b></div>', unsafe_allow_html=True)
     df_260 = get_graph_data(260)
     if not df_260.empty:
+        # เปิดกล่องห่อหุ้มเลื่อนซ้ายขวาด้วย HTML
+        st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig_260 = px.bar(df_260, x='Material', y='rework quantity', text='rework quantity', color='rework quantity', color_continuous_scale="Oranges")
         fig_260.update_traces(textposition='outside')
-        fig_260.update_layout(margin=dict(l=5, r=5, t=20, b=5), height=180, showlegend=False, coloraxis_showscale=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        # บังคับแกน X ตัวอักษรเอียง 45 องศาเพื่อหลบชื่อยาว และล็อกแกน Y เป็นเลขตัวชิ้นเดี่ยวๆ
+        fig_260.update_layout(
+            xaxis=dict(type='category', tickangle=45),
+            yaxis=dict(tickformat='d'),
+            margin=dict(l=10, r=10, t=25, b=50), 
+            height=250, 
+            showlegend=False, 
+            coloraxis_showscale=False, 
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
         st.plotly_chart(fig_260, use_container_width=True)
+        st.markdown('</div></div>', unsafe_allow_html=True) # ปิดกล่องเลื่อน
     else:
         st.caption("ไม่มีข้อมูลสำหรับรหัส 260")
 
@@ -201,10 +211,21 @@ elif st.session_state.page == 'dashboard':
     st.markdown('<div class="login-card"><b>⚡ อันดับชิ้นงานสูงสุด อาการ 261 (Grinding Structure Visible)</b></div>', unsafe_allow_html=True)
     df_261 = get_graph_data(261)
     if not df_261.empty:
+        st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig_261 = px.bar(df_261, x='Material', y='rework quantity', text='rework quantity', color='rework quantity', color_continuous_scale="Purples")
         fig_261.update_traces(textposition='outside')
-        fig_261.update_layout(margin=dict(l=5, r=5, t=20, b=5), height=180, showlegend=False, coloraxis_showscale=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        fig_261.update_layout(
+            xaxis=dict(type='category', tickangle=45),
+            yaxis=dict(tickformat='d'),
+            margin=dict(l=10, r=10, t=25, b=50), 
+            height=250, 
+            showlegend=False, 
+            coloraxis_showscale=False, 
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
         st.plotly_chart(fig_261, use_container_width=True)
+        st.markdown('</div></div>', unsafe_allow_html=True)
     else:
         st.caption("ไม่มีข้อมูลสำหรับรหัส 261")
 
@@ -212,10 +233,21 @@ elif st.session_state.page == 'dashboard':
     st.markdown('<div class="login-card"><b>💥 อันดับชิ้นงานสูงสุด อาการ 380</b></div>', unsafe_allow_html=True)
     df_380 = get_graph_data(380)
     if not df_380.empty:
+        st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig_380 = px.bar(df_380, x='Material', y='rework quantity', text='rework quantity', color='rework quantity', color_continuous_scale="Blues")
         fig_380.update_traces(textposition='outside')
-        fig_380.update_layout(margin=dict(l=5, r=5, t=20, b=5), height=180, showlegend=False, coloraxis_showscale=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        fig_380.update_layout(
+            xaxis=dict(type='category', tickangle=45),
+            yaxis=dict(tickformat='d'),
+            margin=dict(l=10, r=10, t=25, b=50), 
+            height=250, 
+            showlegend=False, 
+            coloraxis_showscale=False, 
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
         st.plotly_chart(fig_380, use_container_width=True)
+        st.markdown('</div></div>', unsafe_allow_html=True)
     else:
         st.caption("ไม่มีข้อมูลสำหรับรหัส 380")
 

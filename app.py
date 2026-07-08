@@ -92,27 +92,37 @@ st.markdown("""
         margin-top: 35px !important;
     }
 
-    div.stButton {
-        display: block !important;
-        width: 100% !important;
-    }
-
-    /* บังคับปุ่ม Dashboard ให้ยาวใหญ่เต็มขอบจอ สีฟ้าสดใส และโค้งมน */
+    /* บังคับปุ่มทั้งหมดให้เป็นสีฟ้าสดใส และโค้งมน ยกเว้นกรณีที่เรากำหนดเฉพาะเจาะจง */
     div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
         border-radius: 30px !important;
-        padding: 14px 0px !important;
+        padding: 12px 0px !important;
         font-weight: bold !important;
-        font-size: 16px !important;
+        font-size: 15px !important;
         border: none !important;
         width: 100% !important;
         display: block !important;
         margin: 0 auto !important;
-        box-shadow: 0 4px 15px rgba(0, 123, 195, 0.4) !important;
+        box-shadow: 0 4px 12px rgba(0, 123, 195, 0.3) !important;
     }
     div.stButton > button:hover {
         background-color: #0c2340 !important;
+    }
+
+    /* 🎯 สไตล์เฉพาะสำหรับปุ่มบนสุด (Top Navigation Bar) ให้สวยเรียบเนียน */
+    .top-nav-box div.stButton > button {
+        background-color: rgba(255, 255, 255, 0.25) !important;
+        color: #1e293b !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        border-radius: 15px !important;
+        padding: 6px 0px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        box-shadow: none !important;
+    }
+    .top-nav-box div.stButton > button:hover {
+        background-color: rgba(255, 255, 255, 0.45) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -144,7 +154,25 @@ def get_graph_data(target_error):
 if 'page' not in st.session_state:
     st.session_state.page = 'login'
 
-# --- ส่วนหัวแอปพลิเคชัน (Header) ---
+# --- ส่วนแถบเมนูด้านบนสุด (Top Navigation Bar) จะแสดงเฉพาะหน้า Dashboard เท่านั้น ---
+if st.session_state.page == 'dashboard':
+    st.markdown('<div class="top-nav-box">', unsafe_allow_html=True)
+    nav_col1, nav_col2, nav_col3 = st.columns([1.2, 2, 1.2])
+    with nav_col1:
+        if st.button("🏠 Home"):
+            st.session_state.page = 'login'
+            st.rerun()
+    with nav_col2:
+        # ช่องกลางเว้นว่างไว้เพื่อความสวยงาม จัดตำแหน่งซ้าย-ขวาให้แยกกันชัดเจน
+        st.write("")
+    with nav_col3:
+        if st.button("🚪 Logout"):
+            st.session_state.page = 'login'
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+
+# --- ส่วนหัวแอปพลิเคชันหลัก (Header Logo) ---
 st.markdown("""
 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; margin-top: 10px;">
     <div style="width: 45px; height: 45px; background-color: #000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #fff; font-weight: bold; font-size: 14px;">TOG</div>
@@ -172,11 +200,11 @@ if st.session_state.page == 'login':
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="bottom-wrapper"><div style="color:#2c3e50; font-size:16px; margin-bottom:15px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div></div>', unsafe_allow_html=True)
-    if st.button("📊 ดูภาพรวม Dashboard"):
+    if st.button("📊 ดูภาพรวม Dashboard", key="btn_login_dash"):
         st.session_state.page = 'dashboard'
         st.rerun()
 
-# ---------------- หน้าสอง: Dashboard (ปรับเปลี่ยนสีแท่งกราฟตามบรีฟ) ----------------
+# ---------------- หน้าสอง: Dashboard (3 กราฟแยกสี + มีปุ่มนำทางด้านบน) ----------------
 elif st.session_state.page == 'dashboard':
     st.markdown('<div style="text-align:center; font-size:20px; font-weight:bold; color:#2c3e50; margin-bottom:15px;">📊 สรุปภาพรวม Dashboard</div>', unsafe_allow_html=True)
     st.caption("👉 ใช้นิ้วปัดเลื่อนซ้าย-ขวาที่ตัวกราฟ เพื่อดูอันดับชิ้นงานเพิ่มเติมได้")
@@ -187,7 +215,6 @@ elif st.session_state.page == 'dashboard':
     if not df_260.empty:
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig_260 = px.bar(df_260, x='Material', y='rework quantity', text='rework quantity')
-        # บังคับอัปเดตสีแท่งกราฟให้เป็นสีส้มเดี่ยวล้วน และกำหนดระยะ Layout
         fig_260.update_traces(textposition='outside', marker_color='#ff7f0e')
         fig_260.update_layout(
             xaxis=dict(type='category', tickangle=45),
@@ -209,7 +236,6 @@ elif st.session_state.page == 'dashboard':
     if not df_261.empty:
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig_261 = px.bar(df_261, x='Material', y='rework quantity', text='rework quantity')
-        # บังคับอัปเดตสีแท่งกราฟให้เป็นสีน้ำเงินเข้มล้วน
         fig_261.update_traces(textposition='outside', marker_color='#002060')
         fig_261.update_layout(
             xaxis=dict(type='category', tickangle=45),
@@ -231,7 +257,6 @@ elif st.session_state.page == 'dashboard':
     if not df_380.empty:
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig_380 = px.bar(df_380, x='Material', y='rework quantity', text='rework quantity')
-        # บังคับอัปเดตสีแท่งกราฟให้เป็นสีดำล้วนทั้งหมด
         fig_380.update_traces(textposition='outside', marker_color='#000000')
         fig_380.update_layout(
             xaxis=dict(type='category', tickangle=45),
@@ -249,16 +274,11 @@ elif st.session_state.page == 'dashboard':
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     
-    # ปุ่มควบคุมท้ายเพจ
+    # เมนูปุ่มควบคุมหลักด้านล่างหน้าจอ
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🔍 ประวัติย้อนหลัง", use_container_width=True):
+        if st.button("🔍 ประวัติย้อนหลัง", key="btn_history"):
             st.toast("กำลังพัฒนาส่วนนี้...")
     with col2:
-        if st.button("➕ เพิ่มตัว Imp.", use_container_width=True):
+        if st.button("➕ เพิ่มตัว Imp.", key="btn_add"):
             st.toast("กำลังพัฒนาส่วนนี้...")
-            
-    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-    if st.button("🔙 ออกจากระบบ", use_container_width=True):
-        st.session_state.page = 'login'
-        st.rerun()

@@ -5,10 +5,10 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่งดักทำลายป้ายแอดมิน และบังคับแถบปุ่มนำทางชิดขอบบนสุด 100%
+# 2. 🛠️ ปรับปรุง CSS ย้ายปุ่มชิดขอบบนสุด และแยกโลโก้ TOG มาไว้ตรงกลางเด็ดขาด
 st.markdown("""
     <style>
-    /* 🚫 ซ่อนปุ่มแอดมิน, ปุ่มเครื่องมือ และป้าย Deploy ดั้งเดิมของ Streamlit ทั้งหมด */
+    /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
     .stDeployButton, 
     [data-testid="stHeader"], 
     [data-testid="stToolbar"], 
@@ -21,21 +21,14 @@ st.markdown("""
         height: 0 !important;
     }
     
-    /* 🚫 ดักฝังบล็อกเลเยอร์ซ่อนปุ่มป้ายวงกลมเขียว (Manage App) บนหน้าจอมือถือไม่ให้โผล่ที่มุมขวาล่าง */
+    /* 🚫 ซ่อนปุ่ม Manage App มุมขวาล่างไม่ให้โผล่มากวนใจ */
     [data-testid="stStatusWidget"], 
     #stConnectionStatus,
-    .st-emotion-cache-zq59db,
-    .st-emotion-cache-1wb763a,
-    .st-emotion-cache-6q9sum,
-    .st-emotion-cache-15z78k,
-    .st-emotion-cache-b9st7z,
-    .st-emotion-cache-h5g6vv,
     div[class*="viewerBadge"],
     div[class*="st-emotion-cache-"] button[title="Manage app"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
-        height: 0 !important;
     }
 
     /* 📱 ดีไซน์คุมธีมหน้าจอมือถือ ส้มพาสเทลสวยงาม */
@@ -45,13 +38,13 @@ st.markdown("""
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
         border: 12px solid #1e293b !important;
         border-radius: 40px !important;
-        padding: 65px 24px 24px 24px !important; /* เว้นระยะด้านบนให้พอดีกับปุ่มนำทางชิดขอบ */
+        padding: 95px 24px 24px 24px !important; /* เว้นระยะด้านบนให้ปุ่มนำทาง */
         box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
         min-height: 90vh !important;
         height: auto !important;
     }
     
-    /* เคลียร์ระยะห่างของ Vertical Block เพื่อความกระชับ */
+    /* เคลียร์ระยะห่างบล็อกของ Streamlit */
     div[data-testid="stVerticalBlock"] > div,
     div[data-testid="element-container"],
     [data-testid="stVerticalBlock"] {
@@ -71,20 +64,19 @@ st.markdown("""
         margin-bottom: 15px !important;
     }
 
-    /* 🎯 จัดการแถบนำทางให้อยู่ "ขอบบนสุดของโทรศัพท์" ไม่ให้ทับซ้อนกับโลโก้ */
+    /* 🎯 แถบนำทาง Home / Logout ล็อกตำแหน่งไว้ที่มุมบนสุดอย่างแท้จริง */
     .custom-top-navbar {
         position: absolute !important;
-        top: 0px !important; /* ดันกระชากขึ้นไปแตะขอบบนสุดของกรอบมือถือ */
-        left: 0px !important;
-        right: 0px !important;
+        top: 18px !important;
+        left: 20px !important;
+        right: 20px !important;
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
-        padding: 20px 24px 0px 24px !important; /* ใช้พื้นที่ภายในคุมระยะห่าง */
         z-index: 999999 !important;
     }
     
-    /* ดีไซน์ปุ่มลิงก์นำทางแบบโค้งมน */
+    /* ดีไซน์ปุ่มลิงก์นำทางด้านบน */
     .nav-btn-link {
         background-color: #007bc3 !important;
         color: white !important;
@@ -97,8 +89,31 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0, 123, 195, 0.25) !important;
         white-space: nowrap !important;
     }
-    .nav-btn-link:hover {
-        background-color: #0c2340 !important;
+
+    /* 🎯 จัดบล็อกโลโก้ TOG และข้อความต้อนรับให้อยู่ตรงกึ่งกลางหน้าจอแบบ 100% */
+    .center-header-block {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        margin-top: 10px !important;
+        margin-bottom: 25px !important;
+        width: 100% !important;
+    }
+    .tog-center-logo {
+        width: 50px;
+        height: 50px;
+        background-color: #000000;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 15px;
+        margin-bottom: 8px; /* เว้นระยะห่างระหว่างโลโก้กับข้อความด้านล่าง */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
     /* ปรับแต่งปุ่มสไตล์ Streamlit ด้านล่าง */
@@ -152,7 +167,7 @@ if "nav" not in st.query_params:
 
 current_page = st.query_params["nav"]
 
-# --- 🎯 แถบปุ่มนำทาง (เกาะติดมุมบนสุดอย่างแท้จริง ไม่แตกแถว และไม่ทับซ้อน) ---
+# --- 🎯 แถบปุ่มนำทาง (เกาะติดขอบบนสุด แยกซ้ายขวาอย่างอิสระ ไม่ซ้อนทับสิ่งใด) ---
 st.markdown("""
 <div class="custom-top-navbar">
     <a href="?nav=login" target="_self" class="nav-btn-link">🏠 Home</a>
@@ -160,13 +175,13 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- ส่วนหัวโลโก้ (ขยับระยะลงมาเพื่อเปิดพื้นที่ให้ปุ่มนำทางด้านบนอย่างสวยงาม) ---
+# --- 🎯 ปรับโครงสร้างใหม่: ย้ายตัวโลโก้ TOG และข้อความต้อนรับมาจัดไว้ตรงกลาง (Center) เพื่อความสวยงาม ---
 st.markdown("""
-<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; margin-top: 25px;">
-    <div style="width: 45px; height: 45px; background-color: #000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #fff; font-weight: bold; font-size: 14px;">TOG</div>
+<div class="center-header-block">
+    <div class="tog-center-logo">TOG</div>
     <div>
-        <small style="color:#fff; opacity:0.8; display:block; font-size:11px;">ยินดีต้อนรับ</small>
-        <span style="font-size:16px; font-weight:600; color:white;">TOG App</span>
+        <small style="color:#fff; opacity:0.8; display:block; font-size:11px; margin-bottom:2px;">ยินดีต้อนรับ</small>
+        <span style="font-size:18px; font-weight:bold; color:white; letter-spacing: 0.5px;">TOG App</span>
     </div>
 </div>
 """, unsafe_allow_html=True)

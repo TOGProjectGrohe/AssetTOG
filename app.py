@@ -6,7 +6,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่ง CSS คุมธีมหน้าจอมือถือส้มพาสเทล จัดกึ่งกลาง และฟิกซ์ปุ่มนำทางด้านบนสุด
+# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างปุ่มตีกรอบฟ้ายาว ตัวอักษรตรงกลาง และคุมหน้าจอมือถือ
 st.markdown("""
     <style>
     /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
@@ -82,12 +82,12 @@ st.markdown("""
         width: 50px; height: 50px; background-color: #000000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-weight: bold; font-size: 15px; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
     
-    /* บังคับปุ่มทั่วไปด้านล่างให้ตีกรอบสไตล์ฟ้ายาวและจัดอักษรตรงกลางกึ่งกลาง */
+    /* บังคับปุ่มของ Streamlit ทุกปุ่มกางสีฟ้ายาว และอักษรอยู่ตรงกลางเป๊ะกริบ */
     div.stButton {
         width: 100% !important; display: flex !important; justify-content: center !important; align-items: center !important; margin-top: 10px !important;
     }
     div.stButton > button {
-        background-color: #007bc3 !important; color: white !important; border-radius: 30px !important; padding: 13px 0px !important; font-weight: bold !important; font-size: 16px !important; border: none !important; width: 100% !important; max-width: 340px !important; display: flex !important; justify-content: center !important; align-items: center !important; margin: 0 auto !important; box-shadow: 0 4px 12px rgba(0, 123, 195, 0.25) !important;
+        background-color: #007bc3 !important; color: white !important; border-radius: 30px !important; padding: 13px 0px !important; font-weight: bold !important; font-size: 15px !important; border: none !important; width: 100% !important; max-width: 340px !important; display: flex !important; justify-content: center !important; align-items: center !important; margin: 0 auto !important; box-shadow: 0 4px 12px rgba(0, 123, 195, 0.25) !important;
     }
     div.stButton > button * {
         display: flex !important; justify-content: center !important; align-items: center !important; text-align: center !important; width: auto !important; margin: 0 auto !important;
@@ -108,35 +108,32 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 🌐 ดึงข้อมูลรายชื่อพนักงานแบบเรียลไทม์จาก Google Sheet ลิงก์ใหม่ของคุณโดยตรง
-@st.cache_data(ttl=5)  # ตั้งดีเลย์แคชสั้น ๆ เผื่อคุณกดเพิ่ม/ลดใน Sheet ปุ๊บ ในแอปจะเปลี่ยนตามทันที
+# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานแบบเรียลไทม์จาก Google Sheet ลิงก์ของคุณโดยตรง
+@st.cache_data(ttl=3)  
 def get_employee_from_sheet(scanned_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     gid = "0"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     try:
         df = pd.read_csv(url)
-        # เคลียร์ล้างช่องว่างของชื่อคอลลัมน์ป้องกันบัคพิมพ์เว้นวรรค
         df.columns = df.columns.str.strip()
         
-        # แปลงข้อมูลคอลัมน์ ID ให้เป็นข้อความ (String) เพื่อจับคู่กับค่านำเข้าจาก QR ได้แม่นยำ
-        df['ID'] = df['ID'].astype(str).str.strip()
-        target_id = str(scanned_id).strip()
+        # คลีนข้อมูล ID ให้ตัดจุดทศนิยมและช่องว่างเพื่อการค้นหาที่แม่นยำ
+        df['ID'] = df['ID'].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
+        target_id = str(scanned_id).strip().replace('.0', '')
         
-        # ค้นหาแถวของพนักงานตามรหัส ID
         match = df[df['ID'] == target_id]
         if not match.empty:
             row = match.iloc[0]
             return {
+                "found": True,
                 "id": str(row['ID']),
                 "name": str(row['Name']),
                 "position": str(row['Position']) if 'Position' in df.columns else "พนักงาน"
             }
-    except Exception as e:
+    except:
         pass
-    
-    # กรณีเกิดข้อผิดพลาดในการโหลด หรือไม่พบข้อมูลรหัส ให้ใช้ค่า Default เพื่อป้องกันระบบล่ม
-    return {"id": str(scanned_id), "name": "ไม่พบรายชื่อพนักงานในระบบ", "position": "Unknown"}
+    return {"found": False, "id": str(scanned_id), "name": None, "position": None}
 
 # 🔗 รายการแผนผังลิงก์โฟลเดอร์ Google Drive แยกตามคู่หน้าและรหัส Defect
 DRIVE_MAP = {
@@ -157,7 +154,7 @@ DRIVE_MAP = {
     }
 }
 
-# 📊 ฟังก์ชันดึงชุดข้อมูลอันดับความถี่ชิ้นงาน Rework จาก Google Sheets คลังหลักข้อมูลดีเฟกต์
+# 📊 ฟังก์ชันดึงชุดข้อมูลกราฟหลักจาก Google Sheets คลังหลัก
 @st.cache_data(ttl=15)
 def get_graph_data(target_error):
     sheet_id = "1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c"
@@ -179,10 +176,11 @@ def get_graph_data(target_error):
 if 'page' not in st.session_state: st.session_state.page = "login"
 if 'user_info' not in st.session_state: st.session_state.user_info = None
 if 'current_defect' not in st.session_state: st.session_state.current_defect = None
+if 'scan_result' not in st.session_state: st.session_state.scan_result = None
 
 current_page = st.session_state.page
 
-# --- แถบนำทางด้านบนสุดสำหรับรีเฟรชหน้าหลัก ---
+# --- แถบนำทางด้านบนสุด ---
 st.markdown('<div class="custom-top-navbar">', unsafe_allow_html=True)
 btn_nav_home = st.button("🏠 Home", key="top_btn_home")
 btn_nav_logout = st.button("🚪 Logout", key="top_btn_logout")
@@ -192,6 +190,7 @@ if btn_nav_home or btn_nav_logout:
     st.session_state.page = "login"
     st.session_state.user_info = None
     st.session_state.current_defect = None
+    st.session_state.scan_result = None
     st.query_params.clear()
     st.rerun()
 
@@ -206,7 +205,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- หน้าแรก: Login ----------------
+# ---------------- หน้าแรก: Login (ปรับปรุงโชว์ผลที่หน้าแรก + ปุ่มกั้นเข้าระบบ) ----------------
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50; text-align:center;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
@@ -215,22 +214,54 @@ if current_page == "login":
     if enable_camera:
         picture = st.camera_input("", label_visibility="collapsed")
         if picture:
-            # สมมุติว่าสแกนกล้องได้รหัสใด ๆ ระบบจะทำการอ่านค่าดึงจากคลังลิงก์ชีตใหม่ของคุณทันที
-            scanned_raw_id = "20" # ตัวอย่างค่าสแกนตั้งต้น
-            emp_info = get_employee_from_sheet(scanned_raw_id)
+            # ดักจำลองจับค่าสแกน QR (สมมุติจับค่าได้ไอดีพนักงานลำดับที่ระบุ)
+            scanned_raw_id = "20" 
             
-            st.session_state.user_info = {
-                "id": emp_info["id"],
-                "name": emp_info["name"],
-                "position": emp_info["position"],
-                "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            }
-            st.session_state.page = "select_defect"
-            st.rerun()
+            # วิ่งไปค้นหารายชื่อจากลิงก์ Google Sheet ทันที
+            with st.spinner("กำลังตรวจสอบคลังรายชื่อ..."):
+                emp_info = get_employee_from_sheet(scanned_raw_id)
+                st.session_state.scan_result = emp_info
+
+    # 🎯 🎯 ส่วนไฮไลท์: โชว์รายละเอียดผลลัพธ์การสแกนทันทีที่หน้าแรก
+    if st.session_state.scan_result:
+        result = st.session_state.scan_result
+        
+        if result["found"]:
+            # กรณีแสกนพบรายชื่อ -> โชว์ข้อมูลให้ตรวจสอบ และเปิดปุ่มกดเข้าระบบให้ข้ามไปหน้าถัดไปได้
+            st.markdown(f"""
+            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
+                <span style="color: #16a34a; font-weight: bold; font-size: 15px;">✅ สแกนสำเร็จ ตรวจสอบข้อมูลพนักงาน:</span><br>
+                <div style="font-size: 14px; margin-top: 5px; color: #1e293b; text-align: left; padding-left: 10px;">
+                    • <b>ชื่อพนักงาน:</b> {result['name']}<br>
+                    • <b>รหัส ID:</b> {result['id']}<br>
+                    • <b>ตำแหน่งงาน:</b> {result['position']}<br>
+                    • <b>เวลา:</b> {datetime.now().strftime("%H:%M:%S")}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button("🔓 ยืนยันข้อมูลถูกต้อง กดเพื่อเข้าระบบ", key="btn_confirm_login"):
+                st.session_state.user_info = {
+                    "id": result["id"], "name": result["name"], "position": result["position"],
+                    "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                st.session_state.page = "select_defect"
+                st.rerun()
+        else:
+            # ❌ กรณีแสกนไม่พบรายชื่อพนักงาน -> แจ้งเตือนสีแดง และบล็อกไม่ยอมให้แสดงปุ่มกดเข้าระบบหน้าถัดไป
+            st.markdown(f"""
+            <div style="background-color: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
+                <span style="color: #dc2626; font-weight: bold; font-size: 15px;">❌ ไม่พบรายชื่อพนักงานในระบบ</span><br>
+                <small style="color: #7f1d1d; display:block; margin-top: 5px;">(รหัสสแกนที่ตรวจพบ: ID {result['id']}) ไม่ได้รับอนุญาตให้เข้าใช้งานกรุณาลองใหม่อีกครั้ง</small>
+            </div>
+            """, unsafe_allow_html=True)
+            
     st.markdown('</div>', unsafe_allow_html=True)
     
-    if st.button("📊 ดูภาพรวมระบบโดยไม่สแกน", key="btn_guest_view"):
-        emp_info = get_employee_from_sheet("20") # ดึงข้อมูลแถวแรกคุณสมบัติเป็นหลัก
+    # ปุ่มทางเลือกทดสอบระบบสำหรับผู้รับชมภายนอก
+    st.markdown('<div style="text-align: center; width: 100%; margin-top: 25px; margin-bottom: 5px;"><div style="color:#2c3e50; font-size:15px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่สแกนจริง?</div></div>', unsafe_allow_html=True)
+    if st.button("📊 ทดสอบจำลองเข้าระบบแอดมิน (ID 20)", key="btn_guest_view"):
+        emp_info = get_employee_from_sheet("20")
         st.session_state.user_info = {
             "id": emp_info["id"], "name": emp_info["name"], "position": emp_info["position"],
             "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")

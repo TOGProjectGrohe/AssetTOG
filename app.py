@@ -5,14 +5,18 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมและจัดเนื้อหาให้อยู่ตรงกลาง
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ปรับปรุงระบบ CSS ลึกถึงรากฐาน (ลบแท่งขาวคั่นกลาง และดึงปุ่มขยายเต็มจอมาไว้ตรงกลางเป๊ะ)
+# 2. 🛠️ ถล่ม CSS (ลบป้ายโฆษณา Streamlit, ลบแท่งขาว, จัดปุ่มขยายเต็มจอตรงกลาง)
 st.markdown("""
     <style>
-    /* ซ่อนแถบเมนูและส่วนหัวดั้งเดิมทั้งหมดของ Streamlit เพื่อคุมดีไซน์เอง */
-    [data-testid="stSidebar"] {display: none !important;}
-    [data-testid="collapsedControl"] {display: none !important;}
-    header {visibility: hidden !important;}
-    [data-testid="stHeader"] {display: none !important;}
+    /* 🚫 ลบป้ายโฆษณา Streamlit Toolbar และส่วนประกอบอื่นๆ ที่แสดงบนมือถือ */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    [data-testid="stHeader"] {display: none;}
+    .stDeployButton {display:none;} /* ลบป้ายแดง Deploy */
+    div[data-testid="stToolbar"] {display: none;} /* ลบแถบเครื่องมือ */
+    div[data-testid="stDecoration"] {display: none;} /* ลบแถบสีรุ้งด้านบน */
+    #stConnectionStatus {display: none !important;} /* ลบป้ายสถานะการเชื่อมต่อ */
     
     /* กรอบมือถือสีส้มพาสเทล */
     .stApp {
@@ -69,7 +73,7 @@ st.markdown("""
         margin-bottom: 5px !important;
     }
 
-    /* 🎯 ล้างบางบล็อกสีขาวและเส้นคั่นกลางที่หลงเหลือจากระบบภายในของ Streamlit */
+    /* ล้างบางบล็อกสีขาวรีๆ คั่นกลาง */
     div[data-testid="element-container"], 
     div[data-testid="stVerticalBlock"] > div,
     div[data-testid="stVerticalBlock"] {
@@ -96,7 +100,7 @@ st.markdown("""
         margin-bottom: 15px !important;
     }
 
-    /* 🎯 สร้างดีไซน์ปุ่มแบบ Custom ล็อกตำแหน่งกึ่งกลางและขยายยาวเต็มความกว้างอย่างเด็ดขาด */
+    /* 🎯 ดีไซน์ปุ่มแบบ Custom ล็อกตำแหน่งกึ่งกลางและขยายยาวเต็มความกว้าง */
     .custom-full-button {
         background-color: #007bc3 !important;
         color: white !important;
@@ -116,6 +120,12 @@ st.markdown("""
     .custom-full-button:hover {
         background-color: #0c2340 !important;
     }
+    
+    /* บังคับปุ่มออกจากระบบสีแดงให้อยู่กลางและยาวเต็มจอด้วย */
+    .btn-red {
+        background-color: #ef4444 !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -132,7 +142,7 @@ def load_data():
 
 df = load_data()
 
-# ใช้ Query Parameters ในการเปลี่ยนหน้าเพื่อรองรับปุ่มลิงก์ HTML แบบ Custom
+# ใช้ Query Parameters ในการเปลี่ยนหน้า
 if "nav" not in st.query_params:
     st.query_params["nav"] = "login"
 
@@ -149,12 +159,10 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- หน้าแรก: สแกนเข้าใช้งาน / ดูภาพรวม ----------------
+# ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
-    # 1. แบนเนอร์ด้านบนสุด
     st.markdown('<div class="promo-banner">✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</div>', unsafe_allow_html=True)
     
-    # 2. การ์ดส่วนพนักงานเข้าใช้งาน
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
     
@@ -167,15 +175,15 @@ if current_page == "login":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 3. โซนปุ่มดูภาพรวมด้านล่าง (บังคับตัวหนังสือและปุ่มน้ำเงินอยู่ตรงกลางแบบเด็ดขาด 100%)
-    st.markdown("""
+    # 🎯 ส่วนปุ่ม Dashboard ด้านล่าง จัดกลางเป๊ะ ขยายยาว ไม่ติดแท่งขาว
+    st.markdown(f"""
         <div class="center-content-wrapper">
             <div class="center-title-text">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div>
             <a href="?nav=dashboard" target="_self" class="custom-full-button">📊 ดูภาพรวม Dashboard</a>
         </div>
     """, unsafe_allow_html=True)
 
-# ---------------- หน้าหลัก: แสดงกราฟ และ 2 ปุ่มล่าง ----------------
+# ---------------- หน้าหลัก: Dashboard ----------------
 elif current_page == "dashboard":
     st.markdown('<div class="login-card" style="padding: 15px !important;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">📈 อันดับความสำเร็จ 1-10</h4></div>', unsafe_allow_html=True)
     
@@ -184,12 +192,10 @@ elif current_page == "dashboard":
         col_value = df.columns[1] if len(df.columns) > 1 else df.columns[0]
         top_10 = df.sort_values(by=col_value, ascending=False).head(10)
         
-        # กราฟแท่ง
         fig_bar = px.bar(top_10, x=col_name, y=col_value, color=col_value, color_continuous_scale="Oranges")
         fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180, showlegend=False, coloraxis_showscale=False)
         st.plotly_chart(fig_bar, use_container_width=True)
         
-        # กราฟวงกลม
         fig_pie = px.pie(top_10, names=col_name, values=col_value, color_discrete_sequence=px.colors.sequential.Oranges_r)
         fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180)
         fig_pie.update_traces(textposition='inside', textinfo='percent')
@@ -197,20 +203,18 @@ elif current_page == "dashboard":
     else:
         st.info("กำลังรอข้อมูลจาก Google Sheet...")
     
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
     
-    # 2 ปุ่มล่างหลัก
-    col1, col2 = st.columns(2)
-    with col1:
-        # เปลี่ยนปุ่มย่อยด้านในให้ใช้ดีไซน์กลางด้วยลิงก์ HTML เพื่อความสวยงามที่สม่ำเสมอ
-        st.markdown('<a href="?nav=history" target="_self" class="custom-full-button" style="font-size:14px !important; padding:10px 0px !important;">🔍 ข้อมูลย้อนหลัง</a>', unsafe_allow_html=True)
-    with col2:
-        st.markdown('<a href="?nav=add_new" target="_self" class="custom-full-button" style="font-size:14px !important; padding:10px 0px !important;">➕ เพิ่ม Imp.</a>', unsafe_allow_html=True)
-            
-    st.markdown("<div style='margin-top:25px;'></div>", unsafe_allow_html=True)
-    st.markdown('<a href="?nav=login" target="_self" class="custom-full-button" style="background-color: #ef4444 !important; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;">🔙 ออกจากระบบ</a>', unsafe_allow_html=True)
+    # 2 ปุ่มล่าง
+    st.markdown(f"""
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+            <a href="?nav=history" target="_self" class="custom-full-button" style="font-size:14px !important; padding:12px 0px !important;">🔍 ข้อมูลย้อนหลัง</a>
+            <a href="?nav=add_new" target="_self" class="custom-full-button" style="font-size:14px !important; padding:12px 0px !important;">➕ เพิ่ม Imp.</a>
+        </div>
+        <a href="?nav=login" target="_self" class="custom-full-button btn-red">🔙 ออกจากระบบ</a>
+    """, unsafe_allow_html=True)
 
-# ---------------- หน้าย่อย: ดูข้อมูลย้อนหลัง Before/After ----------------
+# ---------------- หน้าย่อย: ประวัติ ----------------
 elif current_page == "history":
     st.markdown('<div class="login-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">🔍 ประวัติ Before & After</h4></div>', unsafe_allow_html=True)
     
@@ -225,7 +229,7 @@ elif current_page == "history":
     
     st.markdown('<a href="?nav=dashboard" target="_self" class="custom-full-button">🏠 กลับหน้าหลัก</a>', unsafe_allow_html=True)
 
-# ---------------- หน้าย่อย: ฟอร์มเพิ่ม Improvement ----------------
+# ---------------- หน้าย่อย: เพิ่มข้อมูล ----------------
 elif current_page == "add_new":
     st.markdown('<div class="login-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">📝 บันทึก Improvement ใหม่</h4></div>', unsafe_allow_html=True)
     

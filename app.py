@@ -2,13 +2,13 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. ตั้งค่าหน้าเว็บพื้นฐาน
+# 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูแบบ Built-in
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ถล่ม CSS ดักทุกชื่อคลาสสุ่มของ Streamlit เพื่อลบปุ่มแอดมินออกให้เกลี้ยงบนมือถือ
+# 2. 🛠️ CSS ชุดทำลายล้างป้ายแอดมินระดับลึก (ลบมงกุฎแดงและวงกลมเขียวบนมือถือให้หายขาด)
 st.markdown("""
     <style>
-    /* 🚫 ลบป้าย Deploy (มงกุฎแดง) และ MainMenu ดักทุกคลาสสุ่ม */
+    /* 🚫 ซ่อนปุ่ม Deploy (มงกุฎแดง) แถบเครื่องมือ และปุ่มจุด 3 จุด ทั้งหมด */
     .stDeployButton, 
     [data-testid="stHeader"], 
     [data-testid="stToolbar"], 
@@ -19,20 +19,26 @@ st.markdown("""
         display: none !important;
         visibility: hidden !important;
         height: 0 !important;
+        opacity: 0 !important;
     }
     
-    /* 🚫 ลบปุ่มวงกลมเขียว (Manage App) และสถานะเชื่อมต่อส่วนล่างที่ชอบโผล่บนมือถือ */
+    /* 🚫 ถล่มปุ่มวงกลมเขียว (Manage App) และแถบสถานะเชื่อมต่อส่วนล่างสุดของจอมือถือ */
     [data-testid="stStatusWidget"], 
     #stConnectionStatus,
     .st-emotion-cache-zq59db,
     .st-emotion-cache-1wb763a,
     .st-emotion-cache-6q9sum,
-    .st-emotion-cache-15z78k {
+    .st-emotion-cache-15z78k,
+    .st-emotion-cache-b9st7z,
+    .st-emotion-cache-h5g6vv,
+    div[class*="st-emotion-cache-"] button[title="Manage app"] {
         display: none !important;
         visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
     }
 
-    /* 📱 ดีไซน์บีบให้เป็นทรงมือถือสีส้มพาสเทล */
+    /* 📱 ดีไซน์กรอบแอปให้เป็นทรงสมาร์ทโฟน สีส้มพาสเทลสวยงาม */
     .stApp {
         max-width: 420px !important;
         margin: 0px auto !important;
@@ -45,7 +51,7 @@ st.markdown("""
         height: auto !important;
     }
     
-    /* 🎯 ล้างบางแท่งขาวรี ๆ ที่ชอบโผล่มาคั่นช่องว่างบนจอมือถือ */
+    /* 🎯 ล้างบางแท่งขาวรี ๆ หรือเส้นขอบแปลก ๆ ที่มักจะโผล่มาคั่นช่องว่างบนมือถือ */
     div[data-testid="stVerticalBlock"] > div,
     div[data-testid="element-container"],
     [data-testid="stVerticalBlock"] {
@@ -57,7 +63,7 @@ st.markdown("""
         margin: 0px !important;
     }
 
-    /* 🏷️ ดีไซน์ส่วนหัว (วงกลมดำ TOG) */
+    /* 🏷️ ส่วนหัวแอปประยุกต์ LOGO วงกลมดำ */
     .bank-header {
         display: flex;
         align-items: center;
@@ -78,7 +84,7 @@ st.markdown("""
         font-size: 14px;
     }
 
-    /* 🪪 กล่อง Login Card สีขาว */
+    /* 🪪 กล่องขาว Login Card */
     .login-card {
         background-color: white !important;
         border-radius: 20px !important;
@@ -102,11 +108,11 @@ def load_data():
 
 df = load_data()
 
-# ระบบจัดการหน้าเพจด้วย Session State (กลับมาใช้ระบบปุ่มดั้งเดิมที่เสถียรที่สุดบนมือถือ)
+# ตรวจสอบสถานะหน้าเพจด้วย Session State (กลับมาใช้โครงสร้างสตรีมลิตปกติที่รันเสถียรที่สุด)
 if 'page' not in st.session_state:
     st.session_state.page = 'login'
 
-# --- ส่วนหัว (Header) ---
+# --- ส่วนแสดงผลบนสุด: Header ---
 st.markdown(f"""
 <div class="bank-header">
     <div class="tog-circle-logo">TOG</div>
@@ -133,15 +139,15 @@ if st.session_state.page == 'login':
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🎯 โซนล่างสุด: บังคับข้อความอยู่ตรงกลาง
+    # 🎯 กล่องคำถาม จัดวางตรงกึ่งกลางหน้าจอ
     st.markdown('<div style="text-align:center; color:#2c3e50; font-size:16px; margin-top:40px; margin-bottom:15px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div>', unsafe_allow_html=True)
     
-    # 🎯 ปุ่มดูภาพรวม Dashboard แบบใช้สไตล์ฝังในตัว (Inline Style) บังคับยาวเต็มจอ โค้งมนสีฟ้า และอยู่ตรงกลางชัวร์ 100%
+    # 🎯 ใช้ฟังก์ชันดั้งเดิม use_container_width=True ของ Streamlit เพื่อดึงปุ่มขยายยาวเต็มจอ
     if st.button("📊 ดูภาพรวม Dashboard", key="btn_dash", use_container_width=True):
         st.session_state.page = 'dashboard'
         st.rerun()
         
-    # สั่งปรับแต่งดีไซน์ปุ่ม key="btn_dash" ให้เป็นสีฟ้าและขยายเต็มจอแบบฝังลึก
+    # สั่งเขียน CSS ฝังเจาะจงเฉพาะปุ่ม key="btn_dash" ให้เปลี่ยนเป็นสีฟ้าสดใส โค้งมนกริบ
     st.markdown("""
         <style>
         div.stButton > button[key="btn_dash"] {
@@ -172,7 +178,7 @@ elif st.session_state.page == 'dashboard':
 
     st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
     
-    # ปุ่มควบคุมหน้า Dashboard
+    # กลุ่มปุ่มกดควบคุมในหน้า Dashboard
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🔍 ประวัติ", use_container_width=True):

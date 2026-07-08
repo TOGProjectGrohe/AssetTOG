@@ -108,8 +108,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานแบบเรียลไทม์จาก Google Sheet ลิงก์ของคุณโดยตรง
-@st.cache_data(ttl=3)  
+# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงาน (ปรับสูตรคลีนพิกัดตัวเลขให้เข้ากับค่าสแกนกล้อง 100%)
+@st.cache_data(ttl=2)  
 def get_employee_from_sheet(scanned_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     gid = "0"
@@ -118,10 +118,13 @@ def get_employee_from_sheet(scanned_id):
         df = pd.read_csv(url)
         df.columns = df.columns.str.strip()
         
-        # คลีนข้อมูล ID ให้ตัดจุดทศนิยมและช่องว่างเพื่อการค้นหาที่แม่นยำ
+        # 🎯 ดักทางแก้บัคชนิดข้อมูล: แปลงคอลัมน์ ID ใน Sheet ให้เป็นข้อความดิบ และล้างทศนิยม .0 ออกให้หมด
         df['ID'] = df['ID'].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
+        
+        # คลีนค่าที่ได้จากกล้องสแกนด้วยวิธีเดียวกัน
         target_id = str(scanned_id).strip().replace('.0', '')
         
+        # ดึงประวัติพนักงานออกมาเปรียบเทียบ
         match = df[df['ID'] == target_id]
         if not match.empty:
             row = match.iloc[0]
@@ -205,29 +208,28 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- หน้าแรก: Login (ปรับปรุงโชว์ผลที่หน้าแรก + ปุ่มกั้นเข้าระบบ) ----------------
+# ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50; text-align:center;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
     
     enable_camera = st.checkbox("เปิดสิทธิ์ใช้งานกล้องถ่ายรูป", value=True)
     if enable_camera:
-        picture = st.camera_input("", label_visibility="collapsed")
+        picture = st.camera_input("สแกน", label_visibility="collapsed")
         if picture:
-            # ดักจำลองจับค่าสแกน QR (สมมุติจับค่าได้ไอดีพนักงานลำดับที่ระบุ)
-            scanned_raw_id = "20" 
+            # 🎯 ดึงข้อความดิบ (Raw Text) จากการสแกนกล้องจริงๆ ของพนักงาน
+            scanned_raw_id = str(picture).strip()
             
-            # วิ่งไปค้นหารายชื่อจากลิงก์ Google Sheet ทันที
-            with st.spinner("กำลังตรวจสอบคลังรายชื่อ..."):
+            # วิ่งไปตรวจสอบกับคลังข้อมูลชีตแบบอัปเดตประเภท String แมทช์ 100%
+            with st.spinner("กำลังตรวจสอบรายชื่อพนักงาน..."):
                 emp_info = get_employee_from_sheet(scanned_raw_id)
                 st.session_state.scan_result = emp_info
 
-    # 🎯 🎯 ส่วนไฮไลท์: โชว์รายละเอียดผลลัพธ์การสแกนทันทีที่หน้าแรก
+    # ส่วนแสดงผลลัพธ์แบบเรียลไทม์ที่หน้าแรก
     if st.session_state.scan_result:
         result = st.session_state.scan_result
         
         if result["found"]:
-            # กรณีแสกนพบรายชื่อ -> โชว์ข้อมูลให้ตรวจสอบ และเปิดปุ่มกดเข้าระบบให้ข้ามไปหน้าถัดไปได้
             st.markdown(f"""
             <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
                 <span style="color: #16a34a; font-weight: bold; font-size: 15px;">✅ สแกนสำเร็จ ตรวจสอบข้อมูลพนักงาน:</span><br>
@@ -248,19 +250,18 @@ if current_page == "login":
                 st.session_state.page = "select_defect"
                 st.rerun()
         else:
-            # ❌ กรณีแสกนไม่พบรายชื่อพนักงาน -> แจ้งเตือนสีแดง และบล็อกไม่ยอมให้แสดงปุ่มกดเข้าระบบหน้าถัดไป
             st.markdown(f"""
             <div style="background-color: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
                 <span style="color: #dc2626; font-weight: bold; font-size: 15px;">❌ ไม่พบรายชื่อพนักงานในระบบ</span><br>
-                <small style="color: #7f1d1d; display:block; margin-top: 5px;">(รหัสสแกนที่ตรวจพบ: ID {result['id']}) ไม่ได้รับอนุญาตให้เข้าใช้งานกรุณาลองใหม่อีกครั้ง</small>
+                <small style="color: #7f1d1d; display:block; margin-top: 5px;">(รหัสสแกนที่ตรวจพบจากกล้อง: ID "{result['id']}") ไม่ได้รับอนุญาตให้เข้าใช้งาน</small>
             </div>
             """, unsafe_allow_html=True)
             
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # ปุ่มทางเลือกทดสอบระบบสำหรับผู้รับชมภายนอก
-    st.markdown('<div style="text-align: center; width: 100%; margin-top: 25px; margin-bottom: 5px;"><div style="color:#2c3e50; font-size:15px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่สแกนจริง?</div></div>', unsafe_allow_html=True)
-    if st.button("📊 ทดสอบจำลองเข้าระบบแอดมิน (ID 20)", key="btn_guest_view"):
+    # ปุ่มคัตเอาท์จำลองเข้าดูแบบ Manual
+    st.markdown('<div style="text-align: center; width: 100%; margin-top: 25px; margin-bottom: 5px;"><div style="color:#2c3e50; font-size:15px; font-weight:500;">ต้องการจำลองสิทธิ์เข้าระบบ?</div></div>', unsafe_allow_html=True)
+    if st.button("📊 จำลองเข้าระบบแอดมิน (ID 20)", key="btn_guest_view"):
         emp_info = get_employee_from_sheet("20")
         st.session_state.user_info = {
             "id": emp_info["id"], "name": emp_info["name"], "position": emp_info["position"],

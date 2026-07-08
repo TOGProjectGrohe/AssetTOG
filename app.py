@@ -2,134 +2,112 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูเดิมและจัดเนื้อหาให้อยู่ตรงกลาง
+# 1. ตั้งค่าหน้าเว็บ (พื้นฐาน)
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ถล่ม CSS (ลบป้ายโฆษณา Streamlit, ลบแท่งขาว, จัดปุ่มขยายเต็มจอตรงกลาง)
+# 2. 🛠️ ชุดคำสั่งทำลายล้าง Toolbar และป้าย Deploy (Extreme Kill)
 st.markdown("""
     <style>
-    /* 🚫 ลบป้ายโฆษณา Streamlit Toolbar และส่วนประกอบอื่นๆ ที่แสดงบนมือถือ */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    [data-testid="stHeader"] {display: none;}
-    .stDeployButton {display:none;} /* ลบป้ายแดง Deploy */
-    div[data-testid="stToolbar"] {display: none;} /* ลบแถบเครื่องมือ */
-    div[data-testid="stDecoration"] {display: none;} /* ลบแถบสีรุ้งด้านบน */
-    #stConnectionStatus {display: none !important;} /* ลบป้ายสถานะการเชื่อมต่อ */
+    /* 🚫 1. ลบปุ่ม Deploy (มงกุฎแดง) และ MainMenu (จุด 3 จุด) แบบถาวร */
+    .stDeployButton, .st-emotion-cache-15z78k, .st-emotion-cache-6q9sum, .st-emotion-cache-1wb763a {
+        display: none !important;
+    }
     
-    /* กรอบมือถือสีส้มพาสเทล */
+    /* 🚫 2. ลบแถบ Toolbar ด้านบนและสถานะการเชื่อมต่อ */
+    [data-testid="stHeader"], [data-testid="stDecoration"], [data-testid="stToolbar"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* 🚫 3. ลบปุ่ม Manage App (วงกลมเขียว) ที่มุมล่างขวาบนมือถือ */
+    footer {visibility: hidden !important;}
+    [data-testid="stStatusWidget"], #stConnectionStatus, .st-emotion-cache-zq59db {
+        display: none !important;
+    }
+    
+    /* 🚫 4. ลบเมนูที่แอบขึ้นมาเวลาคลิกขวาหรือกดค้าง */
+    #MainMenu {visibility: hidden !important;}
+
+    /* 📱 ปรับแต่งกรอบมือถือ (TOG Orange Theme) */
     .stApp {
         max-width: 420px !important;
-        margin: 20px auto !important;
+        margin: 0px auto !important;
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
         border: 12px solid #1e293b !important;
         border-radius: 40px !important;
         padding: 24px !important;
         box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
-        min-height: 850px !important;
+        min-height: 90vh !important;
         height: auto !important;
     }
     
-    /* ส่วนหัว Header (วงกลมดำ, TOG) */
+    /* 🎯 ล้างบางแท่งขาว/กล่องขาวรีๆ ที่หลุดมาคั่นกลาง */
+    div[data-testid="stVerticalBlock"] > div,
+    div[data-testid="element-container"],
+    .st-emotion-cache-1v07afm {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0px !important;
+        padding: 0px !important;
+    }
+
+    /* 🏷️ ดีไซน์ส่วนหัว (วงกลมดำ TOG) */
     .bank-header {
         display: flex;
         align-items: center;
         gap: 12px;
         margin-bottom: 25px;
+        margin-top: 10px;
     }
     .tog-circle-logo {
         width: 45px;
         height: 45px;
-        background-color: #000000;
+        background-color: #000;
         border-radius: 50%;
         display: flex;
         justify-content: center;
         align-items: center;
-        color: #ffffff;
-        font-family: 'Helvetica Neue', sans-serif;
+        color: #fff;
         font-weight: bold;
         font-size: 14px;
     }
 
-    /* แบนเนอร์ข้อความด้านบน */
-    .promo-banner {
-        background: rgba(255, 255, 255, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        border-radius: 20px;
-        padding: 15px;
-        text-align: center;
-        color: #2c3e50;
-        font-weight: bold;
-        margin-bottom: 20px;
-    }
-
-    /* กล่องสีขาว (Card) สำหรับ Login */
+    /* 🪪 กล่อง Login Card */
     .login-card {
         background-color: white !important;
         border-radius: 20px !important;
         padding: 20px !important;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-        margin-bottom: 5px !important;
+        margin-bottom: 10px !important;
     }
 
-    /* ล้างบางบล็อกสีขาวรีๆ คั่นกลาง */
-    div[data-testid="element-container"], 
-    div[data-testid="stVerticalBlock"] > div,
-    div[data-testid="stVerticalBlock"] {
-        background-color: transparent !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0px !important;
-        margin: 0px !important;
-    }
-    
-    /* โซนเนื้อหาและการจัดข้อความให้อยู่ตรงกลางจอมือถือ */
-    .center-content-wrapper {
+    /* 🎯 จัดโซนข้อความและปุ่ม Dashboard ให้อยู่กึ่งกลางหน้าจอมือถือ */
+    .center-wrapper {
         text-align: center !important;
         width: 100% !important;
-        display: block !important;
-        margin: 40px auto 15px auto !important;
-    }
-    
-    .center-title-text {
-        color: #2c3e50 !important;
-        font-size: 16px !important;
-        font-weight: 500 !important;
-        margin-bottom: 15px !important;
+        margin: 40px 0 20px 0 !important;
     }
 
-    /* 🎯 ดีไซน์ปุ่มแบบ Custom ล็อกตำแหน่งกึ่งกลางและขยายยาวเต็มความกว้าง */
-    .custom-full-button {
+    /* 🎯 ปุ่ม Custom สีฟ้ายาวเต็มจอ (ล็อกตำแหน่งกึ่งกลาง) */
+    .btn-full-width {
         background-color: #007bc3 !important;
         color: white !important;
         border-radius: 30px !important;
         padding: 14px 0px !important;
         font-weight: bold !important;
         font-size: 16px !important;
-        border: none !important;
         width: 100% !important;
         display: block !important;
         text-align: center !important;
         text-decoration: none !important;
         box-shadow: 0 4px 12px rgba(0, 123, 195, 0.3) !important;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-    .custom-full-button:hover {
-        background-color: #0c2340 !important;
-    }
-    
-    /* บังคับปุ่มออกจากระบบสีแดงให้อยู่กลางและยาวเต็มจอด้วย */
-    .btn-red {
-        background-color: #ef4444 !important;
-        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+        margin: 10px 0 !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# ฟังก์ชันดึงข้อมูลจาก Google Sheet
+# ฟังก์ชันดึงข้อมูล
 @st.cache_data(ttl=30)
 def load_data():
     sheet_id = "1jL7baZKeeuAmuQUCWuEN7cqjya9HoZjCi9riD6DUnB8"
@@ -142,18 +120,17 @@ def load_data():
 
 df = load_data()
 
-# ใช้ Query Parameters ในการเปลี่ยนหน้า
+# ระบบเปลี่ยนหน้า (Query Params)
 if "nav" not in st.query_params:
     st.query_params["nav"] = "login"
-
 current_page = st.query_params["nav"]
 
-# --- ส่วนหัวของแอป (Header) ---
+# --- ส่วนหัว (Header) ---
 st.markdown(f"""
 <div class="bank-header">
     <div class="tog-circle-logo">TOG</div>
     <div>
-        <small style="color:#ffffff; opacity:0.8; display:block; font-size:11px;">ยินดีต้อนรับ</small>
+        <small style="color:#fff; opacity:0.8; display:block; font-size:11px;">ยินดีต้อนรับ</small>
         <span style="font-size:16px; font-weight:600; color:white;">TOG App</span>
     </div>
 </div>
@@ -161,7 +138,7 @@ st.markdown(f"""
 
 # ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
-    st.markdown('<div class="promo-banner">✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</div>', unsafe_allow_html=True)
+    st.markdown('<div style="background:rgba(255,255,255,0.4); border:1px solid rgba(255,255,255,0.5); border-radius:20px; padding:15px; text-align:center; color:#2c3e50; font-weight:bold; margin-bottom:20px;">✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
@@ -175,11 +152,11 @@ if current_page == "login":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🎯 ส่วนปุ่ม Dashboard ด้านล่าง จัดกลางเป๊ะ ขยายยาว ไม่ติดแท่งขาว
-    st.markdown(f"""
-        <div class="center-content-wrapper">
-            <div class="center-title-text">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div>
-            <a href="?nav=dashboard" target="_self" class="custom-full-button">📊 ดูภาพรวม Dashboard</a>
+    # 🎯 โซนล่างสุด: ปุ่ม Dashboard ยาวเต็มจอ ตรงกลางเป๊ะ ไม่มีเส้นคั่น
+    st.markdown("""
+        <div class="center-wrapper">
+            <div style="color:#2c3e50; font-size:16px; margin-bottom:15px;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div>
+            <a href="?nav=dashboard" target="_self" class="btn-full-width">📊 ดูภาพรวม Dashboard</a>
         </div>
     """, unsafe_allow_html=True)
 
@@ -195,53 +172,16 @@ elif current_page == "dashboard":
         fig_bar = px.bar(top_10, x=col_name, y=col_value, color=col_value, color_continuous_scale="Oranges")
         fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180, showlegend=False, coloraxis_showscale=False)
         st.plotly_chart(fig_bar, use_container_width=True)
-        
-        fig_pie = px.pie(top_10, names=col_name, values=col_value, color_discrete_sequence=px.colors.sequential.Oranges_r)
-        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180)
-        fig_pie.update_traces(textposition='inside', textinfo='percent')
-        st.plotly_chart(fig_pie, use_container_width=True)
-    else:
-        st.info("กำลังรอข้อมูลจาก Google Sheet...")
     
-    st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
-    
-    # 2 ปุ่มล่าง
     st.markdown(f"""
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-            <a href="?nav=history" target="_self" class="custom-full-button" style="font-size:14px !important; padding:12px 0px !important;">🔍 ข้อมูลย้อนหลัง</a>
-            <a href="?nav=add_new" target="_self" class="custom-full-button" style="font-size:14px !important; padding:12px 0px !important;">➕ เพิ่ม Imp.</a>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+            <a href="?nav=history" target="_self" class="btn-full-width" style="font-size:14px !important;">🔍 ประวัติ</a>
+            <a href="?nav=add_new" target="_self" class="btn-full-width" style="font-size:14px !important;">➕ เพิ่มงาน</a>
         </div>
-        <a href="?nav=login" target="_self" class="custom-full-button btn-red">🔙 ออกจากระบบ</a>
+        <a href="?nav=login" target="_self" class="btn-full-width" style="background-color: #ef4444 !important; margin-top:20px !important;">🔙 ออกจากระบบ</a>
     """, unsafe_allow_html=True)
 
-# ---------------- หน้าย่อย: ประวัติ ----------------
-elif current_page == "history":
-    st.markdown('<div class="login-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">🔍 ประวัติ Before & After</h4></div>', unsafe_allow_html=True)
-    
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.write("📸 ภาพเปรียบเทียบผลงาน")
-    st.error("🔴 ก่อนแก้ไข (Before)")
-    st.image("https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400", use_container_width=True)
-    
-    st.success("🟢 หลังแก้ไข (After)")
-    st.image("https://images.unsplash.com/photo-158109335397-9583fe92d232?w=400", use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    st.markdown('<a href="?nav=dashboard" target="_self" class="custom-full-button">🏠 กลับหน้าหลัก</a>', unsafe_allow_html=True)
-
-# ---------------- หน้าย่อย: เพิ่มข้อมูล ----------------
-elif current_page == "add_new":
-    st.markdown('<div class="login-card" style="padding: 10px 15px;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">📝 บันทึก Improvement ใหม่</h4></div>', unsafe_allow_html=True)
-    
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    with st.form("mobile_form"):
-        title = st.text_input("ชื่อหัวข้อการปรับปรุง")
-        detail = st.text_area("รายละเอียดการแก้ไข")
-        f_before = st.file_uploader("ภาพก่อนแก้ไข", type=["jpg","png"])
-        f_after = st.file_uploader("ภาพหลังแก้ไข", type=["jpg","png"])
-        
-        if st.form_submit_button("🚀 บันทึกข้อมูล"):
-            st.success("ส่งข้อมูลเข้า Google Sheet สำเร็จ!")
-    st.markdown('</div>', unsafe_allow_html=True)
-            
-    st.markdown('<a href="?nav=dashboard" target="_self" class="custom-full-button">🏠 กลับหน้าหลัก</a>', unsafe_allow_html=True)
+# ---------------- หน้าย่อยอื่นๆ ----------------
+else:
+    st.info("กำลังพัฒนาส่วนนี้...")
+    st.markdown('<a href="?nav=dashboard" target="_self" class="btn-full-width">🏠 กลับหน้าหลัก</a>', unsafe_allow_html=True)

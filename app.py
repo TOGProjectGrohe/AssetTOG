@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ CSS เคลียร์ปัญหาปุ่มชิดซ้าย: บังคับกรอบฟ้ายาวเต็มจอ และจัดตัวอักษรอยู่กึ่งกลางแน่นอน
+# 2. 🛠️ CSS ทลายบล็อกหลัก: แก้อาการปุ่มดื้อชิดซ้าย บังคับยืดเต็มกรอบการ์ดและอยู่ตรงกลาง 100%
 st.markdown("""
     <style>
     /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
@@ -44,10 +44,14 @@ st.markdown("""
         height: auto !important;
     }
     
-    /* เคลียร์ระยะห่างบล็อกของ Streamlit */
-    div[data-testid="stVerticalBlock"] > div,
+    /* 🎯 ไม้ตายทลายบล็อกหลัก: ล้างค่าความกว้างสูงสุดและตัวกั้นของ Streamlit ที่บีบข้อมูลชิดซ้าย */
+    [data-testid="stMainBlockContainer"],
+    [data-testid="stVerticalBlock"],
+    [data-testid="stVerticalBlockRoot"],
     div[data-testid="element-container"],
-    [data-testid="stVerticalBlock"] {
+    .stColumn {
+        width: 100% !important;
+        max-width: 100% !important;
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
@@ -62,6 +66,7 @@ st.markdown("""
         padding: 15px !important;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
         margin-bottom: 15px !important;
+        width: 100% !important;
     }
 
     /* 🎯 แถบนำทาง Home / Logout ล็อกตำแหน่งไว้ที่มุมบนสุด */
@@ -115,25 +120,38 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    /* 🎯 ไม้ตายแก้ปุ่มเบี้ยว: บังคับบล็อกหลัก บล็อกย่อย และตัวปุ่ม ให้กางยาวเต็มกรอบ 100% */
-    div.stButton, div.stButton > button, div.stButton p {
+    /* 🎯 คำสั่งทุบสตรีมลิตเลเยอร์ในสุด: บังคับยืดแผงปุ่มเต็มจอ 100% ทุกมิติ */
+    div.stButton {
         width: 100% !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
+        display: block !important;
         text-align: center !important;
+        margin: 10px 0 0 0 !important;
     }
     
-    /* 🎯 สั่งเจาะจงที่ตัวปุ่ม: ตีกรอบฟ้าขยายยาวเต็มแผ่น และล็อกเนื้อหาด้านในให้อยู่จุดกึ่งกลาง (Center) */
     div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
         border-radius: 30px !important;
-        padding: 14px 0px !important; /* ถ่างความสูงปุ่มบน-ล่างให้สวยงาม */
+        padding: 14px 0px !important;  /* ถ่างความสูงปุ่ม */
         font-weight: bold !important;
-        font-size: 15px !important;
+        font-size: 16px !important;
         border: none !important;
+        width: 100% !important;         /* กางพื้นหลังสีฟ้ายาวเต็มกรอบ */
+        display: block !important;
+        margin: 0 auto !important;       /* ล็อกตำแหน่งอยู่เซ็นเตอร์ */
         box-shadow: 0 4px 12px rgba(0, 123, 195, 0.35) !important;
+    }
+
+    /* จัดระเบียบตัวอักษรและไอคอนภายในปุ่มชั้นในสุดให้เด้งมาอยู่ตรงกลาง */
+    div.stButton > button div, 
+    div.stButton > button p,
+    div.stButton > button span {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        text-align: center !important;
+        width: 100% !important;
+        margin: 0 auto !important;
     }
     
     /* ระบบสไลด์กราฟซ้าย-ขวาบนมือถือ */
@@ -210,10 +228,10 @@ if current_page == "login":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # คำอธิบายเหนือปุ่มจัดให้อยู่ตรงกลางสอดคล้องกับตัวปุ่ม
+    # ข้อความคำอธิบายเหนือปุ่มจัดกึ่งกลาง
     st.markdown('<div style="text-align: center; width: 100%; margin-top: 35px; margin-bottom: 15px;"><div style="color:#2c3e50; font-size:16px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div></div>', unsafe_allow_html=True)
     
-    # 🎯 ปุ่มดูภาพรวม Dashboard (เวอร์ชันบล็อกคลาสชั้นใน: ตีกรอบฟ้ายาว และอยู่ตรงกลาง 100%)
+    # 🎯 ปุ่มเปิดภาพรวม Dashboard (รอบนี้ตีกรอบฟ้ายาวเต็มกรอบ และอักษรอยู่ตรงกลางกึ่งกลางแน่นอน 100%)
     if st.button("📊 ดูภาพรวม Dashboard", key="btn_login_dash"):
         st.query_params["nav"] = "dashboard"
         st.rerun()

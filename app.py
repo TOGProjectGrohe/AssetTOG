@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่งดักทำลายป้ายแอดมิน และระบบ FIXED NAV BAR ด้านบนสุดสำหรับจอมือถือ
+# 2. 🛠️ ชุดคำสั่งถล่มป้ายแอดมิน และฟิกซ์ตำแหน่งแถบปุ่มนำทางให้อยู่มุมบนขนานกันถาวร
 st.markdown("""
     <style>
     /* 🚫 ซ่อนปุ่มแอดมิน, ปุ่มเครื่องมือ และป้าย Deploy ดั้งเดิมของ Streamlit ทั้งหมด */
@@ -45,7 +45,7 @@ st.markdown("""
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
         border: 12px solid #1e293b !important;
         border-radius: 40px !important;
-        padding: 70px 24px 24px 24px !important; /* เว้นพื้นที่ด้านบนหลบแถวปุ่ม Fixed */
+        padding: 85px 24px 24px 24px !important; /* เว้นระยะด้านบนให้ปุ่มนำทาง */
         box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
         min-height: 90vh !important;
         height: auto !important;
@@ -105,42 +105,39 @@ st.markdown("""
         width: 100% !important;
         display: block !important;
         margin: 0 auto !important;
-        box-shadow: 0 4px 12px rgba(0, 123, 195, 0.3) !important;
+        box-shadow: 0 4px 12 rgba(0, 123, 195, 0.3) !important;
     }
     div.stButton > button:hover {
         background-color: #0c2340 !important;
     }
 
-    /* 🎯 🪚 สั่งเจาะลึกปุ่มระบบนำทางด้านบนสุด (Top Nav Group) ให้จัดระเบียบแบบ Flex แถวเดียว ไม่ตัดขึ้นบรรทัดใหม่ */
-    .fixed-nav-container {
+    /* 🎯 🪚 ชุดแถบนำทางบนสุดแบบ HTML Flex ล็อกหัวมุมซ้าย-ขวาขนานกัน 100% ไม่ยอมให้แตกแถวลงมาด้านล่าง */
+    .custom-top-navbar {
         position: absolute !important;
-        top: 20px !important;
+        top: 25px !important;
         left: 24px !important;
         right: 24px !important;
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
         z-index: 999999 !important;
-        background: transparent !important;
     }
     
-    /* ควบคุมโครงสร้างปุ่มขนาดเล็กที่ฝังตัวอยู่ด้านบนซ้ายและขวา */
-    .fixed-nav-container div.stButton {
-        width: auto !important;
-        display: inline-block !important;
-    }
-    
-    .fixed-nav-container div.stButton > button {
+    /* ตกแต่งลิงก์ปุ่ม HTML ให้เหมือนปุ่มจริง สวยงาม สมส่วน */
+    .nav-btn-link {
         background-color: #007bc3 !important;
         color: white !important;
-        border: none !important;
         border-radius: 20px !important;
-        padding: 6px 16px !important; /* ถ่างด้านข้างออกเพื่อให้ปุ่มสมส่วน */
+        padding: 8px 16px !important;
         font-size: 14px !important;
         font-weight: bold !important;
-        width: auto !important;
+        text-decoration: none !important;
+        display: inline-block !important;
         box-shadow: 0 4px 10px rgba(0, 123, 195, 0.25) !important;
-        white-space: nowrap !important; /* 🚫 ห้ามตัวอักษรตัดขึ้นบรรทัดใหม่เด็ดขาด */
+        white-space: nowrap !important; /* 🚫 ห้ามข้อความตัดขึ้นบรรทัดใหม่เด็ดขาด */
+    }
+    .nav-btn-link:hover {
+        background-color: #0c2340 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -168,21 +165,19 @@ def get_graph_data(target_error):
     except:
         return pd.DataFrame(columns=['Material', 'rework quantity'])
 
-# 4. ระบบจัดการหน้าเพจด้วย Session State
-if 'page' not in st.session_state:
-    st.session_state.page = 'login'
+# 4. ระบบจัดการตรวจสอบเปลี่ยนหน้าเพจด้วย Query Parameters (เพื่อรองรับปุ่ม HTML)
+if "nav" not in st.query_params:
+    st.query_params["nav"] = "login"
 
-# --- 🎯 จัดชุดโครงสร้างปุ่มนำทางแบบฟิกซ์ล็อกมุมบน (Fixed Bar) แสดงผลขนานกันทุกหน้าจอไม่แตกคอลัมน์ ---
-st.markdown('<div class="fixed-nav-container">', unsafe_allow_html=True)
-btn_home = st.button("🏠 Home", key="btn_fixed_home")
-st.markdown('<div></div>', unsafe_allow_html=True) # ตัวดึงระยะช่องว่างตรงกลาง
-btn_logout = st.button("🚪 Logout", key="btn_fixed_logout")
-st.markdown('</div>', unsafe_allow_html=True)
+current_page = st.query_params["nav"]
 
-# สั่งเชื่อมลอจิกระบบกดปุ่มฝั่ง Python
-if btn_home or btn_logout:
-    st.session_state.page = 'login'
-    st.rerun()
+# --- 🎯 แถบปุ่มนำทางบนสุดของแท้ บังคับขนานกันซ้าย-ขวาด้วย HTML ไม่แตกแถว ปรากฏขึ้นทุกหน้าจอ ---
+st.markdown("""
+<div class="custom-top-navbar">
+    <a href="?nav=login" target="_self" class="nav-btn-link">🏠 Home</a>
+    <a href="?nav=login" target="_self" class="nav-btn-link">🚪 Logout</a>
+</div>
+""", unsafe_allow_html=True)
 
 # --- ส่วนหัวแอปพลิเคชันหลัก (Header Logo) ---
 st.markdown("""
@@ -196,7 +191,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------
-if st.session_state.page == 'login':
+if current_page == "login":
     st.markdown('<div style="background:rgba(255,255,255,0.4); border:1px solid rgba(255,255,255,0.5); border-radius:20px; padding:15px; text-align:center; color:#2c3e50; font-weight:bold; margin-bottom:20px;">✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
@@ -207,17 +202,19 @@ if st.session_state.page == 'login':
         st.markdown("<p style='font-size:13px; color:#64748b; margin-top:10px;'>สแกน QR Code พนักงานของคุณ</p>", unsafe_allow_html=True)
         picture = st.camera_input("", label_visibility="collapsed")
         if picture:
-            st.session_state.page = 'dashboard'
+            st.query_params["nav"] = "dashboard"
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="bottom-wrapper"><div style="color:#2c3e50; font-size:16px; margin-bottom:15px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div></div>', unsafe_allow_html=True)
+    
+    # ปุ่มเปลี่ยนหน้าไป Dashboard ของหน้า Login
     if st.button("📊 ดูภาพรวม Dashboard", key="btn_login_dash"):
-        st.session_state.page = 'dashboard'
+        st.query_params["nav"] = "dashboard"
         st.rerun()
 
 # ---------------- หน้าสอง: Dashboard (3 กราฟแยกสี) ----------------
-elif st.session_state.page == 'dashboard':
+elif current_page == "dashboard":
     st.markdown('<div style="text-align:center; font-size:20px; font-weight:bold; color:#2c3e50; margin-bottom:15px;">📊 สรุปภาพรวม Dashboard</div>', unsafe_allow_html=True)
     st.caption("👉 ใช้นิ้วปัดเลื่อนซ้าย-ขวาที่ตัวกราฟ เพื่อดูอันดับชิ้นงานเพิ่มเติมได้")
 
@@ -286,7 +283,7 @@ elif st.session_state.page == 'dashboard':
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     
-    # เมนูปุ่มควบคุมหลักด้านล่างหน้าจอ
+    # เมนูปุ่มควบคุมหลักด้านล่างหน้าจอ Dashboard
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🔍 ประวัติย้อนหลัง", key="btn_history"):

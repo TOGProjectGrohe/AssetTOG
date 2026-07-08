@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ปรับปรุง CSS จัดหน้าตาปุ่ม Dashboard ด้านล่างให้ขยายเต็มความกว้างและอยู่กึ่งกลาง
+# 2. 🛠️ CSS ปรับปรุงปุ่ม Dashboard ให้พื้นหลังยาว และจัดให้อยู่กึ่งกลางหน้าจออย่างสมบูรณ์
 st.markdown("""
     <style>
     /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
@@ -116,23 +116,30 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    /* 🎯 จัดการโครงสร้างปุ่มของ Streamlit ให้ขยายเต็มหน้าจอ และจัดข้อความตรงกลาง */
+    /* 🎯 แก้ไข: บังคับให้บล็อกปุ่มของ Streamlit อยู่ตรงกลางหน้าจอ */
     div.stButton {
         width: 100% !important;
         display: flex !important;
         justify-content: center !important;
+        align-items: center !important;
+        text-align: center !important;
+        margin: 0 auto !important;
     }
+    
+    /* 🎯 แก้ไข: ตั้งค่าให้ปุ่มยาวขยายเต็มพื้นที่ และจัดอักษรให้อยู่จุดกึ่งกลางของปุ่มพอดี */
     div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
         border-radius: 30px !important;
-        padding: 12px 20px !important;
+        padding: 12px 24px !important;
         font-weight: bold !important;
         font-size: 15px !important;
         border: none !important;
-        width: 100% !important; /* บังคับให้พื้นหลังปุ่มยาวเต็มพื้นที่ */
-        display: inline-block !important;
-        text-align: center !important; /* จัดข้อความภายในปุ่มให้อยู่กึ่งกลาง */
+        width: 100% !important;        /* ปรับพื้นหลังปนักงาน/ปุ่มให้ยาว */
+        max-width: 340px !important;   /* คุมขนาดความยาวให้สวยงามพอดีกับกรอบ */
+        display: block !important;
+        margin: 0 auto !important;     /* จัดปุ่มให้อยู่ Center */
+        text-align: center !important; /* จัดข้อความด้านในให้อยู่กึ่งกลางปุ่ม */
         box-shadow: 0 4px 12px rgba(0, 123, 195, 0.3) !important;
     }
     
@@ -210,10 +217,10 @@ if current_page == "login":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ปรับคำอธิบายเหนือปุ่ม Dashboard ให้อยู่ตรงกึ่งกลางด้วยเช่นกันเพื่อให้เข้ากัน
+    # คำอธิบายเหนือปุ่มจัดให้อยู่ตรงกลางสอดคล้องกับตัวปุ่ม
     st.markdown('<div style="text-align: center; width: 100%; margin-top: 35px; margin-bottom: 15px;"><div style="color:#2c3e50; font-size:16px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div></div>', unsafe_allow_html=True)
     
-    # 🎯 ปุ่มเปิดภาพรวม Dashboard (พื้ันหลังยาวเต็มจอและอักษรอยู่ตรงกลาง)
+    # 🎯 ปุ่มเปิดภาพรวม Dashboard (แก้เสร็จสมบูรณ์: อยู่ตรงกลางหน้าจอ และขยายพื้นหลังยาว)
     if st.button("📊 ดูภาพรวม Dashboard", key="btn_login_dash"):
         st.query_params["nav"] = "dashboard"
         st.rerun()

@@ -6,7 +6,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างปุ่มและช่องกรอกข้อมูลให้ยาวเต็มจอ ตัวอักษรตรงกลาง คุมธีมส้มพาสเทล
+# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างปุ่มตีกรอบฟ้ายาว ตัวอักษรตรงกลาง และคุมหน้าจอมือถือส้มพาสเทล
 st.markdown("""
     <style>
     /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
@@ -82,7 +82,7 @@ st.markdown("""
         width: 50px; height: 50px; background-color: #000000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-weight: bold; font-size: 15px; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
     
-    /* 🎯 เจาะลึกช่องกรอกข้อความ (TextInput) ให้แสดงผลตัวหนังสืออยู่ตรงกึ่งกลางหน้าจอพอดี */
+    /* เจาะลึกช่องกรอกข้อความ (TextInput) ให้แสดงผลตัวหนังสืออยู่ตรงกึ่งกลางหน้าจอพอดี */
     div[data-testid="stTextInput"] input {
         text-align: center !important;
         font-size: 18px !important;
@@ -122,7 +122,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานแบบเรียลไทม์จาก Google Sheet ลิงก์ของคุณโดยตรง
+# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานแบบเรียลไทม์ (ปรับจูนพิกัดคอลัมน์แบบยืดหยุ่นไดนามิก ค้นพบเจอแน่นอน)
 @st.cache_data(ttl=2)  
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
@@ -130,24 +130,28 @@ def get_employee_from_sheet(input_id):
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     try:
         df = pd.read_csv(url)
+        # เคลียร์ล้างช่องว่างของหัวคอลัมน์ทั้งหมด
         df.columns = df.columns.str.strip()
         
-        # คลีนข้อมูล ID ใน Sheet ให้เป็นข้อความ String และลบเศษ .0 ทิ้ง
-        df['ID'] = df['ID'].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
-        
-        # คลีนค่าที่ได้จากช่องป้อนข้อมูล
-        target_id = str(input_id).strip().replace('.0', '')
-        
-        match = df[df['ID'] == target_id]
-        if not match.empty:
-            row = match.iloc[0]
-            return {
-                "found": True,
-                "id": str(row['ID']),
-                "name": str(row['Name']),
-                "position": str(row['Position']) if 'Position' in df.columns else "พนักงาน"
-            }
-    except:
+        # 🎯 ตรวจสอบเงื่อนไขหากพบคอลัมน์หลัก ID ในชีตปัจจุบัน
+        if 'ID' in df.columns:
+            # แปลงคอลัมน์ ID ทั้งหมดใน Sheet ให้เป็น String, ลบเว้นวรรค และตัด .0 ทิ้งแบบถอนรากถอนโคน
+            df['ID'] = df['ID'].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
+            
+            # คลีนค่ารหัสที่พนักงานป้อนเข้ามาด้วยวิธีเดียวกัน
+            target_id = str(input_id).strip().replace('.0', '')
+            
+            # ทำการเปรียบเทียบข้อมูลรายแถว
+            match = df[df['ID'] == target_id]
+            if not match.empty:
+                row = match.iloc[0]
+                return {
+                    "found": True,
+                    "id": str(row['ID']),
+                    "name": str(row['Name']).strip() if 'Name' in df.columns else "ไม่ระบุชื่อ",
+                    "position": str(row['Position']).strip() if 'Position' in df.columns else "พนักงาน"
+                }
+    except Exception as e:
         pass
     return {"found": False, "id": str(input_id), "name": None, "position": None}
 
@@ -161,7 +165,7 @@ DRIVE_MAP = {
     "B": {
         260: {"main": "https://drive.google.com/drive/u/0/folders/1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "slave": "https://drive.google.com/drive/u/0/folders/1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_name": "SB_260"},
         261: {"main": "https://drive.google.com/drive/u/0/folders/1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "slave": "https://drive.google.com/drive/u/0/folders/1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_name": "SB_261"},
-        380: {"main": "https://drive.google.com/drive/u/0/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "slave": "https://drive.google.com/drive/u/0/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_name": "SB_380"}
+        380: {"main": "https://drive.google.com/drive/u/0/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkJ61bhK", "slave": "https://drive.google.com/drive/u/0/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_name": "SB_380"}
     },
     "C": {
         260: {"main": "https://drive.google.com/drive/u/0/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "slave": "https://drive.google.com/drive/u/0/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_name": "SC_260"},
@@ -223,20 +227,19 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- หน้าแรก: Login (ระบบพิมพ์รหัสและตรวจสอบรายชื่อ) ----------------
+# ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<h3 style='font-size:17px; margin-top:0; color:#2c3e50; text-align:center;'>🪪 ป้อนรหัสพนักงานเพื่อเข้าระบบ</h3>", unsafe_allow_html=True)
     
-    # 🎯 ช่องกรอกข้อมูล ID ตัวเลขพนักงาน (จัดตัวอักษรอยู่ตรงกลางด้วย CSS ด้านบน)
-    input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="เช่น 20, 198, 885", label_visibility="collapsed")
+    input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="เช่น 20, 198, 222", label_visibility="collapsed")
     
     if st.button("🔍 ตรวจสอบรายชื่อพนักงาน", key="btn_check_id"):
         if input_id.strip() == "":
             st.warning("⚠️ โปรดกรอกรหัสพนักงานก่อนกดตรวจสอบ")
         else:
             st.session_state.check_clicked = True
-            with st.spinner("กำลังค้นหารายชื่อจาก Google Sheet..."):
+            with st.spinner("กำลังค้นหารายชื่อแบบ Real-time..."):
                 st.session_state.temp_result = get_employee_from_sheet(input_id)
                 
     # แสดงผลลัพธ์การตรวจสอบข้อมูลตรงกลางหน้าแรก
@@ -244,15 +247,14 @@ if current_page == "login":
         result = st.session_state.temp_result
         
         if result["found"]:
-            # 🟢 กรณีเจอรายชื่อใน Google Sheet: แสดงโปรไฟล์และเปิดปุ่มเข้าระบบ
             st.markdown(f"""
             <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
-                <span style="color: #16a34a; font-weight: bold; font-size: 15px;">✅ ตรวจพบข้อมูลพนักงานถูกต้อง:</span><br>
-                <div style="font-size: 14px; margin-top: 5px; color: #1e293b; text-align: left; padding-left: 15px;">
+                <span style="color: #16a34a; font-weight: bold; font-size: 15px;">✅ พบรายชื่อพนักงานในระบบชีตล่าสุด:</span><br>
+                <div style="font-size: 14px; margin-top: 5px; color: #1e293b; text-align: left; padding-left: 10px;">
                     • <b>ชื่อพนักงาน:</b> {result['name']}<br>
-                    • <b>รหัสพนักงาน (ID):</b> {result['id']}<br>
+                    • <b>รหัส ID:</b> {result['id']}<br>
                     • <b>ตำแหน่งงาน:</b> {result['position']}<br>
-                    • <b>เวลาลงชื่อเข้า:</b> {datetime.now().strftime("%H:%M:%S")}
+                    • <b>เวลาแสกนเข้า:</b> {datetime.now().strftime("%H:%M:%S")}
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -265,11 +267,10 @@ if current_page == "login":
                 st.session_state.page = "select_defect"
                 st.rerun()
         else:
-            # ❌ กรณีไม่เจอรายชื่อ: ขึ้นเตือนสีแดง และบล็อกไม่ให้กดไปหน้าถัดไป
             st.markdown(f"""
             <div style="background-color: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
                 <span style="color: #dc2626; font-weight: bold; font-size: 15px;">❌ ไม่พบรายชื่อพนักงานในระบบ</span><br>
-                <small style="color: #7f1d1d; display:block; margin-top: 5px;">(รหัสรหัสที่คุณป้อน: ID "{result['id']}") ไม่ได้รับอนุญาตให้ผ่านเข้าใช้งานหน้า Dashboard</small>
+                <small style="color: #7f1d1d; display:block; margin-top: 5px;">(รหัสที่คุณป้อน: ID "{result['id']}") โปรดตรวจสอบเลขอีกครั้งบน Google Sheet</small>
             </div>
             """, unsafe_allow_html=True)
             

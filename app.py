@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่งถล่มป้ายแอดมิน และฟิกซ์ตำแหน่งแถบปุ่มนำทางให้อยู่มุมบนขนานกันถาวร
+# 2. 🛠️ ชุดคำสั่งดักทำลายป้ายแอดมิน และบังคับแถบปุ่มนำทางชิดขอบบนสุด 100%
 st.markdown("""
     <style>
     /* 🚫 ซ่อนปุ่มแอดมิน, ปุ่มเครื่องมือ และป้าย Deploy ดั้งเดิมของ Streamlit ทั้งหมด */
@@ -45,25 +45,24 @@ st.markdown("""
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
         border: 12px solid #1e293b !important;
         border-radius: 40px !important;
-        padding: 85px 24px 24px 24px !important; /* เว้นระยะด้านบนให้ปุ่มนำทาง */
+        padding: 65px 24px 24px 24px !important; /* เว้นระยะด้านบนให้พอดีกับปุ่มนำทางชิดขอบ */
         box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
         min-height: 90vh !important;
         height: auto !important;
     }
     
-    /* 🎯 เคลียร์ระยะห่างและแท่งแถบสีขาวรี ๆ ที่ชอบโผล่มาคั่นช่องว่างเลเยอร์ */
+    /* เคลียร์ระยะห่างของ Vertical Block เพื่อความกระชับ */
     div[data-testid="stVerticalBlock"] > div,
     div[data-testid="element-container"],
     [data-testid="stVerticalBlock"] {
         background-color: transparent !important;
-        background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0px !important;
         margin: 0px !important;
     }
 
-    /* 🪪 กล่องพื้นหลังขาว Card ครอบส่วนเนื้อหาสำคัญ */
+    /* กล่องพื้นหลังขาวสำหรับ Content */
     .login-card {
         background-color: white !important;
         border-radius: 20px !important;
@@ -72,28 +71,37 @@ st.markdown("""
         margin-bottom: 15px !important;
     }
 
-    /* 🎯 🛝 ระบบกล่องเลื่อนสไลด์ ซ้าย-ขวาสำหรับกราฟบนจอมือถือ */
-    .scrollable-graph-container {
-        width: 100% !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        display: block !important;
-        margin-bottom: 20px !important;
-        -webkit-overflow-scrolling: touch;
+    /* 🎯 จัดการแถบนำทางให้อยู่ "ขอบบนสุดของโทรศัพท์" ไม่ให้ทับซ้อนกับโลโก้ */
+    .custom-top-navbar {
+        position: absolute !important;
+        top: 0px !important; /* ดันกระชากขึ้นไปแตะขอบบนสุดของกรอบมือถือ */
+        left: 0px !important;
+        right: 0px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 20px 24px 0px 24px !important; /* ใช้พื้นที่ภายในคุมระยะห่าง */
+        z-index: 999999 !important;
     }
     
-    .inner-graph-box {
-        width: 600px !important;
-        display: block !important;
+    /* ดีไซน์ปุ่มลิงก์นำทางแบบโค้งมน */
+    .nav-btn-link {
+        background-color: #007bc3 !important;
+        color: white !important;
+        border-radius: 20px !important;
+        padding: 8px 16px !important;
+        font-size: 13px !important;
+        font-weight: bold !important;
+        text-decoration: none !important;
+        display: inline-block !important;
+        box-shadow: 0 4px 10px rgba(0, 123, 195, 0.25) !important;
+        white-space: nowrap !important;
+    }
+    .nav-btn-link:hover {
+        background-color: #0c2340 !important;
     }
 
-    .bottom-wrapper {
-        text-align: center !important;
-        width: 100% !important;
-        margin-top: 35px !important;
-    }
-
-    /* บังคับปุ่มทั่วไปด้านล่างให้เป็นสีฟ้าสดใส และโค้งมน */
+    /* ปรับแต่งปุ่มสไตล์ Streamlit ด้านล่าง */
     div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
@@ -103,46 +111,23 @@ st.markdown("""
         font-size: 15px !important;
         border: none !important;
         width: 100% !important;
-        display: block !important;
-        margin: 0 auto !important;
-        box-shadow: 0 4px 12 rgba(0, 123, 195, 0.3) !important;
-    }
-    div.stButton > button:hover {
-        background-color: #0c2340 !important;
-    }
-
-    /* 🎯 🪚 ชุดแถบนำทางบนสุดแบบ HTML Flex ล็อกหัวมุมซ้าย-ขวาขนานกัน 100% ไม่ยอมให้แตกแถวลงมาด้านล่าง */
-    .custom-top-navbar {
-        position: absolute !important;
-        top: 25px !important;
-        left: 24px !important;
-        right: 24px !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        z-index: 999999 !important;
     }
     
-    /* ตกแต่งลิงก์ปุ่ม HTML ให้เหมือนปุ่มจริง สวยงาม สมส่วน */
-    .nav-btn-link {
-        background-color: #007bc3 !important;
-        color: white !important;
-        border-radius: 20px !important;
-        padding: 8px 16px !important;
-        font-size: 14px !important;
-        font-weight: bold !important;
-        text-decoration: none !important;
-        display: inline-block !important;
-        box-shadow: 0 4px 10px rgba(0, 123, 195, 0.25) !important;
-        white-space: nowrap !important; /* 🚫 ห้ามข้อความตัดขึ้นบรรทัดใหม่เด็ดขาด */
+    /* ระบบสไลด์กราฟซ้าย-ขวาบนมือถือ */
+    .scrollable-graph-container {
+        width: 100% !important;
+        overflow-x: auto !important;
+        display: block !important;
+        margin-bottom: 20px !important;
     }
-    .nav-btn-link:hover {
-        background-color: #0c2340 !important;
+    .inner-graph-box {
+        width: 600px !important;
+        display: block !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 📊 ฟังก์ชันเชื่อมต่อเพื่อดึงและแบ่งกลุ่มข้อมูลตามรหัส errortype ต่างๆ
+# 3. 📊 ฟังก์ชันดึงข้อมูลจาก Google Sheets
 @st.cache_data(ttl=15)
 def get_graph_data(target_error):
     sheet_id = "1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c"
@@ -151,27 +136,23 @@ def get_graph_data(target_error):
     try:
         raw_df = pd.read_csv(csv_url)
         raw_df.columns = raw_df.columns.str.strip()
-        
         raw_df['errortype'] = pd.to_numeric(raw_df['errortype'], errors='coerce')
         raw_df['rework quantity'] = pd.to_numeric(raw_df['rework quantity'], errors='coerce').fillna(0)
-        
         filtered_df = raw_df[raw_df['errortype'] == target_error]
-        
         grouped_df = filtered_df.groupby('Material', as_index=False)['rework quantity'].sum()
         top_10 = grouped_df.sort_values(by='rework quantity', ascending=False).head(10)
-        
         top_10['Material'] = top_10['Material'].astype(str)
         return top_10
     except:
         return pd.DataFrame(columns=['Material', 'rework quantity'])
 
-# 4. ระบบจัดการตรวจสอบเปลี่ยนหน้าเพจด้วย Query Parameters (เพื่อรองรับปุ่ม HTML)
+# 4. ตรวจสอบสถานะหน้าเพจผ่าน Query Parameters
 if "nav" not in st.query_params:
     st.query_params["nav"] = "login"
 
 current_page = st.query_params["nav"]
 
-# --- 🎯 แถบปุ่มนำทางบนสุดของแท้ บังคับขนานกันซ้าย-ขวาด้วย HTML ไม่แตกแถว ปรากฏขึ้นทุกหน้าจอ ---
+# --- 🎯 แถบปุ่มนำทาง (เกาะติดมุมบนสุดอย่างแท้จริง ไม่แตกแถว และไม่ทับซ้อน) ---
 st.markdown("""
 <div class="custom-top-navbar">
     <a href="?nav=login" target="_self" class="nav-btn-link">🏠 Home</a>
@@ -179,9 +160,9 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- ส่วนหัวแอปพลิเคชันหลัก (Header Logo) ---
+# --- ส่วนหัวโลโก้ (ขยับระยะลงมาเพื่อเปิดพื้นที่ให้ปุ่มนำทางด้านบนอย่างสวยงาม) ---
 st.markdown("""
-<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; margin-top: 5px;">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; margin-top: 25px;">
     <div style="width: 45px; height: 45px; background-color: #000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #fff; font-weight: bold; font-size: 14px;">TOG</div>
     <div>
         <small style="color:#fff; opacity:0.8; display:block; font-size:11px;">ยินดีต้อนรับ</small>
@@ -206,9 +187,8 @@ if current_page == "login":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="bottom-wrapper"><div style="color:#2c3e50; font-size:16px; margin-bottom:15px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div></div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align: center; width: 100%; margin-top: 35px;"><div style="color:#2c3e50; font-size:16px; margin-bottom:15px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div></div>', unsafe_allow_html=True)
     
-    # ปุ่มเปลี่ยนหน้าไป Dashboard ของหน้า Login
     if st.button("📊 ดูภาพรวม Dashboard", key="btn_login_dash"):
         st.query_params["nav"] = "dashboard"
         st.rerun()
@@ -218,72 +198,41 @@ elif current_page == "dashboard":
     st.markdown('<div style="text-align:center; font-size:20px; font-weight:bold; color:#2c3e50; margin-bottom:15px;">📊 สรุปภาพรวม Dashboard</div>', unsafe_allow_html=True)
     st.caption("👉 ใช้นิ้วปัดเลื่อนซ้าย-ขวาที่ตัวกราฟ เพื่อดูอันดับชิ้นงานเพิ่มเติมได้")
 
-    # 📈 กราฟชุดที่ 1: Defect 260 (Rough Lines) -> 🟠 สีส้มทุกแท่ง ไม่ไล่เฉด
+    # กราฟที่ 1
     st.markdown('<div class="login-card"><b>🔥 Defect 260 (Rough Lines)</b></div>', unsafe_allow_html=True)
     df_260 = get_graph_data(260)
     if not df_260.empty:
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig_260 = px.bar(df_260, x='Material', y='rework quantity', text='rework quantity')
         fig_260.update_traces(textposition='outside', marker_color='#ff7f0e')
-        fig_260.update_layout(
-            xaxis=dict(type='category', tickangle=45),
-            yaxis=dict(tickformat='d'),
-            margin=dict(l=10, r=10, t=25, b=50), 
-            height=250, 
-            showlegend=False, 
-            paper_bgcolor='rgba(0,0,0,0)', 
-            plot_bgcolor='rgba(0,0,0,0)'
-        )
+        fig_260.update_layout(xaxis=dict(type='category', tickangle=45), yaxis=dict(tickformat='d'), margin=dict(l=10, r=10, t=25, b=50), height=250, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_260, use_container_width=True)
         st.markdown('</div></div>', unsafe_allow_html=True)
-    else:
-        st.caption("ไม่มีข้อมูลสำหรับรหัส 260")
 
-    # 📈 กราฟชุดที่ 2: Defect 261 (Grinding Structure Visible) -> 🔵 สีน้ำเงินเข้มทุกแท่ง ไม่ไล่เฉด
+    # กราฟที่ 2
     st.markdown('<div class="login-card"><b>⚡ Defect 261 (Grinding Structure Visible)</b></div>', unsafe_allow_html=True)
     df_261 = get_graph_data(261)
     if not df_261.empty:
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig_261 = px.bar(df_261, x='Material', y='rework quantity', text='rework quantity')
         fig_261.update_traces(textposition='outside', marker_color='#002060')
-        fig_261.update_layout(
-            xaxis=dict(type='category', tickangle=45),
-            yaxis=dict(tickformat='d'),
-            margin=dict(l=10, r=10, t=25, b=50), 
-            height=250, 
-            showlegend=False, 
-            paper_bgcolor='rgba(0,0,0,0)', 
-            plot_bgcolor='rgba(0,0,0,0)'
-        )
+        fig_261.update_layout(xaxis=dict(type='category', tickangle=45), yaxis=dict(tickformat='d'), margin=dict(l=10, r=10, t=25, b=50), height=250, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_261, use_container_width=True)
         st.markdown('</div></div>', unsafe_allow_html=True)
-    else:
-        st.caption("ไม่มีข้อมูลสำหรับรหัส 261")
 
-    # 📈 กราฟชุดที่ 3: Defect 380 (Contour/Design Fault) -> ⚫ สีดำทุกแท่ง ไม่ไล่เฉด
+    # กราฟที่ 3
     st.markdown('<div class="login-card"><b>💥 Defect 380 (Contour/Design Fault)</b></div>', unsafe_allow_html=True)
     df_380 = get_graph_data(380)
     if not df_380.empty:
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig_380 = px.bar(df_380, x='Material', y='rework quantity', text='rework quantity')
         fig_380.update_traces(textposition='outside', marker_color='#000000')
-        fig_380.update_layout(
-            xaxis=dict(type='category', tickangle=45),
-            yaxis=dict(tickformat='d'),
-            margin=dict(l=10, r=10, t=25, b=50), 
-            height=250, 
-            showlegend=False, 
-            paper_bgcolor='rgba(0,0,0,0)', 
-            plot_bgcolor='rgba(0,0,0,0)'
-        )
+        fig_380.update_layout(xaxis=dict(type='category', tickangle=45), yaxis=dict(tickformat='d'), margin=dict(l=10, r=10, t=25, b=50), height=250, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_380, use_container_width=True)
         st.markdown('</div></div>', unsafe_allow_html=True)
-    else:
-        st.caption("ไม่มีข้อมูลสำหรับรหัส 380")
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     
-    # เมนูปุ่มควบคุมหลักด้านล่างหน้าจอ Dashboard
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🔍 ประวัติย้อนหลัง", key="btn_history"):

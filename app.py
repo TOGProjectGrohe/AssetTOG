@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่งดักทำลายป้ายแอดมิน และระบบ Scrollable กราฟบนมือถือ
+# 2. 🛠️ ชุดคำสั่งดักทำลายป้ายแอดมินระดับลึกพิเศษ และคุมโครงสร้างปุ่ม Navigation ด้านบนสุด
 st.markdown("""
     <style>
     /* 🚫 ซ่อนปุ่มแอดมิน, ปุ่มเครื่องมือ และป้าย Deploy ดั้งเดิมของ Streamlit ทั้งหมด */
@@ -21,7 +21,7 @@ st.markdown("""
         height: 0 !important;
     }
     
-    /* 🚫 ฝังบล็อกเลเยอร์ซ่อนปุ่มป้ายวงกลมเขียว (Manage App) บนหน้าจอมือถือ */
+    /* 🚫 ดักฝังบล็อกเลเยอร์ซ่อนปุ่มป้ายวงกลมเขียว (Manage App) บนหน้าจอมือถือไม่ให้โผล่ที่มุมขวาล่าง */
     [data-testid="stStatusWidget"], 
     #stConnectionStatus,
     .st-emotion-cache-zq59db,
@@ -30,6 +30,7 @@ st.markdown("""
     .st-emotion-cache-15z78k,
     .st-emotion-cache-b9st7z,
     .st-emotion-cache-h5g6vv,
+    div[class*="viewerBadge"],
     div[class*="st-emotion-cache-"] button[title="Manage app"] {
         display: none !important;
         visibility: hidden !important;
@@ -44,7 +45,7 @@ st.markdown("""
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
         border: 12px solid #1e293b !important;
         border-radius: 40px !important;
-        padding: 24px !important;
+        padding: 20px 24px 24px 24px !important; /* ดึงระยะ padding บนสุดขึ้นอีก */
         box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
         min-height: 90vh !important;
         height: auto !important;
@@ -92,7 +93,7 @@ st.markdown("""
         margin-top: 35px !important;
     }
 
-    /* บังคับปุ่มทั้งหมดให้เป็นสีฟ้าสดใส และโค้งมน ยกเว้นกรณีที่เรากำหนดเฉพาะเจาะจง */
+    /* บังคับปุ่มทั่วไปให้เป็นสีฟ้าสดใส และโค้งมน */
     div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
@@ -110,19 +111,24 @@ st.markdown("""
         background-color: #0c2340 !important;
     }
 
-    /* 🎯 สไตล์เฉพาะสำหรับปุ่มบนสุด (Top Navigation Bar) ให้สวยเรียบเนียน */
+    /* 🎯 สไตล์เฉพาะสำหรับแถบปุ่มด้านบนสุด (Top Navigation Bar) บังคับชิดขอบบน */
+    .top-nav-box {
+        margin-top: -10px !important; /* ดึงขึ้นด้านบนให้สุดอีก */
+        margin-bottom: 15px !important;
+        width: 100% !important;
+    }
     .top-nav-box div.stButton > button {
-        background-color: rgba(255, 255, 255, 0.25) !important;
-        color: #1e293b !important;
-        border: 1px solid rgba(255, 255, 255, 0.4) !important;
-        border-radius: 15px !important;
-        padding: 6px 0px !important;
+        background-color: #007bc3 !important; /* เปลี่ยนเป็นสีน้ำเงินตามรูปที่ 3 */
+        color: white !important;
+        border: none !important;
+        border-radius: 20px !important;
+        padding: 8px 0px !important;
         font-size: 14px !important;
-        font-weight: 600 !important;
-        box-shadow: none !important;
+        font-weight: bold !important;
+        box-shadow: 0 4px 10px rgba(0, 123, 195, 0.25) !important;
     }
     .top-nav-box div.stButton > button:hover {
-        background-color: rgba(255, 255, 255, 0.45) !important;
+        background-color: #0c2340 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -154,27 +160,24 @@ def get_graph_data(target_error):
 if 'page' not in st.session_state:
     st.session_state.page = 'login'
 
-# --- ส่วนแถบเมนูด้านบนสุด (Top Navigation Bar) จะแสดงเฉพาะหน้า Dashboard เท่านั้น ---
-if st.session_state.page == 'dashboard':
-    st.markdown('<div class="top-nav-box">', unsafe_allow_html=True)
-    nav_col1, nav_col2, nav_col3 = st.columns([1.2, 2, 1.2])
-    with nav_col1:
-        if st.button("🏠 Home"):
-            st.session_state.page = 'login'
-            st.rerun()
-    with nav_col2:
-        # ช่องกลางเว้นว่างไว้เพื่อความสวยงาม จัดตำแหน่งซ้าย-ขวาให้แยกกันชัดเจน
-        st.write("")
-    with nav_col3:
-        if st.button("🚪 Logout"):
-            st.session_state.page = 'login'
-            st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+# --- 🎯 ย้ายแถบเมนูนิตออกมาข้างนอกเงื่อนไข เพื่อให้แสดงผลอยู่ "ทุกหน้า" และขยับขึ้นบนสุด ---
+st.markdown('<div class="top-nav-box">', unsafe_allow_html=True)
+nav_col1, nav_col2, nav_col3 = st.columns([1.3, 1.8, 1.3])
+with nav_col1:
+    if st.button("🏠 Home", key="nav_home_global"):
+        st.session_state.page = 'login'
+        st.rerun()
+with nav_col2:
+    st.write("") # เว้นพื้นที่ว่างตรงกลางไว้หลบพิกัดสัดส่วนจอ
+with nav_col3:
+    if st.button("🚪 Logout", key="nav_logout_global"):
+        st.session_state.page = 'login'
+        st.rerun()
+st.markdown('</div>', unsafe_allow_html=True)
 
 # --- ส่วนหัวแอปพลิเคชันหลัก (Header Logo) ---
 st.markdown("""
-<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; margin-top: 10px;">
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; margin-top: 5px;">
     <div style="width: 45px; height: 45px; background-color: #000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #fff; font-weight: bold; font-size: 14px;">TOG</div>
     <div>
         <small style="color:#fff; opacity:0.8; display:block; font-size:11px;">ยินดีต้อนรับ</small>
@@ -204,7 +207,7 @@ if st.session_state.page == 'login':
         st.session_state.page = 'dashboard'
         st.rerun()
 
-# ---------------- หน้าสอง: Dashboard (3 กราฟแยกสี + มีปุ่มนำทางด้านบน) ----------------
+# ---------------- หน้าสอง: Dashboard (3 กราฟแยกสี) ----------------
 elif st.session_state.page == 'dashboard':
     st.markdown('<div style="text-align:center; font-size:20px; font-weight:bold; color:#2c3e50; margin-bottom:15px;">📊 สรุปภาพรวม Dashboard</div>', unsafe_allow_html=True)
     st.caption("👉 ใช้นิ้วปัดเลื่อนซ้าย-ขวาที่ตัวกราฟ เพื่อดูอันดับชิ้นงานเพิ่มเติมได้")

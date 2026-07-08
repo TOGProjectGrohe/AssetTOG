@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่งดักทำลายป้ายแอดมิน และสร้างระบบ Scrollable เลื่อนซ้าย-ขวาสำหรับกราฟบนมือถือ
+# 2. 🛠️ ชุดคำสั่งดักทำลายป้ายแอดมิน และระบบ Scrollable กราฟบนมือถือ
 st.markdown("""
     <style>
     /* 🚫 ซ่อนปุ่มแอดมิน, ปุ่มเครื่องมือ และป้าย Deploy ดั้งเดิมของ Streamlit ทั้งหมด */
@@ -71,19 +71,18 @@ st.markdown("""
         margin-bottom: 15px !important;
     }
 
-    /* 🎯 🛝 ไม้ตายสร้างกล่องเลื่อนสไลด์ ซ้าย-ขวา (Horizontal Scroll) สำหรับกราฟบนจอมือถือ */
+    /* 🎯 🛝 ระบบกล่องเลื่อนสไลด์ ซ้าย-ขวาสำหรับกราฟบนจอมือถือ */
     .scrollable-graph-container {
         width: 100% !important;
         overflow-x: auto !important;
         overflow-y: hidden !important;
         display: block !important;
         margin-bottom: 20px !important;
-        -webkit-overflow-scrolling: touch; /* สไลด์ลื่นบน iOS */
+        -webkit-overflow-scrolling: touch;
     }
     
-    /* บังคับความกว้างกล่องกราฟด้านในให้ยาวเกินจอ เพื่อให้ใช้นิ้วปัดเลื่อนดูรหัสเต็มๆ ได้ */
     .inner-graph-box {
-        width: 600px !important; /* ถ่างพื้นที่ออกไปด้านข้างให้พิมรหัสเต็มชื่อ */
+        width: 600px !important;
         display: block !important;
     }
 
@@ -136,7 +135,6 @@ def get_graph_data(target_error):
         grouped_df = filtered_df.groupby('Material', as_index=False)['rework quantity'].sum()
         top_10 = grouped_df.sort_values(by='rework quantity', ascending=False).head(10)
         
-        # บังคับประเภทเป็น String ป้องกันแกน X เพี้ยนเป็นทศนิยมหรือค่า M
         top_10['Material'] = top_10['Material'].astype(str)
         return top_10
     except:
@@ -148,8 +146,8 @@ if 'page' not in st.session_state:
 
 # --- ส่วนหัวแอปพลิเคชัน (Header) ---
 st.markdown("""
-<div class="bank-header">
-    <div class="tog-circle-logo">TOG</div>
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; margin-top: 10px;">
+    <div style="width: 45px; height: 45px; background-color: #000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #fff; font-weight: bold; font-size: 14px;">TOG</div>
     <div>
         <small style="color:#fff; opacity:0.8; display:block; font-size:11px;">ยินดีต้อนรับ</small>
         <span style="font-size:16px; font-weight:600; color:white;">TOG App</span>
@@ -178,49 +176,47 @@ if st.session_state.page == 'login':
         st.session_state.page = 'dashboard'
         st.rerun()
 
-# ---------------- หน้าสอง: Dashboard (สไลด์เลื่อนซ้าย-ขวาได้ ชื่อเต็มชัดเจน) ----------------
+# ---------------- หน้าสอง: Dashboard (ปรับเปลี่ยนสีแท่งกราฟตามบรีฟ) ----------------
 elif st.session_state.page == 'dashboard':
     st.markdown('<div style="text-align:center; font-size:20px; font-weight:bold; color:#2c3e50; margin-bottom:15px;">📊 สรุปภาพรวม Dashboard</div>', unsafe_allow_html=True)
     st.caption("👉 ใช้นิ้วปัดเลื่อนซ้าย-ขวาที่ตัวกราฟ เพื่อดูอันดับชิ้นงานเพิ่มเติมได้")
 
-    # 📈 กราฟชุดที่ 1: รหัสความผิดพลาด 260
-    st.markdown('<div class="login-card"><b>🔥 อันดับชิ้นงานสูงสุด อาการ 260 (Rough Lines)</b></div>', unsafe_allow_html=True)
+    # 📈 กราฟชุดที่ 1: Defect 260 (Rough Lines) -> 🟠 สีส้มทุกแท่ง ไม่ไล่เฉด
+    st.markdown('<div class="login-card"><b>🔥 Defect 260 (Rough Lines)</b></div>', unsafe_allow_html=True)
     df_260 = get_graph_data(260)
     if not df_260.empty:
-        # เปิดกล่องห่อหุ้มเลื่อนซ้ายขวาด้วย HTML
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
-        fig_260 = px.bar(df_260, x='Material', y='rework quantity', text='rework quantity', color='rework quantity', color_continuous_scale="Oranges")
-        fig_260.update_traces(textposition='outside')
-        # บังคับแกน X ตัวอักษรเอียง 45 องศาเพื่อหลบชื่อยาว และล็อกแกน Y เป็นเลขตัวชิ้นเดี่ยวๆ
+        fig_260 = px.bar(df_260, x='Material', y='rework quantity', text='rework quantity')
+        # บังคับอัปเดตสีแท่งกราฟให้เป็นสีส้มเดี่ยวล้วน และกำหนดระยะ Layout
+        fig_260.update_traces(textposition='outside', marker_color='#ff7f0e')
         fig_260.update_layout(
             xaxis=dict(type='category', tickangle=45),
             yaxis=dict(tickformat='d'),
             margin=dict(l=10, r=10, t=25, b=50), 
             height=250, 
             showlegend=False, 
-            coloraxis_showscale=False, 
             paper_bgcolor='rgba(0,0,0,0)', 
             plot_bgcolor='rgba(0,0,0,0)'
         )
         st.plotly_chart(fig_260, use_container_width=True)
-        st.markdown('</div></div>', unsafe_allow_html=True) # ปิดกล่องเลื่อน
+        st.markdown('</div></div>', unsafe_allow_html=True)
     else:
         st.caption("ไม่มีข้อมูลสำหรับรหัส 260")
 
-    # 📈 กราฟชุดที่ 2: รหัสความผิดพลาด 261
-    st.markdown('<div class="login-card"><b>⚡ อันดับชิ้นงานสูงสุด อาการ 261 (Grinding Structure Visible)</b></div>', unsafe_allow_html=True)
+    # 📈 กราฟชุดที่ 2: Defect 261 (Grinding Structure Visible) -> 🔵 สีน้ำเงินเข้มทุกแท่ง ไม่ไล่เฉด
+    st.markdown('<div class="login-card"><b>⚡ Defect 261 (Grinding Structure Visible)</b></div>', unsafe_allow_html=True)
     df_261 = get_graph_data(261)
     if not df_261.empty:
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
-        fig_261 = px.bar(df_261, x='Material', y='rework quantity', text='rework quantity', color='rework quantity', color_continuous_scale="Purples")
-        fig_261.update_traces(textposition='outside')
+        fig_261 = px.bar(df_261, x='Material', y='rework quantity', text='rework quantity')
+        # บังคับอัปเดตสีแท่งกราฟให้เป็นสีน้ำเงินเข้มล้วน
+        fig_261.update_traces(textposition='outside', marker_color='#002060')
         fig_261.update_layout(
             xaxis=dict(type='category', tickangle=45),
             yaxis=dict(tickformat='d'),
             margin=dict(l=10, r=10, t=25, b=50), 
             height=250, 
             showlegend=False, 
-            coloraxis_showscale=False, 
             paper_bgcolor='rgba(0,0,0,0)', 
             plot_bgcolor='rgba(0,0,0,0)'
         )
@@ -229,20 +225,20 @@ elif st.session_state.page == 'dashboard':
     else:
         st.caption("ไม่มีข้อมูลสำหรับรหัส 261")
 
-    # 📈 กราฟชุดที่ 3: รหัสความผิดพลาด 380
-    st.markdown('<div class="login-card"><b>💥 อันดับชิ้นงานสูงสุด อาการ 380</b></div>', unsafe_allow_html=True)
+    # 📈 กราฟชุดที่ 3: Defect 380 (Contour/Design Fault) -> ⚫ สีดำทุกแท่ง ไม่ไล่เฉด
+    st.markdown('<div class="login-card"><b>💥 Defect 380 (Contour/Design Fault)</b></div>', unsafe_allow_html=True)
     df_380 = get_graph_data(380)
     if not df_380.empty:
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
-        fig_380 = px.bar(df_380, x='Material', y='rework quantity', text='rework quantity', color='rework quantity', color_continuous_scale="Blues")
-        fig_380.update_traces(textposition='outside')
+        fig_380 = px.bar(df_380, x='Material', y='rework quantity', text='rework quantity')
+        # บังคับอัปเดตสีแท่งกราฟให้เป็นสีดำล้วนทั้งหมด
+        fig_380.update_traces(textposition='outside', marker_color='#000000')
         fig_380.update_layout(
             xaxis=dict(type='category', tickangle=45),
             yaxis=dict(tickformat='d'),
             margin=dict(l=10, r=10, t=25, b=50), 
             height=250, 
             showlegend=False, 
-            coloraxis_showscale=False, 
             paper_bgcolor='rgba(0,0,0,0)', 
             plot_bgcolor='rgba(0,0,0,0)'
         )

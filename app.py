@@ -6,7 +6,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่ง CSS คุมธีมหน้าจอมือถือส้มพาสเทล จัดกึ่งกลาง และฟิกซ์ปุ่มนำทางด้านบนสุด
+# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างแผงหน้าจอมือถือส้มพาสเทลและปุ่มล็อกมุมบนอย่างสวยงามสมบูรณ์แบบ
 st.markdown("""
     <style>
     /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
@@ -46,7 +46,7 @@ st.markdown("""
         background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
     }
 
-    /* 🎯 แถบนำทางปุ่มกด Home / Logout เปลี่ยนเป็นโครงสร้างลิงก์ HTML แท้ เพื่อแก้ปัญหาปุ่มทับซ้อนกันซ้ายขวา */
+    /* แถบนำทางปุ่มกด Home / Logout ฟิกซ์ล็อกชิดขอบบนสุดขนานสองฝั่ง */
     .custom-top-navbar {
         position: absolute !important; 
         top: 20px !important; 
@@ -78,7 +78,7 @@ st.markdown("""
         width: 50px; height: 50px; background-color: #000000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-weight: bold; font-size: 15px; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
     
-    /* เจาะลึกช่องกรอกข้อความ (TextInput) ให้แสดงผลตัวหนังสืออยู่ตรงกึ่งกลางหน้าจอพอดี */
+    /* เจาะลึกช่องกรอกข้อความ TextInput ให้เนื้อหาอยู่เซ็นเตอร์ */
     div[data-testid="stTextInput"] input {
         text-align: center !important;
         font-size: 18px !important;
@@ -86,10 +86,6 @@ st.markdown("""
         color: #1e293b !important;
         border-radius: 15px !important;
         border: 2px solid #cbd5e1 !important;
-    }
-    div[data-testid="stTextInput"] input:focus {
-        border-color: #007bc3 !important;
-        box-shadow: 0 0 0 1px #007bc3 !important;
     }
     
     /* บังคับปุ่มของ Streamlit ทุกปุ่มกางสีฟ้ายาว และอักษรอยู่ตรงกลางเป๊ะกริบ */
@@ -118,17 +114,18 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานแบบเรียลไทม์จาก Google Sheet ด้วยระบบแมทช์ค่า String สัมบูรณ์
+# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงาน (เพิ่มระบบรายงานสถานะแจ้งเตือนหาจุดขัดข้อง)
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     gid = "0"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     try:
+        # ดึงไฟล์ผ่าน pandas ตรงๆ แบบไม่แคชเพื่อทดสอบความเสถียร
         df = pd.read_csv(url)
         df.columns = df.columns.str.strip()
         
         if 'ID' in df.columns:
-            # แปลงเป็นข้อความ ล้างเว้นวรรค และตัดเศษ .0 ออกทั้งหมด
+            # ล้างฟอร์แมตตัวแปรให้อยู่ในรูปข้อความเพียว
             df['ID'] = df['ID'].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
             target_id = str(input_id).strip().replace('.0', '')
             
@@ -136,14 +133,18 @@ def get_employee_from_sheet(input_id):
             if not match.empty:
                 row = match.iloc[0]
                 return {
+                    "status": "success",
                     "found": True,
                     "id": str(row['ID']),
                     "name": str(row['Name']).strip() if 'Name' in df.columns else "ไม่ระบุชื่อ",
                     "position": str(row['Position']).strip() if 'Position' in df.columns else "พนักงาน"
                 }
-    except:
-        pass
-    return {"found": False, "id": str(input_id), "name": None, "position": None}
+            return {"status": "success", "found": False, "id": target_id}
+    except Exception as e:
+        # หากเชื่อมไม่สำเร็จ สลับโยนค่า error ไปแจ้งหน้าจอหลักเพื่อเช็คสิทธิ์
+        return {"status": "error", "error_msg": str(e), "id": str(input_id)}
+    
+    return {"status": "success", "found": False, "id": str(input_id)}
 
 # 🔗 รายการแผนผังลิงก์โฟลเดอร์ Google Drive แยกตามคู่หน้าและรหัส Defect
 DRIVE_MAP = {
@@ -155,7 +156,7 @@ DRIVE_MAP = {
     "B": {
         260: {"main": "https://drive.google.com/drive/u/0/folders/1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "slave": "https://drive.google.com/drive/u/0/folders/1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_name": "SB_260"},
         261: {"main": "https://drive.google.com/drive/u/0/folders/1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "slave": "https://drive.google.com/drive/u/0/folders/1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_name": "SB_261"},
-        380: {"main": "https://drive.google.com/drive/u/0/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkJ61bhK", "slave": "https://drive.google.com/drive/u/0/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_name": "SB_380"}
+        380: {"main": "https://drive.google.com/drive/u/0/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "slave": "https://drive.google.com/drive/u/0/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_name": "SB_380"}
     },
     "C": {
         260: {"main": "https://drive.google.com/drive/u/0/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "slave": "https://drive.google.com/drive/u/0/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_name": "SC_260"},
@@ -183,14 +184,13 @@ def get_graph_data(target_error):
     except:
         return pd.DataFrame(columns=['Material', 'rework quantity'])
 
-# ตั้งค่าสถานะหน้าเพจผ่านทางคลัง Session State ย่อย
 if 'page' not in st.session_state: st.session_state.page = "login"
 if 'user_info' not in st.session_state: st.session_state.user_info = None
 if 'current_defect' not in st.session_state: st.session_state.current_defect = None
 
 current_page = st.session_state.page
 
-# --- 🎯 แถบนำทางปุ่มกดด้านบนสุดสไตล์ลิงก์ HTML แท้ (แก้ไขจุดปุ่มซ้อนกันฝั่งซ้ายแล้ว) ---
+# --- แถบนำทางด้านบนสุด ---
 st.markdown("""
 <div class="custom-top-navbar">
     <a href="?nav=reset" target="_self" class="nav-btn-link">🏠 Home</a>
@@ -198,7 +198,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# รับค่าจากลิงก์ด้านบนเมื่อมีพนักงานเผลอกดสลับเคลียร์ลอจิก
 if st.query_params.get("nav") == "reset":
     st.session_state.page = "login"
     st.session_state.user_info = None
@@ -217,45 +216,49 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- หน้าแรก: Login (ระบบพิมพ์รหัสและลอจิกเช็คพิกัดทันใจ) ----------------
+# ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<h4 style='font-size:16px; margin-top:0; color:#2c3e50; text-align:center;'>🪪 ป้อนรหัสพนักงานเพื่อเข้าระบบ</h4>", unsafe_allow_html=True)
     
-    # ช่องพิมพ์รหัสพนักงาน ID
     input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="พิมพ์ตัวเลขรหัส เช่น 20, 198, 222", label_visibility="collapsed")
     
-    # 🎯 แก้ไขปุ่มลอจิก: เมื่อกดปุ่มเช็คปุ๊บ ระบบจะประมวลผลดึงค่าแผงข้อมูลเทียบทันทีแบบไม่มีดีเลย์ค้างหน้าแดง
     if input_id.strip() != "":
         result = get_employee_from_sheet(input_id)
         
-        if result["found"]:
-            st.markdown(f"""
-            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
-                <span style="color: #16a34a; font-weight: bold; font-size: 15px;">✅ ตรวจพบข้อมูลพนักงานถูกต้อง:</span><br>
-                <div style="font-size: 14px; margin-top: 5px; color: #1e293b; text-align: left; padding-left: 10px;">
-                    • <b>ชื่อพนักงาน:</b> {result['name']}<br>
-                    • <b>รหัสพนักงาน (ID):</b> {result['id']}<br>
-                    • <b>ตำแหน่งงาน:</b> {result['position']}<br>
-                    • <b>เวลาลงชื่อเข้า:</b> {datetime.now().strftime("%H:%M:%S")}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+        # 🎯 ตัวดักตรวจสอบสิทธิ์: กรณีขึ้น Error แปลว่ายังไม่ได้เปิดแชร์ลิ้งก์สาธารณะบนชีต
+        if result["status"] == "error":
+            st.error(f"⚠️ การเชื่อมต่อถูกปฏิเสธ! โปรดไปที่ Google Sheet แล้วกด 'แชร์' เปลี่ยนจาก 'จำกัด' ให้เป็น 'ทุกคนที่มีลิงก์'")
+            st.caption(f"รายละเอียดทางเทคนิค: {result['error_msg']}")
             
-            if st.button("🔓 ยืนยันข้อมูลถูกต้อง กดเพื่อเข้าระบบ", key="btn_confirm_login"):
-                st.session_state.user_info = {
-                    "id": result["id"], "name": result["name"], "position": result["position"],
-                    "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                }
-                st.session_state.page = "select_defect"
-                st.rerun()
-        else:
-            st.markdown(f"""
-            <div style="background-color: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
-                <span style="color: #dc2626; font-weight: bold; font-size: 15px;">❌ ไม่พบรายชื่อพนักงานในระบบ</span><br>
-                <small style="color: #7f1d1d; display:block; margin-top: 5px;">(รหัสที่คุณป้อน: ID "{result['id']}") โปรดตรวจสอบเลขอีกครั้งบน Google Sheet</small>
-            </div>
-            """, unsafe_allow_html=True)
+        elif result["status"] == "success":
+            if result.get("found"):
+                st.markdown(f"""
+                <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
+                    <span style="color: #16a34a; font-weight: bold; font-size: 15px;">✅ ตรวจพบข้อมูลพนักงานถูกต้อง:</span><br>
+                    <div style="font-size: 14px; margin-top: 5px; color: #1e293b; text-align: left; padding-left: 10px;">
+                        • <b>ชื่อพนักงาน:</b> {result['name']}<br>
+                        • <b>รหัสพนักงาน (ID):</b> {result['id']}<br>
+                        • <b>ตำแหน่งงาน:</b> {result['position']}<br>
+                        • <b>เวลาลงชื่อเข้า:</b> {datetime.now().strftime("%H:%M:%S")}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button("🔓 ยืนยันข้อมูลถูกต้อง กดเพื่อเข้าระบบ", key="btn_confirm_login"):
+                    st.session_state.user_info = {
+                        "id": result["id"], "name": result["name"], "position": result["position"],
+                        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    st.session_state.page = "select_defect"
+                    st.rerun()
+            else:
+                st.markdown(f"""
+                <div style="background-color: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
+                    <span style="color: #dc2626; font-weight: bold; font-size: 15px;">❌ ไม่พบรายชื่อพนักงานในระบบ</span><br>
+                    <small style="color: #7f1d1d; display:block; margin-top: 5px;">(รหัสที่คุณป้อน: ID "{result['id']}") โปรดตรวจสอบเลขอีกครั้งบน Google Sheet</small>
+                </div>
+                """, unsafe_allow_html=True)
     else:
         st.info("💡 โปรดพิมพ์ตัวเลขรหัสพนักงานของคุณลงในช่องด้านบน")
             
@@ -299,21 +302,54 @@ elif current_page == "defect_view":
         st.session_state.page = "select_defect"
         st.rerun()
         
-    st.markdown(f'<div class="login-card" style="text-align:center; border-left: 6px solid {color_hex};"><b>📊 ข้อมูลสรุปกราฟ 1-10 ของ {defect_title}</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="login-card" style="text-align:center; border-left: 6px solid {color_hex};"><b>📊 ข้อมูลสรุปกราฟ 1-10 ของ {defect_title}</b><br><small style="color: #64748b;">💡 ลองจิ้มคลิกที่แท่งกราฟเพื่อเลือก Material ได้เลย!</small></div>', unsafe_allow_html=True)
     
+    # ดึงข้อมูลกราฟมาประมวลผล
     df_current = get_graph_data(defect)
+    
+    # 🎯 ตัวแปรเตรียมแกะค่ารหัสจาก Chart
+    selected_material_from_chart = ""
+    
     if not df_current.empty:
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig = px.bar(df_current, x='Material', y='rework quantity', text='rework quantity')
         fig.update_traces(textposition='outside', marker_color=color_hex)
-        fig.update_layout(xaxis=dict(type='category', tickangle=45), yaxis=dict(tickformat='d'), margin=dict(l=10, r=10, t=25, b=50), height=200, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig, use_container_width=True)
+        fig.update_layout(
+            xaxis=dict(type='category', tickangle=45), 
+            yaxis=dict(tickformat='d'), 
+            margin=dict(l=10, r=10, t=25, b=50), 
+            height=200, 
+            showlegend=False, 
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)',
+            clickmode='event+select' # เปิดโหมดล็อกเป้าหมายรับพิกัดคลิก
+        )
+        
+        # ⚡ สั่งรันคำสั่งแสดงพล็อตพร้อมดักจับข้อมูล Rerun แบบ On Select
+        chart_data = st.plotly_chart(fig, use_container_width=True, on_select="rerun")
         st.markdown('</div></div>', unsafe_allow_html=True)
+        
+        # ถอดรหัสหาข้อความ Material เมื่อคลิกแท่งกราฟ
+        if chart_data := chart_data: # ตรวจสอบค่ากล่องพิกัด
+            pass
+        if chart_data := st.context.get("chart_click"): # ฟังก์ชันดึงพิกัดซอร์สตรงของ Streamlit
+            pass
+        # ลอจิกดึงชุดจุดพิกเซลจุดของ Plotly Chart ดั้งเดิม
+        if chart_data and "selection" in chart_data and "points" in chart_data["selection"]:
+            points = chart_data["selection"]["points"]
+            if len(points) > 0:
+                selected_material_from_chart = points[0].get("x", "")
 
     # 🔲 กรอบย่อยที่ 1: คลังรูปภาพ BEFORE ล็อกพิกัดตรงตามปุ่มเลือก
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#007bc3; font-size:14px; display:block; margin-bottom:5px;'>🖼️ กรอบที่ 1: {defect_title} เลือกภาพ Before</b>", unsafe_allow_html=True)
     
+    # 🎯 แสดงผลรหัสชิ้นงานที่คลิกเลือกแบบอัตโนมัติ
+    if selected_material_from_chart:
+        st.success(f"🎯 เลือก Material อัตโนมัติ: **{selected_material_from_chart}**")
+    else:
+        st.info("ℹ️ ยังไม่ได้เลือกชิ้นงาน (สามารถคลิกเลือกจากแท่งกราฟด้านบนได้เลย)")
+
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C", "อื่นๆ"], horizontal=True, key=f"rf_{defect}")
     
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"]:
@@ -335,7 +371,16 @@ elif current_page == "defect_view":
     # 🔲 กรอบย่อยที่ 2: จัดการเก็บข้อมูลความเห็นและภาพถ่าย AFTER
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ กรอบที่ 2: ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
-    st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", key=f"ta_af_{defect}", placeholder="กรอกบันทึกข้อมูลหลังแก้ไขเสร็จสิ้น...")
+    
+    # 🎯 บรรจุค่า Material นำร่องเข้าไปกรอกให้ล่วงหน้าในช่อง After
+    default_text = f"รายงานผลชิ้นงาน Material รหัส: {selected_material_from_chart}\n" if selected_material_from_chart else ""
+    
+    st.text_area(
+        "พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", 
+        value=default_text,
+        key=f"ta_af_{defect}", 
+        placeholder="กรอกบันทึกข้อมูลหลังแก้ไขเสร็จสิ้น..."
+    )
     
     st.markdown("<p style='font-size:12px; color:#475569; margin-bottom:2px;'>📸 สแนปภาพถ่ายชิ้นงาน After (ถ่ายแนบได้สูงสุด 5 ภาพ):</p>", unsafe_allow_html=True)
     for i in range(1, 6):

@@ -1,14 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TOG App</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-        iframe { border: none; width: 100%; height: 100%; }
+        /* ล้างค่าขอบจอทั้งหมดเพื่อให้แสดงผลเต็มจอมือถือ */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: #ffb07c; /* ใช้สีส้มพาสเทลเป็นพื้นหลังรองรับ */
+        }
+        /* บังคับให้ตัวแอป Streamlit แสดงผลอยู่ข้างในกรอบนี้แบบไร้รอยต่อ */
+        iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
     </style>
 </head>
 <body>
-    <iframe src="https://assettog-nirkp89lft9ydcfk4od5uj.streamlit.app/?nav=login"></iframe>
+    <iframe 
+        src="https://assettog-nirkp89lft9ydcfk4od5uj.streamlit.app/?nav=login"
+        sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts">
+    </iframe>
 </body>
 </html>

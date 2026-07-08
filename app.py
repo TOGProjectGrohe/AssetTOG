@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่งดักทำลายป้ายแอดมินระดับลึกพิเศษ และคุมโครงสร้างปุ่ม Navigation ด้านบนสุด
+# 2. 🛠️ ชุดคำสั่งดักทำลายป้ายแอดมิน และระบบ FIXED NAV BAR ด้านบนสุดสำหรับจอมือถือ
 st.markdown("""
     <style>
     /* 🚫 ซ่อนปุ่มแอดมิน, ปุ่มเครื่องมือ และป้าย Deploy ดั้งเดิมของ Streamlit ทั้งหมด */
@@ -45,7 +45,7 @@ st.markdown("""
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
         border: 12px solid #1e293b !important;
         border-radius: 40px !important;
-        padding: 20px 24px 24px 24px !important; /* ดึงระยะ padding บนสุดขึ้นอีก */
+        padding: 70px 24px 24px 24px !important; /* เว้นพื้นที่ด้านบนหลบแถวปุ่ม Fixed */
         box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
         min-height: 90vh !important;
         height: auto !important;
@@ -93,7 +93,7 @@ st.markdown("""
         margin-top: 35px !important;
     }
 
-    /* บังคับปุ่มทั่วไปให้เป็นสีฟ้าสดใส และโค้งมน */
+    /* บังคับปุ่มทั่วไปด้านล่างให้เป็นสีฟ้าสดใส และโค้งมน */
     div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
@@ -111,24 +111,36 @@ st.markdown("""
         background-color: #0c2340 !important;
     }
 
-    /* 🎯 สไตล์เฉพาะสำหรับแถบปุ่มด้านบนสุด (Top Navigation Bar) บังคับชิดขอบบน */
-    .top-nav-box {
-        margin-top: -10px !important; /* ดึงขึ้นด้านบนให้สุดอีก */
-        margin-bottom: 15px !important;
-        width: 100% !important;
+    /* 🎯 🪚 สั่งเจาะลึกปุ่มระบบนำทางด้านบนสุด (Top Nav Group) ให้จัดระเบียบแบบ Flex แถวเดียว ไม่ตัดขึ้นบรรทัดใหม่ */
+    .fixed-nav-container {
+        position: absolute !important;
+        top: 20px !important;
+        left: 24px !important;
+        right: 24px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        z-index: 999999 !important;
+        background: transparent !important;
     }
-    .top-nav-box div.stButton > button {
-        background-color: #007bc3 !important; /* เปลี่ยนเป็นสีน้ำเงินตามรูปที่ 3 */
+    
+    /* ควบคุมโครงสร้างปุ่มขนาดเล็กที่ฝังตัวอยู่ด้านบนซ้ายและขวา */
+    .fixed-nav-container div.stButton {
+        width: auto !important;
+        display: inline-block !important;
+    }
+    
+    .fixed-nav-container div.stButton > button {
+        background-color: #007bc3 !important;
         color: white !important;
         border: none !important;
         border-radius: 20px !important;
-        padding: 8px 0px !important;
+        padding: 6px 16px !important; /* ถ่างด้านข้างออกเพื่อให้ปุ่มสมส่วน */
         font-size: 14px !important;
         font-weight: bold !important;
+        width: auto !important;
         box-shadow: 0 4px 10px rgba(0, 123, 195, 0.25) !important;
-    }
-    .top-nav-box div.stButton > button:hover {
-        background-color: #0c2340 !important;
+        white-space: nowrap !important; /* 🚫 ห้ามตัวอักษรตัดขึ้นบรรทัดใหม่เด็ดขาด */
     }
     </style>
 """, unsafe_allow_html=True)
@@ -160,20 +172,17 @@ def get_graph_data(target_error):
 if 'page' not in st.session_state:
     st.session_state.page = 'login'
 
-# --- 🎯 ย้ายแถบเมนูนิตออกมาข้างนอกเงื่อนไข เพื่อให้แสดงผลอยู่ "ทุกหน้า" และขยับขึ้นบนสุด ---
-st.markdown('<div class="top-nav-box">', unsafe_allow_html=True)
-nav_col1, nav_col2, nav_col3 = st.columns([1.3, 1.8, 1.3])
-with nav_col1:
-    if st.button("🏠 Home", key="nav_home_global"):
-        st.session_state.page = 'login'
-        st.rerun()
-with nav_col2:
-    st.write("") # เว้นพื้นที่ว่างตรงกลางไว้หลบพิกัดสัดส่วนจอ
-with nav_col3:
-    if st.button("🚪 Logout", key="nav_logout_global"):
-        st.session_state.page = 'login'
-        st.rerun()
+# --- 🎯 จัดชุดโครงสร้างปุ่มนำทางแบบฟิกซ์ล็อกมุมบน (Fixed Bar) แสดงผลขนานกันทุกหน้าจอไม่แตกคอลัมน์ ---
+st.markdown('<div class="fixed-nav-container">', unsafe_allow_html=True)
+btn_home = st.button("🏠 Home", key="btn_fixed_home")
+st.markdown('<div></div>', unsafe_allow_html=True) # ตัวดึงระยะช่องว่างตรงกลาง
+btn_logout = st.button("🚪 Logout", key="btn_fixed_logout")
 st.markdown('</div>', unsafe_allow_html=True)
+
+# สั่งเชื่อมลอจิกระบบกดปุ่มฝั่ง Python
+if btn_home or btn_logout:
+    st.session_state.page = 'login'
+    st.rerun()
 
 # --- ส่วนหัวแอปพลิเคชันหลัก (Header Logo) ---
 st.markdown("""

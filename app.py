@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ CSS ปรับปรุงปุ่ม Dashboard ให้พื้นหลังยาว และจัดให้อยู่กึ่งกลางหน้าจออย่างสมบูรณ์
+# 2. 🛠️ CSS เคลียร์ปัญหาปุ่มชิดซ้าย: บังคับกรอบฟ้ายาวเต็มจอ และจัดตัวอักษรอยู่กึ่งกลางแน่นอน
 st.markdown("""
     <style>
     /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
@@ -38,7 +38,7 @@ st.markdown("""
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
         border: 12px solid #1e293b !important;
         border-radius: 40px !important;
-        padding: 95px 24px 24px 24px !important; /* เว้นระยะด้านบนให้ปุ่มนำทาง */
+        padding: 95px 24px 24px 24px !important; 
         box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
         min-height: 90vh !important;
         height: auto !important;
@@ -64,7 +64,7 @@ st.markdown("""
         margin-bottom: 15px !important;
     }
 
-    /* 🎯 แถบนำทาง Home / Logout ล็อกตำแหน่งไว้ที่มุมบนสุดอย่างแท้จริง */
+    /* 🎯 แถบนำทาง Home / Logout ล็อกตำแหน่งไว้ที่มุมบนสุด */
     .custom-top-navbar {
         position: absolute !important;
         top: 18px !important;
@@ -76,7 +76,6 @@ st.markdown("""
         z-index: 999999 !important;
     }
     
-    /* ดีไซน์ปุ่มลิงก์นำทางด้านบน */
     .nav-btn-link {
         background-color: #007bc3 !important;
         color: white !important;
@@ -116,31 +115,25 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    /* 🎯 แก้ไข: บังคับให้บล็อกปุ่มของ Streamlit อยู่ตรงกลางหน้าจอ */
-    div.stButton {
+    /* 🎯 ไม้ตายแก้ปุ่มเบี้ยว: บังคับบล็อกหลัก บล็อกย่อย และตัวปุ่ม ให้กางยาวเต็มกรอบ 100% */
+    div.stButton, div.stButton > button, div.stButton p {
         width: 100% !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
         text-align: center !important;
-        margin: 0 auto !important;
     }
     
-    /* 🎯 แก้ไข: ตั้งค่าให้ปุ่มยาวขยายเต็มพื้นที่ และจัดอักษรให้อยู่จุดกึ่งกลางของปุ่มพอดี */
+    /* 🎯 สั่งเจาะจงที่ตัวปุ่ม: ตีกรอบฟ้าขยายยาวเต็มแผ่น และล็อกเนื้อหาด้านในให้อยู่จุดกึ่งกลาง (Center) */
     div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
         border-radius: 30px !important;
-        padding: 12px 24px !important;
+        padding: 14px 0px !important; /* ถ่างความสูงปุ่มบน-ล่างให้สวยงาม */
         font-weight: bold !important;
         font-size: 15px !important;
         border: none !important;
-        width: 100% !important;        /* ปรับพื้นหลังปนักงาน/ปุ่มให้ยาว */
-        max-width: 340px !important;   /* คุมขนาดความยาวให้สวยงามพอดีกับกรอบ */
-        display: block !important;
-        margin: 0 auto !important;     /* จัดปุ่มให้อยู่ Center */
-        text-align: center !important; /* จัดข้อความด้านในให้อยู่กึ่งกลางปุ่ม */
-        box-shadow: 0 4px 12px rgba(0, 123, 195, 0.3) !important;
+        box-shadow: 0 4px 12px rgba(0, 123, 195, 0.35) !important;
     }
     
     /* ระบบสไลด์กราฟซ้าย-ขวาบนมือถือ */
@@ -220,7 +213,7 @@ if current_page == "login":
     # คำอธิบายเหนือปุ่มจัดให้อยู่ตรงกลางสอดคล้องกับตัวปุ่ม
     st.markdown('<div style="text-align: center; width: 100%; margin-top: 35px; margin-bottom: 15px;"><div style="color:#2c3e50; font-size:16px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div></div>', unsafe_allow_html=True)
     
-    # 🎯 ปุ่มเปิดภาพรวม Dashboard (แก้เสร็จสมบูรณ์: อยู่ตรงกลางหน้าจอ และขยายพื้นหลังยาว)
+    # 🎯 ปุ่มดูภาพรวม Dashboard (เวอร์ชันบล็อกคลาสชั้นใน: ตีกรอบฟ้ายาว และอยู่ตรงกลาง 100%)
     if st.button("📊 ดูภาพรวม Dashboard", key="btn_login_dash"):
         st.query_params["nav"] = "dashboard"
         st.rerun()

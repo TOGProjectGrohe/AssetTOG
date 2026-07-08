@@ -6,19 +6,24 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างให้เรียบร้อยสมดุล คุมโทนส้มพาสเทลและจัดกึ่งกลาง
+# 2. 🛠️ ชุดคำสั่ง CSS คุมธีม และสไตล์จัดการจัดกึ่งกลาง พร้อมระบบปุ่มนำทางชิดขอบบนสุดของจริง
 st.markdown("""
     <style>
+    /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
         display: none !important;
         visibility: hidden !important;
         height: 0 !important;
     }
+    
+    /* 🚫 ซ่อนปุ่ม Manage App มุมขวาล่างไม่ให้โผล่มากวนใจ */
     [data-testid="stStatusWidget"], #stConnectionStatus, div[class*="viewerBadge"], div[class*="st-emotion-cache-"] button[title="Manage app"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
     }
+
+    /* 📱 ดีไซน์คุมธีมหน้าจอมือถือ ส้มพาสเทลสวยงาม */
     .stApp {
         max-width: 420px !important;
         margin: 0px auto !important;
@@ -30,24 +35,55 @@ st.markdown("""
         min-height: 90vh !important;
         height: auto !important;
     }
+    
+    /* เคลียร์ระยะห่างบล็อกหลักไม่ให้โย้ชิดซ้าย */
     [data-testid="stMainBlockContainer"], [data-testid="stVerticalBlock"], [data-testid="stVerticalBlockRoot"], div[data-testid="element-container"], .stColumn {
         width: 100% !important; max-width: 100% !important; background-color: transparent !important; border: none !important; box-shadow: none !important; padding: 0px !important; margin: 0px !important;
     }
+
+    /* กล่องพื้นหลังขาวสำหรับ Content */
     .login-card {
         background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
     }
+
+    /* 🎯 จัดการแถบนำทางปุ่มกด Home / Logout ให้ฟิกซ์ล็อกชิดขอบบนสุดซ้าย-ขวาอย่างแท้จริง */
     .custom-top-navbar {
-        position: absolute !important; top: 18px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
+        position: absolute !important; 
+        top: 18px !important; 
+        left: 20px !important; 
+        right: 20px !important; 
+        display: flex !important; 
+        justify-content: space-between !important; 
+        align-items: center !important; 
+        z-index: 999999 !important;
     }
-    .nav-btn-link {
-        background-color: #007bc3 !important; color: white !important; border-radius: 20px !important; padding: 8px 16px !important; font-size: 13px !important; font-weight: bold !important; text-decoration: none !important; display: inline-block !important; box-shadow: 0 4px 10px rgba(0, 123, 195, 0.25) !important; white-space: nowrap !important;
+    
+    /* สไตล์คุมกล่องปุ่มย่อยของสตรีมลิตในแถบนำทางด้านบน */
+    .custom-top-navbar div.stButton {
+        width: auto !important;
+        margin-top: 0px !important;
     }
+    .custom-top-navbar div.stButton > button {
+        background-color: #007bc3 !important; 
+        color: white !important; 
+        border-radius: 20px !important; 
+        padding: 6px 16px !important; 
+        font-size: 13px !important; 
+        font-weight: bold !important; 
+        width: auto !important;
+        box-shadow: 0 4px 10px rgba(0, 123, 195, 0.25) !important;
+        white-space: nowrap !important;
+    }
+
+    /* จัดบล็อกโลโก้ TOG และข้อความต้อนรับให้อยู่ตรงกึ่งกลางหน้าจอแบบ 100% */
     .center-header-block {
         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
     }
     .tog-center-logo {
         width: 50px; height: 50px; background-color: #000000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-weight: bold; font-size: 15px; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
+    
+    /* บังคับปุ่มทั่วไปด้านล่างให้ตีกรอบสไตล์ฟ้ายาวและจัดอักษรตรงกลางกึ่งกลาง */
     div.stButton {
         width: 100% !important; display: flex !important; justify-content: center !important; align-items: center !important; margin-top: 10px !important;
     }
@@ -56,6 +92,10 @@ st.markdown("""
     }
     div.stButton > button * {
         display: flex !important; justify-content: center !important; align-items: center !important; text-align: center !important; width: auto !important; margin: 0 auto !important;
+    }
+    
+    div[data-testid="stRadio"] > label {
+        font-weight: bold !important; color: #1e293b !important;
     }
     .scrollable-graph-container {
         width: 100% !important; overflow-x: auto !important; display: block !important; margin-bottom: 15px !important;
@@ -128,13 +168,19 @@ if 'current_defect' not in st.session_state: st.session_state.current_defect = N
 
 current_page = st.session_state.page
 
-# --- แถบนำทางด้านบนสุด ---
-st.markdown("""
-<div class="custom-top-navbar">
-    <a href="#" onclick="window.location.reload();" class="nav-btn-link">🏠 Home</a>
-    <a href="#" onclick="window.location.reload();" class="nav-btn-link">🚪 Logout</a>
-</div>
-""", unsafe_allow_html=True)
+# --- 🎯 แถบนำทางด้านบนสุด (ปรับปรุงให้ใช้ st.button แท้ร่วมกับ CSS ฟิกซ์มุมบนขนานกัน 100%) ---
+st.markdown('<div class="custom-top-navbar">', unsafe_allow_html=True)
+btn_nav_home = st.button("🏠 Home", key="top_btn_home")
+btn_nav_logout = st.button("🚪 Logout", key="top_btn_logout")
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ลอจิกเมื่อพนักงานกดปุ่มนำทางด้านบนสุดชิ้นงานตัวใดตัวหนึ่ง
+if btn_nav_home or btn_nav_logout:
+    st.session_state.page = "login"
+    st.session_state.user_info = None
+    st.session_state.current_defect = None
+    st.query_params.clear()
+    st.rerun()
 
 # --- โลโก้ TOG กลางหน้าจอ ---
 st.markdown("""
@@ -156,15 +202,11 @@ if current_page == "login":
     if enable_camera:
         picture = st.camera_input("", label_visibility="collapsed")
         if picture:
-            # 🎯 ระบบดักจับข้อความสแกนจากกล้อง และทำการจับคู่แมปรายชื่อพนักงานจริงทันที
-            scanned_raw_id = "20" # ตัวอย่างค่าดิบที่ได้จากการแสกน
-            
+            scanned_raw_id = "20" # ค่าจำลองพิกัดสแกนจากกล้อง QR Code
             if scanned_raw_id in EMPLOYEE_DATA:
                 emp = EMPLOYEE_DATA[scanned_raw_id]
                 st.session_state.user_info = {
-                    "id": scanned_raw_id,
-                    "name": emp["name"],
-                    "position": emp["position"],
+                    "id": scanned_raw_id, "name": emp["name"], "position": emp["position"],
                     "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
             else:
@@ -176,7 +218,7 @@ if current_page == "login":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
     
-    if st.button("📊 ดูภาพรวมระบบโดยไม่สแกน"):
+    if st.button("📊 ดูภาพรวมระบบโดยไม่สแกน", key="btn_guest_view"):
         st.session_state.user_info = {
             "id": "20", "name": "นาย สมบัติ อำภา", "position": "GL",
             "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -186,7 +228,6 @@ if current_page == "login":
 
 # ---------------- หน้าสอง: คัดเลือก 3 แผงปุ่ม Defect ----------------
 elif current_page == "select_defect":
-    # 🪪 แสดงผลข้อมูลชื่อลิงก์พนักงานชุดจริงจาก Google Sheets หัวมุมบนสุด
     if st.session_state.user_info:
         info = st.session_state.user_info
         st.markdown(f"""
@@ -198,39 +239,38 @@ elif current_page == "select_defect":
         
     st.markdown('<div class="login-card" style="text-align:center;"><b>🎯 โปรดเลือกประเภท Defect เพื่อตรวจสอบคลังงาน:</b></div>', unsafe_allow_html=True)
     
-    if st.button("🟠 ดูข้อมูล Defect 260 (Rough Lines)"):
+    if st.button("🟠 ดูข้อมูล Defect 260 (Rough Lines)", key="btn_def_260"):
         st.session_state.current_defect = 260
         st.session_state.page = "defect_view"
         st.rerun()
         
-    if st.button("🔵 ดูข้อมูล Defect 261 (Grinding Structure)"):
+    if st.button("🔵 ดูข้อมูล Defect 261 (Grinding Structure)", key="btn_def_261"):
         st.session_state.current_defect = 261
         st.session_state.page = "defect_view"
         st.rerun()
         
-    if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
+    if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)", key="btn_def_380"):
         st.session_state.current_defect = 380
         st.session_state.page = "defect_view"
         st.rerun()
 
-# ---------------- หน้าสาม: แสดงกราฟ 1-10 ของชิ้นงาน พร้อมกรอบ Before / After แยกหน้า ----------------
+# ---------------- หน้าสาม: แสดงกราฟ 1-10 พร้อมกรอบ Before / After ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     color_hex = "#ff7f0e" if defect == 260 else ("#002060" if defect == 261 else "#000000")
     defect_title = "Defect 260" if defect == 260 else ("Defect 261" if defect == 261 else "Defect 380")
     
-    if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"):
+    if st.button("🔙 กลับไปเลือกประเภท Defect อื่น", key="btn_back_select"):
         st.session_state.page = "select_defect"
         st.rerun()
         
     st.markdown(f'<div class="login-card" style="text-align:center; border-left: 6px solid {color_hex};"><b>📊 ข้อมูลสรุปกราฟ 1-10 ของ {defect_title}</b></div>', unsafe_allow_html=True)
     
-    # ดึงผลเฉพาะกราฟอันดับของตัวแปรประเภทนั้น
     df_current = get_graph_data(defect)
     if not df_current.empty:
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig = px.bar(df_current, x='Material', y='rework quantity', text='rework quantity')
-        fig.update_traces(textposition='outside', marker_color=color_hex)
+        fig.update_traces(textposition='outside', marker_color='#ff7f0e' if defect == 260 else ('#002060' if defect == 261 else '#000000'))
         fig.update_layout(xaxis=dict(type='category', tickangle=45), yaxis=dict(tickformat='d'), margin=dict(l=10, r=10, t=25, b=50), height=200, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div></div>', unsafe_allow_html=True)

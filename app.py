@@ -2,13 +2,13 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. ตั้งค่าหน้าเว็บให้ซ่อนเมนูแบบ Built-in
+# 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ CSS ชุดทำลายล้างป้ายแอดมินระดับลึก (ลบมงกุฎแดงและวงกลมเขียวบนมือถือให้หายขาด)
+# 2. 🛠️ ชุดคำสั่งดักทำลายป้ายแอดมิน (มงกุฎแดง/วงกลมเขียว) และคุมธีมมือถือให้เนียนกริบ
 st.markdown("""
     <style>
-    /* 🚫 ซ่อนปุ่ม Deploy (มงกุฎแดง) แถบเครื่องมือ และปุ่มจุด 3 จุด ทั้งหมด */
+    /* 🚫 ซ่อนปุ่มแอดมิน, ปุ่มเครื่องมือ และป้าย Deploy ดั้งเดิมของ Streamlit ทั้งหมด */
     .stDeployButton, 
     [data-testid="stHeader"], 
     [data-testid="stToolbar"], 
@@ -19,26 +19,22 @@ st.markdown("""
         display: none !important;
         visibility: hidden !important;
         height: 0 !important;
-        opacity: 0 !important;
     }
     
-    /* 🚫 ถล่มปุ่มวงกลมเขียว (Manage App) และแถบสถานะเชื่อมต่อส่วนล่างสุดของจอมือถือ */
+    /* 🚫 ฝังบล็อกเลเยอร์ซ่อนปุ่มป้ายวงกลมเขียว (Manage App) บนหน้าจอมือถือ */
     [data-testid="stStatusWidget"], 
     #stConnectionStatus,
     .st-emotion-cache-zq59db,
     .st-emotion-cache-1wb763a,
     .st-emotion-cache-6q9sum,
     .st-emotion-cache-15z78k,
-    .st-emotion-cache-b9st7z,
-    .st-emotion-cache-h5g6vv,
     div[class*="st-emotion-cache-"] button[title="Manage app"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
-        height: 0 !important;
     }
 
-    /* 📱 ดีไซน์กรอบแอปให้เป็นทรงสมาร์ทโฟน สีส้มพาสเทลสวยงาม */
+    /* 📱 ดีไซน์คุมธีมหน้าจอมือถือ ส้มพาสเทลสวยงาม */
     .stApp {
         max-width: 420px !important;
         margin: 0px auto !important;
@@ -51,7 +47,7 @@ st.markdown("""
         height: auto !important;
     }
     
-    /* 🎯 ล้างบางแท่งขาวรี ๆ หรือเส้นขอบแปลก ๆ ที่มักจะโผล่มาคั่นช่องว่างบนมือถือ */
+    /* 🎯 เคลียร์ระยะห่างและแท่งแถบสีขาวรี ๆ ที่ชอบโผล่มาคั่นช่องว่างเลเยอร์ */
     div[data-testid="stVerticalBlock"] > div,
     div[data-testid="element-container"],
     [data-testid="stVerticalBlock"] {
@@ -63,7 +59,7 @@ st.markdown("""
         margin: 0px !important;
     }
 
-    /* 🏷️ ส่วนหัวแอปประยุกต์ LOGO วงกลมดำ */
+    /* 🏷️ การจัดวาง Logo วงกลมสีดำ TOG ด้านบนหัวแอป */
     .bank-header {
         display: flex;
         align-items: center;
@@ -84,35 +80,77 @@ st.markdown("""
         font-size: 14px;
     }
 
-    /* 🪪 กล่องขาว Login Card */
+    /* 🪪 กล่องพื้นหลังขาว Card ครอบส่วนเนื้อหาสำคัญ */
     .login-card {
         background-color: white !important;
         border-radius: 20px !important;
-        padding: 20px !important;
+        padding: 15px !important;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 15px !important;
+    }
+
+    .bottom-wrapper {
+        text-align: center !important;
+        width: 100% !important;
+        margin-top: 35px !important;
+    }
+
+    div.stButton {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    /* บังคับปุ่ม Dashboard ให้ยาวใหญ่เต็มขอบจอ สีฟ้าสดใส และโค้งมน */
+    div.stButton > button {
+        background-color: #007bc3 !important;
+        color: white !important;
+        border-radius: 30px !important;
+        padding: 14px 0px !important;
+        font-weight: bold !important;
+        font-size: 16px !important;
+        border: none !important;
+        width: 100% !important;
+        display: block !important;
+        margin: 0 auto !important;
+        box-shadow: 0 4px 15px rgba(0, 123, 195, 0.4) !important;
+    }
+    div.stButton > button:hover {
+        background-color: #0c2340 !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# ฟังก์ชันดึงข้อมูลจาก Google Sheet
-@st.cache_data(ttl=30)
-def load_data():
-    sheet_id = "1jL7baZKeeuAmuQUCWuEN7cqjya9HoZjCi9riD6DUnB8"
+# 3. 📊 ฟังก์ชันเชื่อมต่อเพื่อดึงและแบ่งกลุ่มข้อมูลตามรหัส errortype ต่างๆ
+@st.cache_data(ttl=15)
+def get_graph_data(target_error):
+    sheet_id = "1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c"
     gid = "0"
     csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     try:
-        return pd.read_csv(csv_url)
+        raw_df = pd.read_csv(csv_url)
+        raw_df.columns = raw_df.columns.str.strip()
+        
+        # แปลงค่าเพื่อป้องกันข้อมูลผิดพลาด
+        raw_df['errortype'] = pd.to_numeric(raw_df['errortype'], errors='coerce')
+        raw_df['rework quantity'] = pd.to_numeric(raw_df['rework quantity'], errors='coerce').fillna(0)
+        
+        # กรองเจาะจงเฉพาะรหัส errortype ที่ส่งเข้ามาในฟังก์ชัน
+        filtered_df = raw_df[raw_df['errortype'] == target_error]
+        
+        # จัดกลุ่มนับยอดรวม Rework แยกตามชิ้นงาน (Material)
+        grouped_df = filtered_df.groupby('Material', as_index=False)['rework quantity'].sum()
+        top_10 = grouped_df.sort_values(by='rework quantity', ascending=False).head(10)
+        
+        top_10['Material'] = top_10['Material'].astype(str)
+        return top_10
     except:
-        return pd.DataFrame()
+        return pd.DataFrame(columns=['Material', 'rework quantity'])
 
-df = load_data()
-
-# ตรวจสอบสถานะหน้าเพจด้วย Session State (กลับมาใช้โครงสร้างสตรีมลิตปกติที่รันเสถียรที่สุด)
+# 4. ระบบจัดการหน้าเพจด้วย Session State
 if 'page' not in st.session_state:
     st.session_state.page = 'login'
 
-# --- ส่วนแสดงผลบนสุด: Header ---
+# --- ส่วนโครงสร้างหัวเว็บแอป (Header) ---
 st.markdown(f"""
 <div class="bank-header">
     <div class="tog-circle-logo">TOG</div>
@@ -130,7 +168,7 @@ if st.session_state.page == 'login':
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
 
-    enable_camera = st.checkbox("เปิดสิทธิ์ใช้งานกล้องถ่ายรูป")
+    enable_camera = st.checkbox("เปิดสิทธิ์ใช้งานกล้องถ่ายรูป", value=True)
     if enable_camera:
         st.markdown("<p style='font-size:13px; color:#64748b; margin-top:10px;'>สแกน QR Code พนักงานของคุณ</p>", unsafe_allow_html=True)
         picture = st.camera_input("", label_visibility="collapsed")
@@ -139,55 +177,60 @@ if st.session_state.page == 'login':
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🎯 กล่องคำถาม จัดวางตรงกึ่งกลางหน้าจอ
-    st.markdown('<div style="text-align:center; color:#2c3e50; font-size:16px; margin-top:40px; margin-bottom:15px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div>', unsafe_allow_html=True)
-    
-    # 🎯 ใช้ฟังก์ชันดั้งเดิม use_container_width=True ของ Streamlit เพื่อดึงปุ่มขยายยาวเต็มจอ
-    if st.button("📊 ดูภาพรวม Dashboard", key="btn_dash", use_container_width=True):
+    st.markdown('<div class="bottom-wrapper"><div style="color:#2c3e50; font-size:16px; margin-bottom:15px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div></div>', unsafe_allow_html=True)
+    if st.button("📊 ดูภาพรวม Dashboard"):
         st.session_state.page = 'dashboard'
         st.rerun()
-        
-    # สั่งเขียน CSS ฝังเจาะจงเฉพาะปุ่ม key="btn_dash" ให้เปลี่ยนเป็นสีฟ้าสดใส โค้งมนกริบ
-    st.markdown("""
-        <style>
-        div.stButton > button[key="btn_dash"] {
-            background-color: #007bc3 !important;
-            color: white !important;
-            border-radius: 30px !important;
-            padding: 14px 0px !important;
-            font-weight: bold !important;
-            font-size: 16px !important;
-            border: none !important;
-            box-shadow: 0 4px 12px rgba(0, 123, 195, 0.3) !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
 
-# ---------------- หน้าหลัก: Dashboard ----------------
+# ---------------- หน้าสอง: Dashboard (3 กราฟในหน้าเดียว) ----------------
 elif st.session_state.page == 'dashboard':
-    st.markdown('<div class="login-card" style="padding: 15px !important;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">📈 อันดับความสำเร็จ 1-10</h4></div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align:center; font-size:20px; font-weight:bold; color:#2c3e50; margin-bottom:15px;">📊 สรุปภาพรวม Dashboard</div>', unsafe_allow_html=True)
 
-    if not df.empty:
-        col_name = df.columns[0]
-        col_value = df.columns[1] if len(df.columns) > 1 else df.columns[0]
-        top_10 = df.sort_values(by=col_value, ascending=False).head(10)
+    # 📈 กราฟชุดที่ 1: รหัสความผิดพลาด 260
+    st.markdown('<div class="login-card"><b>🔥 อันดับชิ้นงานสูงสุด อาการ 260 (Rough Lines)</b></div>', unsafe_allow_html=True)
+    df_260 = get_graph_data(260)
+    if not df_260.empty:
+        fig_260 = px.bar(df_260, x='Material', y='rework quantity', text='rework quantity', color='rework quantity', color_continuous_scale="Oranges")
+        fig_260.update_traces(textposition='outside')
+        fig_260.update_layout(margin=dict(l=5, r=5, t=20, b=5), height=180, showlegend=False, coloraxis_showscale=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig_260, use_container_width=True)
+    else:
+        st.caption("ไม่มีข้อมูลสำหรับรหัส 260")
 
-        fig_bar = px.bar(top_10, x=col_name, y=col_value, color=col_value, color_continuous_scale="Oranges")
-        fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180, showlegend=False, coloraxis_showscale=False)
-        st.plotly_chart(fig_bar, use_container_width=True)
+    # 📈 กราฟชุดที่ 2: รหัสความผิดพลาด 261
+    st.markdown('<div class="login-card"><b>⚡ อันดับชิ้นงานสูงสุด อาการ 261 (Grinding Structure Visible)</b></div>', unsafe_allow_html=True)
+    df_261 = get_graph_data(261)
+    if not df_261.empty:
+        fig_261 = px.bar(df_261, x='Material', y='rework quantity', text='rework quantity', color='rework quantity', color_continuous_scale="Purples")
+        fig_261.update_traces(textposition='outside')
+        fig_261.update_layout(margin=dict(l=5, r=5, t=20, b=5), height=180, showlegend=False, coloraxis_showscale=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig_261, use_container_width=True)
+    else:
+        st.caption("ไม่มีข้อมูลสำหรับรหัส 261")
 
-    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+    # 📈 กราฟชุดที่ 3: รหัสความผิดพลาด 380
+    st.markdown('<div class="login-card"><b>💥 อันดับชิ้นงานสูงสุด อาการ 380</b></div>', unsafe_allow_html=True)
+    df_380 = get_graph_data(380)
+    if not df_380.empty:
+        fig_380 = px.bar(df_380, x='Material', y='rework quantity', text='rework quantity', color='rework quantity', color_continuous_scale="Blues")
+        fig_380.update_traces(textposition='outside')
+        fig_380.update_layout(margin=dict(l=5, r=5, t=20, b=5), height=180, showlegend=False, coloraxis_showscale=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig_380, use_container_width=True)
+    else:
+        st.caption("ไม่มีข้อมูลสำหรับรหัส 380")
+
+    st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     
-    # กลุ่มปุ่มกดควบคุมในหน้า Dashboard
+    # ปุ่มควบคุมท้ายเพจ
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🔍 ประวัติ", use_container_width=True):
-            st.info("กำลังพัฒนาส่วนนี้...")
+        if st.button("🔍 ประวัติย้อนหลัง", use_container_width=True):
+            st.toast("กำลังพัฒนาส่วนนี้...")
     with col2:
-        if st.button("➕ เพิ่มงาน", use_container_width=True):
-            st.info("กำลังพัฒนาส่วนนี้...")
+        if st.button("➕ เพิ่มตัว Imp.", use_container_width=True):
+            st.toast("กำลังพัฒนาส่วนนี้...")
             
-    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     if st.button("🔙 ออกจากระบบ", use_container_width=True):
         st.session_state.page = 'login'
         st.rerun()

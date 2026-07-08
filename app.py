@@ -2,107 +2,108 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. ตั้งค่าหน้าเว็บ (พื้นฐาน)
+# 1. ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่งทำลายล้าง Toolbar และป้าย Deploy (Extreme Kill)
+# 2. 🛠️ ไม้ตายสุดท้าย: ไล่ล่าลบทุกอย่างที่เป็นส่วนเกินของ Streamlit (Ads/Toolbar/White Bars)
 st.markdown("""
     <style>
-    /* 🚫 1. ลบปุ่ม Deploy (มงกุฎแดง) และ MainMenu (จุด 3 จุด) แบบถาวร */
-    .stDeployButton, .st-emotion-cache-15z78k, .st-emotion-cache-6q9sum, .st-emotion-cache-1wb763a {
-        display: none !important;
-    }
-    
-    /* 🚫 2. ลบแถบ Toolbar ด้านบนและสถานะการเชื่อมต่อ */
-    [data-testid="stHeader"], [data-testid="stDecoration"], [data-testid="stToolbar"] {
+    /* 🚫 ลบป้าย Deploy, มงกุฎ, และแถบเมนูทั้งหมด (ครอบคลุมทุกชื่อคลาสสุ่ม) */
+    [data-testid="stHeader"], 
+    [data-testid="stToolbar"], 
+    [data-testid="stDecoration"],
+    [data-testid="stStatusWidget"],
+    footer, 
+    header, 
+    .stDeployButton,
+    #stConnectionStatus {
         display: none !important;
         visibility: hidden !important;
+        height: 0 !important;
+        width: 0 !important;
     }
 
-    /* 🚫 3. ลบปุ่ม Manage App (วงกลมเขียว) ที่มุมล่างขวาบนมือถือ */
-    footer {visibility: hidden !important;}
-    [data-testid="stStatusWidget"], #stConnectionStatus, .st-emotion-cache-zq59db {
-        display: none !important;
-    }
-    
-    /* 🚫 4. ลบเมนูที่แอบขึ้นมาเวลาคลิกขวาหรือกดค้าง */
-    #MainMenu {visibility: hidden !important;}
-
-    /* 📱 ปรับแต่งกรอบมือถือ (TOG Orange Theme) */
+    /* 📱 ปรับแต่งพื้นหลังแอปให้เป็นสีส้มพาสเทลแบบเต็มจอ */
     .stApp {
         max-width: 420px !important;
-        margin: 0px auto !important;
+        margin: 0 auto !important;
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
-        border: 12px solid #1e293b !important;
+        border: 10px solid #1e293b !important;
         border-radius: 40px !important;
-        padding: 24px !important;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
-        min-height: 90vh !important;
-        height: auto !important;
-    }
-    
-    /* 🎯 ล้างบางแท่งขาว/กล่องขาวรีๆ ที่หลุดมาคั่นกลาง */
-    div[data-testid="stVerticalBlock"] > div,
-    div[data-testid="element-container"],
-    .st-emotion-cache-1v07afm {
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        margin: 0px !important;
-        padding: 0px !important;
+        padding: 20px !important;
+        min-height: 95vh !important;
     }
 
-    /* 🏷️ ดีไซน์ส่วนหัว (วงกลมดำ TOG) */
-    .bank-header {
+    /* 🎯 กำจัด "แท่งขาวรีๆ" (White Bars) ที่คั่นกลางระหว่าง Element */
+    [data-testid="stVerticalBlock"] > div {
+        padding: 0px !important;
+        margin: 0px !important;
+        gap: 0px !important;
+    }
+    
+    /* 🎯 ลบช่องว่างและเส้นคั่นสีขาวที่ Streamlit ชอบสร้างขึ้นมาเอง */
+    [data-testid="element-container"] {
+        background: transparent !important;
+        border: none !important;
+        margin-bottom: 0px !important;
+    }
+
+    /* 🏷️ ส่วนหัวแอป (วงกลมดำ TOG) */
+    .custom-header {
         display: flex;
         align-items: center;
         gap: 12px;
-        margin-bottom: 25px;
-        margin-top: 10px;
+        margin-bottom: 30px;
     }
-    .tog-circle-logo {
-        width: 45px;
-        height: 45px;
-        background-color: #000;
+    .tog-logo {
+        width: 48px;
+        height: 48px;
+        background: #000;
         border-radius: 50%;
         display: flex;
         justify-content: center;
         align-items: center;
         color: #fff;
         font-weight: bold;
-        font-size: 14px;
     }
 
-    /* 🪪 กล่อง Login Card */
-    .login-card {
-        background-color: white !important;
-        border-radius: 20px !important;
-        padding: 20px !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-        margin-bottom: 10px !important;
+    /* 🪪 การ์ดสีขาวสำหรับส่วน Login */
+    .login-box {
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
     }
 
-    /* 🎯 จัดโซนข้อความและปุ่ม Dashboard ให้อยู่กึ่งกลางหน้าจอมือถือ */
-    .center-wrapper {
-        text-align: center !important;
+    /* 🎯 บังคับปุ่ม Streamlit ให้ยาวเต็มจอ ตรงกลาง และเป็นสีฟ้าสดใส */
+    div.stButton {
+        display: flex !important;
+        justify-content: center !important;
         width: 100% !important;
-        margin: 40px 0 20px 0 !important;
+        margin-top: 20px !important;
     }
 
-    /* 🎯 ปุ่ม Custom สีฟ้ายาวเต็มจอ (ล็อกตำแหน่งกึ่งกลาง) */
-    .btn-full-width {
+    div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
         border-radius: 30px !important;
-        padding: 14px 0px !important;
+        padding: 15px 0px !important;
         font-weight: bold !important;
         font-size: 16px !important;
         width: 100% !important;
-        display: block !important;
-        text-align: center !important;
-        text-decoration: none !important;
-        box-shadow: 0 4px 12px rgba(0, 123, 195, 0.3) !important;
-        margin: 10px 0 !important;
+        border: none !important;
+        box-shadow: 0 5px 15px rgba(0, 123, 195, 0.3) !important;
+    }
+
+    /* จัดข้อความ Guest ล่างปุ่มให้อยู่ตรงกลาง */
+    .guest-text {
+        text-align: center;
+        color: #2c3e50;
+        font-size: 15px;
+        margin-top: 40px;
+        width: 100%;
+        display: block;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -120,68 +121,55 @@ def load_data():
 
 df = load_data()
 
-# ระบบเปลี่ยนหน้า (Query Params)
-if "nav" not in st.query_params:
-    st.query_params["nav"] = "login"
-current_page = st.query_params["nav"]
+# จัดการ State หน้าเว็บ
+if 'page' not in st.session_state:
+    st.session_state.page = 'login'
 
 # --- ส่วนหัว (Header) ---
-st.markdown(f"""
-<div class="bank-header">
-    <div class="tog-circle-logo">TOG</div>
+st.markdown("""
+<div class="custom-header">
+    <div class="tog-logo">TOG</div>
     <div>
-        <small style="color:#fff; opacity:0.8; display:block; font-size:11px;">ยินดีต้อนรับ</small>
-        <span style="font-size:16px; font-weight:600; color:white;">TOG App</span>
+        <small style="color:white; opacity:0.8; display:block;">ยินดีต้อนรับ</small>
+        <b style="color:white; font-size:17px;">TOG App</b>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- หน้าแรก: Login ----------------
-if current_page == "login":
-    st.markdown('<div style="background:rgba(255,255,255,0.4); border:1px solid rgba(255,255,255,0.5); border-radius:20px; padding:15px; text-align:center; color:#2c3e50; font-weight:bold; margin-bottom:20px;">✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</div>', unsafe_allow_html=True)
+# ---------------- หน้า LOGIN ----------------
+if st.session_state.page == 'login':
+    # แบนเนอร์ (ใช้คำสั่ง Python ปกติ แต่ CSS จะคุมให้ไม่มีขอบขาว)
+    st.markdown('<div style="background:rgba(255,255,255,0.4); border-radius:15px; padding:15px; text-align:center; color:#2c3e50; font-weight:bold; margin-bottom:20px;">✨ ปรับปรุงประสิทธิภาพการทำงานอย่างต่อเนื่อง</div>', unsafe_allow_html=True)
     
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
-    
-    enable_camera = st.checkbox("เปิดสิทธิ์ใช้งานกล้องถ่ายรูป")
-    if enable_camera:
-        st.markdown("<p style='font-size:13px; color:#64748b; margin-top:10px;'>สแกน QR Code พนักงานของคุณ</p>", unsafe_allow_html=True)
-        picture = st.camera_input("", label_visibility="collapsed")
-        if picture:
-            st.query_params["nav"] = "dashboard"
-            st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    # การ์ด Login
+    with st.container():
+        st.markdown('<div class="login-box">', unsafe_allow_html=True)
+        st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
+        enable_camera = st.checkbox("เปิดสิทธิ์ใช้งานกล้องถ่ายรูป")
+        if enable_camera:
+            st.camera_input("สแกน QR Code พนักงาน", label_visibility="collapsed")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🎯 โซนล่างสุด: ปุ่ม Dashboard ยาวเต็มจอ ตรงกลางเป๊ะ ไม่มีเส้นคั่น
-    st.markdown("""
-        <div class="center-wrapper">
-            <div style="color:#2c3e50; font-size:16px; margin-bottom:15px;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div>
-            <a href="?nav=dashboard" target="_self" class="btn-full-width">📊 ดูภาพรวม Dashboard</a>
-        </div>
-    """, unsafe_allow_html=True)
+    # ส่วนล่าง: ข้อความและปุ่ม Dashboard (จัดกลาง+เต็มจอด้วย CSS)
+    st.markdown('<span class="guest-text">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</span>', unsafe_allow_html=True)
+    if st.button("📊 ดูภาพรวม Dashboard"):
+        st.session_state.page = 'dashboard'
+        st.rerun()
 
-# ---------------- หน้าหลัก: Dashboard ----------------
-elif current_page == "dashboard":
-    st.markdown('<div class="login-card" style="padding: 15px !important;"><h4 style="margin:0; font-size:16px; color:#2c3e50;">📈 อันดับความสำเร็จ 1-10</h4></div>', unsafe_allow_html=True)
+# ---------------- หน้า DASHBOARD ----------------
+elif st.session_state.page == 'dashboard':
+    st.markdown('<div class="login-box" style="padding:15px;"><h4 style="margin:0; font-size:16px;">📈 อันดับความสำเร็จ 1-10</h4></div>', unsafe_allow_html=True)
     
     if not df.empty:
         col_name = df.columns[0]
         col_value = df.columns[1] if len(df.columns) > 1 else df.columns[0]
         top_10 = df.sort_values(by=col_value, ascending=False).head(10)
-        
         fig_bar = px.bar(top_10, x=col_name, y=col_value, color=col_value, color_continuous_scale="Oranges")
-        fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=180, showlegend=False, coloraxis_showscale=False)
+        fig_bar.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=200, showlegend=False, coloraxis_showscale=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_bar, use_container_width=True)
     
-    st.markdown(f"""
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
-            <a href="?nav=history" target="_self" class="btn-full-width" style="font-size:14px !important;">🔍 ประวัติ</a>
-            <a href="?nav=add_new" target="_self" class="btn-full-width" style="font-size:14px !important;">➕ เพิ่มงาน</a>
-        </div>
-        <a href="?nav=login" target="_self" class="btn-full-width" style="background-color: #ef4444 !important; margin-top:20px !important;">🔙 ออกจากระบบ</a>
-    """, unsafe_allow_html=True)
-
-# ---------------- หน้าย่อยอื่นๆ ----------------
-else:
-    st.info("กำลังพัฒนาส่วนนี้...")
-    st.markdown('<a href="?nav=dashboard" target="_self" class="btn-full-width">🏠 กลับหน้าหลัก</a>', unsafe_allow_html=True)
+    # ปุ่มกลับหน้าแรก (ปุ่มสีแดง)
+    st.markdown("<div style='margin-top:30px;'></div>", unsafe_allow_html=True)
+    if st.button("🔙 ออกจากระบบ"):
+        st.session_state.page = 'login'
+        st.rerun()

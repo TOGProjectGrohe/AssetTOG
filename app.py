@@ -6,7 +6,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างปุ่มตีกรอบฟ้ายาว ตัวอักษรตรงกลาง และคุมหน้าจอมือถือส้มพาสเทล
+# 2. 🛠️ ชุดคำสั่ง CSS คุมธีมหน้าจอมือถือส้มพาสเทล จัดกึ่งกลาง และฟิกซ์ปุ่มนำทางด้านบนสุด
 st.markdown("""
     <style>
     /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
@@ -46,10 +46,10 @@ st.markdown("""
         background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
     }
 
-    /* 🎯 แถบนำทางปุ่มกด Home / Logout ฟิกซ์ล็อกชิดขอบบนสุดซ้าย-ขวา */
+    /* 🎯 แถบนำทางปุ่มกด Home / Logout เปลี่ยนเป็นโครงสร้างลิงก์ HTML แท้ เพื่อแก้ปัญหาปุ่มทับซ้อนกันซ้ายขวา */
     .custom-top-navbar {
         position: absolute !important; 
-        top: 18px !important; 
+        top: 20px !important; 
         left: 20px !important; 
         right: 20px !important; 
         display: flex !important; 
@@ -58,18 +58,14 @@ st.markdown("""
         z-index: 999999 !important;
     }
     
-    .custom-top-navbar div.stButton {
-        width: auto !important;
-        margin-top: 0px !important;
-    }
-    .custom-top-navbar div.stButton > button {
+    .nav-btn-link {
         background-color: #007bc3 !important; 
         color: white !important; 
         border-radius: 20px !important; 
-        padding: 6px 16px !important; 
+        padding: 8px 16px !important; 
         font-size: 13px !important; 
         font-weight: bold !important; 
-        width: auto !important;
+        text-decoration: none !important;
         box-shadow: 0 4px 10px rgba(0, 123, 195, 0.25) !important;
         white-space: nowrap !important;
     }
@@ -98,7 +94,7 @@ st.markdown("""
     
     /* บังคับปุ่มของ Streamlit ทุกปุ่มกางสีฟ้ายาว และอักษรอยู่ตรงกลางเป๊ะกริบ */
     div.stButton {
-        width: 100% !important; display: flex !important; justify-content: center !important; align-items: center !important; margin-top: 10px !important;
+        width: 100% !important; display: flex !important; justify-content: center !important; align-items: center !important; margin-top: 15px !important;
     }
     div.stButton > button {
         background-color: #007bc3 !important; color: white !important; border-radius: 30px !important; padding: 13px 0px !important; font-weight: bold !important; font-size: 15px !important; border: none !important; width: 100% !important; max-width: 340px !important; display: flex !important; justify-content: center !important; align-items: center !important; margin: 0 auto !important; box-shadow: 0 4px 12px rgba(0, 123, 195, 0.25) !important;
@@ -122,26 +118,20 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานแบบเรียลไทม์ (ปรับจูนพิกัดคอลัมน์แบบยืดหยุ่นไดนามิก ค้นพบเจอแน่นอน)
-@st.cache_data(ttl=2)  
+# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานแบบเรียลไทม์จาก Google Sheet ด้วยระบบแมทช์ค่า String สัมบูรณ์
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     gid = "0"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     try:
         df = pd.read_csv(url)
-        # เคลียร์ล้างช่องว่างของหัวคอลัมน์ทั้งหมด
         df.columns = df.columns.str.strip()
         
-        # 🎯 ตรวจสอบเงื่อนไขหากพบคอลัมน์หลัก ID ในชีตปัจจุบัน
         if 'ID' in df.columns:
-            # แปลงคอลัมน์ ID ทั้งหมดใน Sheet ให้เป็น String, ลบเว้นวรรค และตัด .0 ทิ้งแบบถอนรากถอนโคน
+            # แปลงเป็นข้อความ ล้างเว้นวรรค และตัดเศษ .0 ออกทั้งหมด
             df['ID'] = df['ID'].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
-            
-            # คลีนค่ารหัสที่พนักงานป้อนเข้ามาด้วยวิธีเดียวกัน
             target_id = str(input_id).strip().replace('.0', '')
             
-            # ทำการเปรียบเทียบข้อมูลรายแถว
             match = df[df['ID'] == target_id]
             if not match.empty:
                 row = match.iloc[0]
@@ -151,7 +141,7 @@ def get_employee_from_sheet(input_id):
                     "name": str(row['Name']).strip() if 'Name' in df.columns else "ไม่ระบุชื่อ",
                     "position": str(row['Position']).strip() if 'Position' in df.columns else "พนักงาน"
                 }
-    except Exception as e:
+    except:
         pass
     return {"found": False, "id": str(input_id), "name": None, "position": None}
 
@@ -193,26 +183,26 @@ def get_graph_data(target_error):
     except:
         return pd.DataFrame(columns=['Material', 'rework quantity'])
 
+# ตั้งค่าสถานะหน้าเพจผ่านทางคลัง Session State ย่อย
 if 'page' not in st.session_state: st.session_state.page = "login"
 if 'user_info' not in st.session_state: st.session_state.user_info = None
 if 'current_defect' not in st.session_state: st.session_state.current_defect = None
-if 'check_clicked' not in st.session_state: st.session_state.check_clicked = False
-if 'temp_result' not in st.session_state: st.session_state.temp_result = None
 
 current_page = st.session_state.page
 
-# --- แถบนำทางด้านบนสุด ---
-st.markdown('<div class="custom-top-navbar">', unsafe_allow_html=True)
-btn_nav_home = st.button("🏠 Home", key="top_btn_home")
-btn_nav_logout = st.button("🚪 Logout", key="top_btn_logout")
-st.markdown('</div>', unsafe_allow_html=True)
+# --- 🎯 แถบนำทางปุ่มกดด้านบนสุดสไตล์ลิงก์ HTML แท้ (แก้ไขจุดปุ่มซ้อนกันฝั่งซ้ายแล้ว) ---
+st.markdown("""
+<div class="custom-top-navbar">
+    <a href="?nav=reset" target="_self" class="nav-btn-link">🏠 Home</a>
+    <a href="?nav=reset" target="_self" class="nav-btn-link">🚪 Logout</a>
+</div>
+""", unsafe_allow_html=True)
 
-if btn_nav_home or btn_nav_logout:
+# รับค่าจากลิงก์ด้านบนเมื่อมีพนักงานเผลอกดสลับเคลียร์ลอจิก
+if st.query_params.get("nav") == "reset":
     st.session_state.page = "login"
     st.session_state.user_info = None
     st.session_state.current_defect = None
-    st.session_state.check_clicked = False
-    st.session_state.temp_result = None
     st.query_params.clear()
     st.rerun()
 
@@ -227,34 +217,27 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- หน้าแรก: Login ----------------
+# ---------------- หน้าแรก: Login (ระบบพิมพ์รหัสและลอจิกเช็คพิกัดทันใจ) ----------------
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown("<h3 style='font-size:17px; margin-top:0; color:#2c3e50; text-align:center;'>🪪 ป้อนรหัสพนักงานเพื่อเข้าระบบ</h3>", unsafe_allow_html=True)
+    st.markdown("<h4 style='font-size:16px; margin-top:0; color:#2c3e50; text-align:center;'>🪪 ป้อนรหัสพนักงานเพื่อเข้าระบบ</h4>", unsafe_allow_html=True)
     
-    input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="เช่น 20, 198, 222", label_visibility="collapsed")
+    # ช่องพิมพ์รหัสพนักงาน ID
+    input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="พิมพ์ตัวเลขรหัส เช่น 20, 198, 222", label_visibility="collapsed")
     
-    if st.button("🔍 ตรวจสอบรายชื่อพนักงาน", key="btn_check_id"):
-        if input_id.strip() == "":
-            st.warning("⚠️ โปรดกรอกรหัสพนักงานก่อนกดตรวจสอบ")
-        else:
-            st.session_state.check_clicked = True
-            with st.spinner("กำลังค้นหารายชื่อแบบ Real-time..."):
-                st.session_state.temp_result = get_employee_from_sheet(input_id)
-                
-    # แสดงผลลัพธ์การตรวจสอบข้อมูลตรงกลางหน้าแรก
-    if st.session_state.check_clicked and st.session_state.temp_result:
-        result = st.session_state.temp_result
+    # 🎯 แก้ไขปุ่มลอจิก: เมื่อกดปุ่มเช็คปุ๊บ ระบบจะประมวลผลดึงค่าแผงข้อมูลเทียบทันทีแบบไม่มีดีเลย์ค้างหน้าแดง
+    if input_id.strip() != "":
+        result = get_employee_from_sheet(input_id)
         
         if result["found"]:
             st.markdown(f"""
             <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
-                <span style="color: #16a34a; font-weight: bold; font-size: 15px;">✅ พบรายชื่อพนักงานในระบบชีตล่าสุด:</span><br>
+                <span style="color: #16a34a; font-weight: bold; font-size: 15px;">✅ ตรวจพบข้อมูลพนักงานถูกต้อง:</span><br>
                 <div style="font-size: 14px; margin-top: 5px; color: #1e293b; text-align: left; padding-left: 10px;">
                     • <b>ชื่อพนักงาน:</b> {result['name']}<br>
-                    • <b>รหัส ID:</b> {result['id']}<br>
+                    • <b>รหัสพนักงาน (ID):</b> {result['id']}<br>
                     • <b>ตำแหน่งงาน:</b> {result['position']}<br>
-                    • <b>เวลาแสกนเข้า:</b> {datetime.now().strftime("%H:%M:%S")}
+                    • <b>เวลาลงชื่อเข้า:</b> {datetime.now().strftime("%H:%M:%S")}
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -273,6 +256,8 @@ if current_page == "login":
                 <small style="color: #7f1d1d; display:block; margin-top: 5px;">(รหัสที่คุณป้อน: ID "{result['id']}") โปรดตรวจสอบเลขอีกครั้งบน Google Sheet</small>
             </div>
             """, unsafe_allow_html=True)
+    else:
+        st.info("💡 โปรดพิมพ์ตัวเลขรหัสพนักงานของคุณลงในช่องด้านบน")
             
     st.markdown('</div>', unsafe_allow_html=True)
 

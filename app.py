@@ -6,19 +6,24 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ CSS ฉบับสมบูรณ์ คุมหน้าจอมือถือ จัดกลาง และตีกรอบปุ่มสวยงาม
+# 2. 🛠️ ชุดคำสั่ง CSS คุมธีม และสไตล์จัดการให้ปุ่มและตัวอักษรทุกชิ้นอยู่กึ่งกลางสมดุล 100%
 st.markdown("""
     <style>
+    /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
         display: none !important;
         visibility: hidden !important;
         height: 0 !important;
     }
+    
+    /* 🚫 ซ่อนปุ่ม Manage App มุมขวาล่างไม่ให้โผล่มากวนใจ */
     [data-testid="stStatusWidget"], #stConnectionStatus, div[class*="viewerBadge"], div[class*="st-emotion-cache-"] button[title="Manage app"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
     }
+
+    /* 📱 ดีไซน์คุมธีมหน้าจอมือถือ ส้มพาสเทลสวยงาม */
     .stApp {
         max-width: 420px !important;
         margin: 0px auto !important;
@@ -30,12 +35,18 @@ st.markdown("""
         min-height: 90vh !important;
         height: auto !important;
     }
+    
+    /* เคลียร์ระยะห่างบล็อกหลักไม่ให้โย้ชิดซ้าย */
     [data-testid="stMainBlockContainer"], [data-testid="stVerticalBlock"], [data-testid="stVerticalBlockRoot"], div[data-testid="element-container"], .stColumn {
         width: 100% !important; max-width: 100% !important; background-color: transparent !important; border: none !important; box-shadow: none !important; padding: 0px !important; margin: 0px !important;
     }
+
+    /* กล่องพื้นหลังขาวสำหรับ Content */
     .login-card {
         background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
     }
+
+    /* 🏠 แถบนำทาง Home / Logout ล็อกตำแหน่งไว้ที่มุมบนสุด */
     .custom-top-navbar {
         position: absolute !important; top: 18px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
     }
@@ -48,15 +59,23 @@ st.markdown("""
     .tog-center-logo {
         width: 50px; height: 50px; background-color: #000000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-weight: bold; font-size: 15px; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
+    
+    /* บังคับปุ่มของ Streamlit ให้ตีกรอบสไตล์ฟ้ายาวและจัดอักษรตรงกลางกึ่งกลาง */
     div.stButton {
         width: 100% !important; display: flex !important; justify-content: center !important; align-items: center !important; margin-top: 10px !important;
     }
     div.stButton > button {
-        background-color: #007bc3 !important; color: white !important; border-radius: 30px !important; padding: 12px 0px !important; font-weight: bold !important; font-size: 15px !important; border: none !important; width: 100% !important; max-width: 340px !important; display: flex !important; justify-content: center !important; align-items: center !important; margin: 0 auto !important; box-shadow: 0 4px 12px rgba(0, 123, 195, 0.25) !important;
+        background-color: #007bc3 !important; color: white !important; border-radius: 30px !important; padding: 13px 0px !important; font-weight: bold !important; font-size: 16px !important; border: none !important; width: 100% !important; max-width: 340px !important; display: flex !important; justify-content: center !important; align-items: center !important; margin: 0 auto !important; box-shadow: 0 4px 12px rgba(0, 123, 195, 0.25) !important;
     }
     div.stButton > button * {
         display: flex !important; justify-content: center !important; align-items: center !important; text-align: center !important; width: auto !important; margin: 0 auto !important;
     }
+    
+    /* สไตล์แต่งกลุ่มปุ่มคัดกรองสลับเลือกสัดส่วนวิทยุด้านล่าง */
+    div[data-testid="stRadio"] > label {
+        font-weight: bold !important; color: #1e293b !important;
+    }
+
     .scrollable-graph-container {
         width: 100% !important; overflow-x: auto !important; display: block !important; margin-bottom: 15px !important;
     }
@@ -69,7 +88,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 📊 ฐานข้อมูลลิงก์โฟลเดอร์ตามเงื่อนไขที่คุณให้มา
+# 3. 📊 ดิกชันนารีเก็บฐานข้อมูลโฟลเดอร์ Google Drive ล็อกพิกัดแม่นยำตามเงื่อนไข (A, B, C ย่อยไปหา Slave)
 DRIVE_MAP = {
     "A": {
         260: {"main": "https://drive.google.com/drive/u/0/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "slave": "https://drive.google.com/drive/u/0/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_name": "SA_260"},
@@ -88,6 +107,7 @@ DRIVE_MAP = {
     }
 }
 
+# 📊 ฟังก์ชันดึงชุดข้อมูลอันดับความถี่ชิ้นงาน Rework จาก Google Sheets
 @st.cache_data(ttl=15)
 def get_graph_data(target_error):
     sheet_id = "1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c"
@@ -106,13 +126,14 @@ def get_graph_data(target_error):
     except:
         return pd.DataFrame(columns=['Material', 'rework quantity'])
 
-# 4. จัดการหน้าเพจและบันทึก State การเลือกกลุ่มข้อมูล
+# 4. ออกแบบระบบจดจำสลับหน้าเพจด้วย Session State คุมพฤติกรรมกล้องมือถือให้เสถียร
 if 'page' not in st.session_state: st.session_state.page = "login"
 if 'user_info' not in st.session_state: st.session_state.user_info = None
+if 'current_defect' not in st.session_state: st.session_state.current_defect = None
 
 current_page = st.session_state.page
 
-# --- แถบนำทางด้านบนสุด ---
+# --- แถบนำทางด้านบนสุดสำหรับรีเฟรชหน้าหลัก ---
 st.markdown("""
 <div class="custom-top-navbar">
     <a href="#" onclick="window.location.reload();" class="nav-btn-link">🏠 Home</a>
@@ -131,7 +152,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- หน้าแรก: Login ----------------
+# ---------------- หน้าที่ 1: Login สแกน QR Code เพื่อเก็บโปรไฟล์พนักงาน ----------------
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50; text-align:center;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
@@ -141,133 +162,133 @@ if current_page == "login":
         picture = st.camera_input("", label_visibility="collapsed")
         if picture:
             st.session_state.user_info = {
-                "id": "EMP-94821", "name": "สมชาย", "surname": "สายลมเย็น",
+                "id": "EMP-20688", "name": "สมบัติ", "surname": "อำภา",
                 "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
-            st.session_state.page = "dashboard"
+            st.session_state.page = "select_defect"
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
     
-    if st.button("📊 ดูภาพรวม Dashboard", key="btn_login_dash"):
+    if st.button("📊 ดูภาพรวมระบบโดยไม่สแกน"):
         st.session_state.user_info = {
-            "id": "GUEST-001", "name": "ผู้เยี่ยมชม", "surname": "(ทั่วไป)",
+            "id": "GUEST-007", "name": "ผู้เยี่ยมชม", "surname": "(ส่วนกลาง)",
             "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
-        st.session_state.page = "dashboard"
+        st.session_state.page = "select_defect"
         st.rerun()
 
-# ---------------- หน้าสอง: Dashboard (ครบถ้วนตามเงื่อนไขใหม่) ----------------
-elif current_page == "dashboard":
-    
-    # โชว์ ID, ชื่อ นามสกุล และเวลา
+# ---------------- หน้าที่ 2: แสดงโปรไฟล์พนักงาน และมีปุ่มเลือก 3 Defect ----------------
+elif current_page == "select_defect":
+    # แสดงข้อมูลพนักงานด้านบนสุดตามบรีฟใหม่
     if st.session_state.user_info:
         info = st.session_state.user_info
         st.markdown(f"""
         <div class="user-profile-box">
-            <div style="font-size: 14px; font-weight: bold; color: #1e293b;">👤 พนักงาน: {info['name']} {info['surname']}</div>
-            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">รหัสพนักงาน: {info['id']} | เวลาแสกนเข้า: {info['time']}</div>
+            <div style="font-size: 14px; font-weight: bold; color: #1e293b;">👤 ผู้ใช้งาน: {info['name']} {info['surname']}</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">ID: {info['id']} | เวลาแสกนเข้า: {info['time']}</div>
         </div>
         """, unsafe_allow_html=True)
-
-    st.markdown('<div style="text-align:center; font-size:17px; font-weight:bold; color:#2c3e50; margin-bottom:15px;">📊 กราฟสรุปผล 3 ประเภท</div>', unsafe_allow_html=True)
-
-    # กราฟประเภทที่ 1: Defect 260
-    st.markdown('<div class="login-card" style="padding:8px 15px; margin-bottom:5px;"><b>🔥 Defect 260 (Rough Lines)</b></div>', unsafe_allow_html=True)
-    df_260 = get_graph_data(260)
-    if not df_260.empty:
-        st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
-        fig_260 = px.bar(df_260, x='Material', y='rework quantity', text='rework quantity')
-        fig_260.update_traces(textposition='outside', marker_color='#ff7f0e')
-        fig_260.update_layout(xaxis=dict(type='category', tickangle=45), yaxis=dict(tickformat='d'), margin=dict(l=10, r=10, t=25, b=50), height=200, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig_260, use_container_width=True)
-        st.markdown('</div></div>', unsafe_allow_html=True)
-
-    # กราฟประเภทที่ 2: Defect 261
-    st.markdown('<div class="login-card" style="padding:8px 15px; margin-bottom:5px;"><b>⚡ Defect 261 (Grinding Structure Visible)</b></div>', unsafe_allow_html=True)
-    df_261 = get_graph_data(261)
-    if not df_261.empty:
-        st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
-        fig_261 = px.bar(df_261, x='Material', y='rework quantity', text='rework quantity')
-        fig_261.update_traces(textposition='outside', marker_color='#002060')
-        fig_261.update_layout(xaxis=dict(type='category', tickangle=45), yaxis=dict(tickformat='d'), margin=dict(l=10, r=10, t=25, b=50), height=200, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig_261, use_container_width=True)
-        st.markdown('</div></div>', unsafe_allow_html=True)
-
-    # กราฟประเภทที่ 3: Defect 380
-    st.markdown('<div class="login-card" style="padding:8px 15px; margin-bottom:5px;"><b>💥 Defect 380 (Contour/Design Fault)</b></div>', unsafe_allow_html=True)
-    df_380 = get_graph_data(380)
-    if not df_380.empty:
-        st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
-        fig_380 = px.bar(df_380, x='Material', y='rework quantity', text='rework quantity')
-        fig_380.update_traces(textposition='outside', marker_color='#000000')
-        fig_380.update_layout(xaxis=dict(type='category', tickangle=45), yaxis=dict(tickformat='d'), margin=dict(l=10, r=10, t=25, b=50), height=200, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig_380, use_container_width=True)
-        st.markdown('</div></div>', unsafe_allow_html=True)
-
-    # --- ส่วนที่สั่งปรับแต่งเพิ่มใหม่: ระบบเลือกรูปภาพ ก่อน/หลัง ---
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown("<b style='color:#1e293b; font-size:14px; display:block; margin-bottom:5px;'>กรอบที่ 1 defect 380 เลือกภาพ Before</b>", unsafe_allow_html=True)
+        
+    st.markdown('<div class="login-card" style="text-align:center;"><b>🎯 โปรดเลือกประเภท Defect ที่ต้องการตรวจสอบคลังงาน:</b></div>', unsafe_allow_html=True)
     
-    # 1. กล่องวิทยุเลือก หน้า A, B, C หรือ อื่นๆ
+    # เมนูปุ่มกดขนาดใหญ่ 3 Defect แยกขาดชิ้นต่อชิ้น
+    if st.button("🟠 ดูข้อมูล Defect 260 (Rough Lines)"):
+        st.session_state.current_defect = 260
+        st.session_state.page = "defect_view"
+        st.rerun()
+        
+    if st.button("🔵 ดูข้อมูล Defect 261 (Grinding Structure)"):
+        st.session_state.current_defect = 261
+        st.session_state.page = "defect_view"
+        st.rerun()
+        
+    if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
+        st.session_state.current_defect = 380
+        st.session_state.page = "defect_view"
+        st.rerun()
+
+# ---------------- หน้าที่ 3: หน้ารายละเอียดงานแบบแยกหน้าต่อหน้า (ไม่ปนกัน) ----------------
+elif current_page == "defect_view":
+    defect = st.session_state.current_defect
+    
+    # แสดงหัวข้อกำกับและสีแท่งตามเงื่อนไขระบุ
+    color_hex = "#ff7f0e" if defect == 260 else ("#002060" if defect == 261 else "#000000")
+    defect_title = "Defect 260" if defect == 260 else ("Defect 261" if defect == 261 else "Defect 380")
+    
+    # ปุ่มย้อนกลับไปสลับเลือก Defect อื่น
+    if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"):
+        st.session_state.page = "select_defect"
+        st.rerun()
+        
+    st.markdown(f'<div class="login-card" style="text-align:center; border-left: 6px solid {color_hex};"><b>📊 ข้อมูลสรุปกราฟ 1-10 ของ {defect_title}</b></div>', unsafe_allow_html=True)
+    
+    # 📈 โชว์เฉพาะกราฟ 1-10 ของชิ้นที่เราคลิกเข้ามาเท่านั้น
+    df_current = get_graph_data(defect)
+    if not df_current.empty:
+        st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
+        fig = px.bar(df_current, x='Material', y='rework quantity', text='rework quantity')
+        fig.update_traces(textposition='outside', marker_color=color_hex)
+        fig.update_layout(xaxis=dict(type='category', tickangle=45), yaxis=dict(tickformat='d'), margin=dict(l=10, r=10, t=25, b=50), height=210, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig, use_container_width=True)
+        st.markdown('</div></div>', unsafe_allow_html=True)
+    else:
+        st.caption("ไม่มีข้อมูลประวัติ rework สำหรับกลุ่มนี้")
+
+    # --- 🔲 กรอบย่อยที่ 1: ระบบตรวจสอบคลังรูป BEFORE (สวิทช์ลิงก์ตรงตามตัวเลือกอัตโนมัติ) ---
+    st.markdown('<div class="login-card">', unsafe_allow_html=True)
+    st.markdown(f"<b style='color:#007bc3; font-size:14px; display:block; margin-bottom:5px;'>🖼️ กรอบที่ 1: {defect_title} เลือกภาพ Before</b>", unsafe_allow_html=True)
+    
     selected_face = st.radio(
-        "เลือกตำแหน่งชิ้นงาน:",
+        "เลือกพิกัดหน้างาน:",
         ["หน้า A", "หน้า B", "หน้า C", "อื่นๆ"],
-        horizontal=True
+        horizontal=True,
+        key=f"radio_face_{defect}"
     )
     
-    # กรณีเลือกหน้าหลัก (A, B, C)
+    # กรณีเลือกหน้าหลัก A, B, C -> ดึงลิงก์มาแมปคู่กันทันทีเพื่อความเร็ว
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"]:
-        face_key = selected_face.split()[-1] # ดึงเฉพาะตัวอักษร A, B, C
-        
-        # คัดกรองรหัส Defect ที่ต้องการเจาะลึกดูรูปภาพย่อย
-        target_defect = st.selectbox("เลือกรหัส Defect เพื่อเข้าคลังรูปย่อย:", [380, 260, 261])
-        
-        # ดึงข้อมูลชุดลิงก์ตรงตามที่กำหนดไว้
-        folder_info = DRIVE_MAP[face_key][target_defect]
+        face_char = selected_face.split()[-1]
+        folder_info = DRIVE_MAP[face_char][defect]
         
         st.markdown(f"""
         <div style="background-color:#f1f5f9; padding:10px; border-radius:10px; font-size:12px; margin: 10px 0;">
-            <b>📁 ระบบล็อกพิกัดคลังภาพอัตโนมัติ:</b><br>
-            • โฟลเดอร์หลัก ({face_key}_{target_defect}): <a href="{folder_info['main']}" target="_blank">คลิกเปิดดู</a><br>
-            • โฟลเดอร์ย่อย ชั้น Slave ({folder_info['slave_name']}): <a href="{folder_info['slave']}" target="_blank">คลิกเปิดดูย่อย</a>
+            <b>📂 พิกัด Drive ตรงตัวเลือก ({face_char}_{defect}):</b><br>
+            • โฟลเดอร์หลัก: <a href="{folder_info['main']}" target="_blank">คลิกเพื่อเปิดไว</a><br>
+            • ชั้นรอง (Slave): <a href="{folder_info['slave']}" target="_blank">คลิกเข้าสู่ {folder_info['slave_name']}</a>
         </div>
         """, unsafe_allow_html=True)
         
-        # ตัวเลือกรูปภาพย่อย 5 รายละเอียดภายในกลุ่ม
-        sub_img = st.selectbox(
-            f"เลือกรายละเอียดภาพย่อยของ {face_key}_{target_defect} (มี 5 ภาพ):",
-            ["ภาพรายละเอียดย่อยที่ 1", "ภาพรายละเอียดย่อยที่ 2", "ภาพรายละเอียดย่อยที่ 3", "ภาพรายละเอียดย่อยที่ 4", "ภาพรายละเอียดย่อยที่ 5"]
-        )
-        st.info(f"📸 กำลังแสดงพรีวิวซอร์สของ: {sub_img}")
+        # ตัวเลือกจำลองเปิดรูปย่อย 5 รูป
+        sub_choice = st.selectbox("เลือกรายละเอียดภาพย่อยย่อย (มี 5 ภาพ):", [f"ภาพรายละเอียดชิ้นงานย่อยที่ {i}" for i in range(1, 6)])
+        st.info(f"📸 พรีวิวกำลังดึงค่าซอร์ส: {sub_choice}")
         
-    # กรณีเลือก "อื่นๆ" -> ระบบเปิดสิทธิ์ให้ถ่ายรูปลงได้เองทันที
+    # กรณีเลือก อื่นๆ -> สั่งเปิดกล้องถ่ายภาพเก็บลงเองได้เลย
     elif selected_face == "อื่นๆ":
-        st.markdown("<p style='color:#64748b; font-size:13px;'>📷 โหมดเลือกกำหนดเอง: โปรดกดปุ่มกล้องเพื่อถ่ายภาพชิ้นงาน Before</p>", unsafe_allow_html=True)
-        other_pic = st.camera_input("ถ่ายภาพชิ้นงานอื่นๆ", key="cam_before_other")
-        if other_pic:
-            st.success("บันทึกรูปภาพ Before เรียบร้อย")
-
+        st.markdown("<p style='color:#64748b; font-size:12px;'>📸 โหมดหน้างานเสริม: กดบันทึกรูปภาพชิ้นงาน Before ได้ด้วยตนเอง</p>", unsafe_allow_html=True)
+        custom_before = st.camera_input("ถ่ายภาพ Before (อื่นๆ)", key=f"cam_before_other_{defect}")
+        if custom_before:
+            st.success("บันทึกภาพถ่าย Before นอกกรอบสำเร็จ")
+            
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- ส่วนด้านล่างสุด: โซน AFTER ---
+    # --- 🔲 กรอบย่อยที่ 2: ระบบจัดการอัปเดตผลลัพธ์ AFTER ---
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
-    st.markdown("<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตข้อมูลผลลัพธ์ After</b>", unsafe_allow_html=True)
+    st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ กรอบที่ 2: ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
     
-    # ช่องพิมพ์ข้อความในส่วน After
-    after_text = st.text_area("พิมพ์ข้อความรายละเอียด / สรุปงาน After:", placeholder="กรอกรายละเอียดผลการแก้ไขที่นี่...")
+    # ช่องกรอกรายละเอียดความเห็น After
+    after_comment = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", key=f"text_after_{defect}", placeholder="กรอกข้อความที่ต้องการบันทึกหลังการแก้ไข...")
     
-    # ถ่ายภาพแนบได้สูงสุด 5 ภาพในส่วน After
-    st.markdown("<p style='font-size:12px; color:#475569; margin-bottom:2px;'>📸 แนบรูปถ่าย After (ส่งได้สูงสุด 5 ภาพ):</p>", unsafe_allow_html=True)
+    # ระบบถ่ายภาพแนบผลงาน After ได้จำนวน 5 รูป
+    st.markdown("<p style='font-size:12px; color:#475569; margin-bottom:2px;'>📸 สแนปภาพถ่ายชิ้นงาน After (ถ่ายแนบได้สูงสุด 5 ภาพ):</p>", unsafe_allow_html=True)
     
-    after_pics = []
-    # ใช้ loop สร้างช่องเปิดกล้องขึ้นมา 5 ช่องเรียงกัน
+    captured_after_list = []
     for i in range(1, 6):
-        pic_captured = st.camera_input(f"ถ่ายภาพ After ชิ้นที่ {i}", key=f"cam_after_{i}")
-        if pic_captured:
-            after_pics.append(pic_captured)
+        pic_after = st.camera_input(f"ถ่ายภาพ After ลำดับที่ {i}", key=f"cam_after_{defect}_{i}")
+        if pic_after:
+            captured_after_list.append(pic_after)
             
-    if after_pics:
-        st.toast(f"บันทึกรูปภาพ After สำเร็จแล้ว {len(after_pics)} ภาพ")
+    if captured_after_list:
+        st.toast(f"รับไฟล์รูปถ่าย After ครบเรียบร้อย {len(captured_after_list)} ภาพ")
         
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)

@@ -6,7 +6,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่ง CSS คุมธีม และสไตล์จัดการจัดกึ่งกลาง พร้อมระบบปุ่มนำทางชิดขอบบนสุดของจริง
+# 2. 🛠️ ชุดคำสั่ง CSS คุมธีมหน้าจอมือถือส้มพาสเทล จัดกึ่งกลาง และฟิกซ์ปุ่มนำทางด้านบนสุด
 st.markdown("""
     <style>
     /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
@@ -58,7 +58,6 @@ st.markdown("""
         z-index: 999999 !important;
     }
     
-    /* สไตล์คุมกล่องปุ่มย่อยของสตรีมลิตในแถบนำทางด้านบน */
     .custom-top-navbar div.stButton {
         width: auto !important;
         margin-top: 0px !important;
@@ -109,21 +108,35 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 🗃️ ฝังฐานข้อมูลรายชื่อพนักงานชุดจริงจาก Google Sheets เพื่อทำตารางดึงข้อมูล (Data Mapping)
-EMPLOYEE_DATA = {
-    "20": {"name": "นาย สมบัติ อำภา", "position": "GL"},
-    "198": {"name": "นาย สมพงษ์ ศักดา", "position": "GL"},
-    "222": {"name": "นาย เชิดชัย ราญรอน", "position": "GL"},
-    "236": {"name": "นาย เอก ห่างภัย", "position": "GL"},
-    "306": {"name": "นาย สำราญ สลุพล", "position": "GL"},
-    "460": {"name": "นาย ธนภัทร ห่างภัย", "position": "GL"},
-    "535": {"name": "นาย ศราวุธ กองกูล", "position": "GL"},
-    "576": {"name": "นาย สมโภชน์ สิงหวิสุทธิ์", "position": "GL"},
-    "688": {"name": "นาย ฟ้าคะนอง จันทน์หอม", "position": "GL"},
-    "742": {"name": "นาย สมควร จันทร์ศรี", "position": "GL"},
-    "859": {"name": "นาย เสน่ห์ เอกนิกรร", "position": "GL"},
-    "885": {"name": "นาย ศรายุทธ์ บุญชัยสิทธิ์", "position": "Se.Eng"}
-}
+# 3. 🌐 ดึงข้อมูลรายชื่อพนักงานแบบเรียลไทม์จาก Google Sheet ลิงก์ใหม่ของคุณโดยตรง
+@st.cache_data(ttl=5)  # ตั้งดีเลย์แคชสั้น ๆ เผื่อคุณกดเพิ่ม/ลดใน Sheet ปุ๊บ ในแอปจะเปลี่ยนตามทันที
+def get_employee_from_sheet(scanned_id):
+    sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
+    gid = "0"
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+    try:
+        df = pd.read_csv(url)
+        # เคลียร์ล้างช่องว่างของชื่อคอลลัมน์ป้องกันบัคพิมพ์เว้นวรรค
+        df.columns = df.columns.str.strip()
+        
+        # แปลงข้อมูลคอลัมน์ ID ให้เป็นข้อความ (String) เพื่อจับคู่กับค่านำเข้าจาก QR ได้แม่นยำ
+        df['ID'] = df['ID'].astype(str).str.strip()
+        target_id = str(scanned_id).strip()
+        
+        # ค้นหาแถวของพนักงานตามรหัส ID
+        match = df[df['ID'] == target_id]
+        if not match.empty:
+            row = match.iloc[0]
+            return {
+                "id": str(row['ID']),
+                "name": str(row['Name']),
+                "position": str(row['Position']) if 'Position' in df.columns else "พนักงาน"
+            }
+    except Exception as e:
+        pass
+    
+    # กรณีเกิดข้อผิดพลาดในการโหลด หรือไม่พบข้อมูลรหัส ให้ใช้ค่า Default เพื่อป้องกันระบบล่ม
+    return {"id": str(scanned_id), "name": "ไม่พบรายชื่อพนักงานในระบบ", "position": "Unknown"}
 
 # 🔗 รายการแผนผังลิงก์โฟลเดอร์ Google Drive แยกตามคู่หน้าและรหัส Defect
 DRIVE_MAP = {
@@ -144,6 +157,7 @@ DRIVE_MAP = {
     }
 }
 
+# 📊 ฟังก์ชันดึงชุดข้อมูลอันดับความถี่ชิ้นงาน Rework จาก Google Sheets คลังหลักข้อมูลดีเฟกต์
 @st.cache_data(ttl=15)
 def get_graph_data(target_error):
     sheet_id = "1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c"
@@ -168,13 +182,12 @@ if 'current_defect' not in st.session_state: st.session_state.current_defect = N
 
 current_page = st.session_state.page
 
-# --- 🎯 แถบนำทางด้านบนสุด (ปรับปรุงให้ใช้ st.button แท้ร่วมกับ CSS ฟิกซ์มุมบนขนานกัน 100%) ---
+# --- แถบนำทางด้านบนสุดสำหรับรีเฟรชหน้าหลัก ---
 st.markdown('<div class="custom-top-navbar">', unsafe_allow_html=True)
 btn_nav_home = st.button("🏠 Home", key="top_btn_home")
 btn_nav_logout = st.button("🚪 Logout", key="top_btn_logout")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ลอจิกเมื่อพนักงานกดปุ่มนำทางด้านบนสุดชิ้นงานตัวใดตัวหนึ่ง
 if btn_nav_home or btn_nav_logout:
     st.session_state.page = "login"
     st.session_state.user_info = None
@@ -202,25 +215,24 @@ if current_page == "login":
     if enable_camera:
         picture = st.camera_input("", label_visibility="collapsed")
         if picture:
-            scanned_raw_id = "20" # ค่าจำลองพิกัดสแกนจากกล้อง QR Code
-            if scanned_raw_id in EMPLOYEE_DATA:
-                emp = EMPLOYEE_DATA[scanned_raw_id]
-                st.session_state.user_info = {
-                    "id": scanned_raw_id, "name": emp["name"], "position": emp["position"],
-                    "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                }
-            else:
-                st.session_state.user_info = {
-                    "id": scanned_raw_id, "name": "นาย สมบัติ อำภา", "position": "GL",
-                    "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                }
+            # สมมุติว่าสแกนกล้องได้รหัสใด ๆ ระบบจะทำการอ่านค่าดึงจากคลังลิงก์ชีตใหม่ของคุณทันที
+            scanned_raw_id = "20" # ตัวอย่างค่าสแกนตั้งต้น
+            emp_info = get_employee_from_sheet(scanned_raw_id)
+            
+            st.session_state.user_info = {
+                "id": emp_info["id"],
+                "name": emp_info["name"],
+                "position": emp_info["position"],
+                "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
             st.session_state.page = "select_defect"
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
     
     if st.button("📊 ดูภาพรวมระบบโดยไม่สแกน", key="btn_guest_view"):
+        emp_info = get_employee_from_sheet("20") # ดึงข้อมูลแถวแรกคุณสมบัติเป็นหลัก
         st.session_state.user_info = {
-            "id": "20", "name": "นาย สมบัติ อำภา", "position": "GL",
+            "id": emp_info["id"], "name": emp_info["name"], "position": emp_info["position"],
             "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         st.session_state.page = "select_defect"
@@ -270,7 +282,7 @@ elif current_page == "defect_view":
     if not df_current.empty:
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig = px.bar(df_current, x='Material', y='rework quantity', text='rework quantity')
-        fig.update_traces(textposition='outside', marker_color='#ff7f0e' if defect == 260 else ('#002060' if defect == 261 else '#000000'))
+        fig.update_traces(textposition='outside', marker_color=color_hex)
         fig.update_layout(xaxis=dict(type='category', tickangle=45), yaxis=dict(tickformat='d'), margin=dict(l=10, r=10, t=25, b=50), height=200, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div></div>', unsafe_allow_html=True)

@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ปรับปรุง CSS ย้ายปุ่มชิดขอบบนสุด และแยกโลโก้ TOG มาไว้ตรงกลางเด็ดขาด
+# 2. 🛠️ ปรับปรุง CSS จัดหน้าตาปุ่ม Dashboard ด้านล่างให้ขยายเต็มความกว้างและอยู่กึ่งกลาง
 st.markdown("""
     <style>
     /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
@@ -90,7 +90,7 @@ st.markdown("""
         white-space: nowrap !important;
     }
 
-    /* 🎯 จัดบล็อกโลโก้ TOG และข้อความต้อนรับให้อยู่ตรงกึ่งกลางหน้าจอแบบ 100% */
+    /* จัดบล็อกโลโก้ TOG และข้อความต้อนรับให้อยู่ตรงกึ่งกลางหน้าจอ */
     .center-header-block {
         display: flex !important;
         flex-direction: column !important;
@@ -112,20 +112,28 @@ st.markdown("""
         color: #ffffff;
         font-weight: bold;
         font-size: 15px;
-        margin-bottom: 8px; /* เว้นระยะห่างระหว่างโลโก้กับข้อความด้านล่าง */
+        margin-bottom: 8px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    /* ปรับแต่งปุ่มสไตล์ Streamlit ด้านล่าง */
+    /* 🎯 จัดการโครงสร้างปุ่มของ Streamlit ให้ขยายเต็มหน้าจอ และจัดข้อความตรงกลาง */
+    div.stButton {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
     div.stButton > button {
         background-color: #007bc3 !important;
         color: white !important;
         border-radius: 30px !important;
-        padding: 12px 0px !important;
+        padding: 12px 20px !important;
         font-weight: bold !important;
         font-size: 15px !important;
         border: none !important;
-        width: 100% !important;
+        width: 100% !important; /* บังคับให้พื้นหลังปุ่มยาวเต็มพื้นที่ */
+        display: inline-block !important;
+        text-align: center !important; /* จัดข้อความภายในปุ่มให้อยู่กึ่งกลาง */
+        box-shadow: 0 4px 12px rgba(0, 123, 195, 0.3) !important;
     }
     
     /* ระบบสไลด์กราฟซ้าย-ขวาบนมือถือ */
@@ -167,7 +175,7 @@ if "nav" not in st.query_params:
 
 current_page = st.query_params["nav"]
 
-# --- 🎯 แถบปุ่มนำทาง (เกาะติดขอบบนสุด แยกซ้ายขวาอย่างอิสระ ไม่ซ้อนทับสิ่งใด) ---
+# --- แถบปุ่มนำทางด้านบนสุด ---
 st.markdown("""
 <div class="custom-top-navbar">
     <a href="?nav=login" target="_self" class="nav-btn-link">🏠 Home</a>
@@ -175,7 +183,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- 🎯 ปรับโครงสร้างใหม่: ย้ายตัวโลโก้ TOG และข้อความต้อนรับมาจัดไว้ตรงกลาง (Center) เพื่อความสวยงาม ---
+# --- โลโก้ TOG และข้อความต้อนรับกึ่งกลาง ---
 st.markdown("""
 <div class="center-header-block">
     <div class="tog-center-logo">TOG</div>
@@ -202,8 +210,10 @@ if current_page == "login":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div style="text-align: center; width: 100%; margin-top: 35px;"><div style="color:#2c3e50; font-size:16px; margin-bottom:15px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div></div>', unsafe_allow_html=True)
+    # ปรับคำอธิบายเหนือปุ่ม Dashboard ให้อยู่ตรงกึ่งกลางด้วยเช่นกันเพื่อให้เข้ากัน
+    st.markdown('<div style="text-align: center; width: 100%; margin-top: 35px; margin-bottom: 15px;"><div style="color:#2c3e50; font-size:16px; font-weight:500;">ต้องการดูข้อมูลสรุปโดยไม่ล็อกอิน?</div></div>', unsafe_allow_html=True)
     
+    # 🎯 ปุ่มเปิดภาพรวม Dashboard (พื้ันหลังยาวเต็มจอและอักษรอยู่ตรงกลาง)
     if st.button("📊 ดูภาพรวม Dashboard", key="btn_login_dash"):
         st.query_params["nav"] = "dashboard"
         st.rerun()

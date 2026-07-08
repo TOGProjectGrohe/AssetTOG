@@ -6,7 +6,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างปุ่มตีกรอบฟ้ายาว ตัวอักษรตรงกลาง และคุมหน้าจอมือถือ
+# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างปุ่มและช่องกรอกข้อมูลให้ยาวเต็มจอ ตัวอักษรตรงกลาง คุมธีมส้มพาสเทล
 st.markdown("""
     <style>
     /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
@@ -46,7 +46,7 @@ st.markdown("""
         background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
     }
 
-    /* 🎯 จัดการแถบนำทางปุ่มกด Home / Logout ให้ฟิกซ์ล็อกชิดขอบบนสุดซ้าย-ขวาอย่างแท้จริง */
+    /* 🎯 แถบนำทางปุ่มกด Home / Logout ฟิกซ์ล็อกชิดขอบบนสุดซ้าย-ขวา */
     .custom-top-navbar {
         position: absolute !important; 
         top: 18px !important; 
@@ -82,6 +82,20 @@ st.markdown("""
         width: 50px; height: 50px; background-color: #000000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-weight: bold; font-size: 15px; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
     
+    /* 🎯 เจาะลึกช่องกรอกข้อความ (TextInput) ให้แสดงผลตัวหนังสืออยู่ตรงกึ่งกลางหน้าจอพอดี */
+    div[data-testid="stTextInput"] input {
+        text-align: center !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        color: #1e293b !important;
+        border-radius: 15px !important;
+        border: 2px solid #cbd5e1 !important;
+    }
+    div[data-testid="stTextInput"] input:focus {
+        border-color: #007bc3 !important;
+        box-shadow: 0 0 0 1px #007bc3 !important;
+    }
+    
     /* บังคับปุ่มของ Streamlit ทุกปุ่มกางสีฟ้ายาว และอักษรอยู่ตรงกลางเป๊ะกริบ */
     div.stButton {
         width: 100% !important; display: flex !important; justify-content: center !important; align-items: center !important; margin-top: 10px !important;
@@ -108,9 +122,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงาน (ปรับสูตรคลีนพิกัดตัวเลขให้เข้ากับค่าสแกนกล้อง 100%)
+# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานแบบเรียลไทม์จาก Google Sheet ลิงก์ของคุณโดยตรง
 @st.cache_data(ttl=2)  
-def get_employee_from_sheet(scanned_id):
+def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     gid = "0"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
@@ -118,13 +132,12 @@ def get_employee_from_sheet(scanned_id):
         df = pd.read_csv(url)
         df.columns = df.columns.str.strip()
         
-        # 🎯 ดักทางแก้บัคชนิดข้อมูล: แปลงคอลัมน์ ID ใน Sheet ให้เป็นข้อความดิบ และล้างทศนิยม .0 ออกให้หมด
+        # คลีนข้อมูล ID ใน Sheet ให้เป็นข้อความ String และลบเศษ .0 ทิ้ง
         df['ID'] = df['ID'].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
         
-        # คลีนค่าที่ได้จากกล้องสแกนด้วยวิธีเดียวกัน
-        target_id = str(scanned_id).strip().replace('.0', '')
+        # คลีนค่าที่ได้จากช่องป้อนข้อมูล
+        target_id = str(input_id).strip().replace('.0', '')
         
-        # ดึงประวัติพนักงานออกมาเปรียบเทียบ
         match = df[df['ID'] == target_id]
         if not match.empty:
             row = match.iloc[0]
@@ -136,7 +149,7 @@ def get_employee_from_sheet(scanned_id):
             }
     except:
         pass
-    return {"found": False, "id": str(scanned_id), "name": None, "position": None}
+    return {"found": False, "id": str(input_id), "name": None, "position": None}
 
 # 🔗 รายการแผนผังลิงก์โฟลเดอร์ Google Drive แยกตามคู่หน้าและรหัส Defect
 DRIVE_MAP = {
@@ -179,7 +192,8 @@ def get_graph_data(target_error):
 if 'page' not in st.session_state: st.session_state.page = "login"
 if 'user_info' not in st.session_state: st.session_state.user_info = None
 if 'current_defect' not in st.session_state: st.session_state.current_defect = None
-if 'scan_result' not in st.session_state: st.session_state.scan_result = None
+if 'check_clicked' not in st.session_state: st.session_state.check_clicked = False
+if 'temp_result' not in st.session_state: st.session_state.temp_result = None
 
 current_page = st.session_state.page
 
@@ -193,7 +207,8 @@ if btn_nav_home or btn_nav_logout:
     st.session_state.page = "login"
     st.session_state.user_info = None
     st.session_state.current_defect = None
-    st.session_state.scan_result = None
+    st.session_state.check_clicked = False
+    st.session_state.temp_result = None
     st.query_params.clear()
     st.rerun()
 
@@ -208,36 +223,36 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- หน้าแรก: Login ----------------
+# ---------------- หน้าแรก: Login (ระบบพิมพ์รหัสและตรวจสอบรายชื่อ) ----------------
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown("<h3 style='font-size:18px; margin-top:0; color:#2c3e50; text-align:center;'>🪪 ส่วนพนักงานเข้าใช้งาน</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='font-size:17px; margin-top:0; color:#2c3e50; text-align:center;'>🪪 ป้อนรหัสพนักงานเพื่อเข้าระบบ</h3>", unsafe_allow_html=True)
     
-    enable_camera = st.checkbox("เปิดสิทธิ์ใช้งานกล้องถ่ายรูป", value=True)
-    if enable_camera:
-        picture = st.camera_input("สแกน", label_visibility="collapsed")
-        if picture:
-            # 🎯 ดึงข้อความดิบ (Raw Text) จากการสแกนกล้องจริงๆ ของพนักงาน
-            scanned_raw_id = str(picture).strip()
-            
-            # วิ่งไปตรวจสอบกับคลังข้อมูลชีตแบบอัปเดตประเภท String แมทช์ 100%
-            with st.spinner("กำลังตรวจสอบรายชื่อพนักงาน..."):
-                emp_info = get_employee_from_sheet(scanned_raw_id)
-                st.session_state.scan_result = emp_info
-
-    # ส่วนแสดงผลลัพธ์แบบเรียลไทม์ที่หน้าแรก
-    if st.session_state.scan_result:
-        result = st.session_state.scan_result
+    # 🎯 ช่องกรอกข้อมูล ID ตัวเลขพนักงาน (จัดตัวอักษรอยู่ตรงกลางด้วย CSS ด้านบน)
+    input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="เช่น 20, 198, 885", label_visibility="collapsed")
+    
+    if st.button("🔍 ตรวจสอบรายชื่อพนักงาน", key="btn_check_id"):
+        if input_id.strip() == "":
+            st.warning("⚠️ โปรดกรอกรหัสพนักงานก่อนกดตรวจสอบ")
+        else:
+            st.session_state.check_clicked = True
+            with st.spinner("กำลังค้นหารายชื่อจาก Google Sheet..."):
+                st.session_state.temp_result = get_employee_from_sheet(input_id)
+                
+    # แสดงผลลัพธ์การตรวจสอบข้อมูลตรงกลางหน้าแรก
+    if st.session_state.check_clicked and st.session_state.temp_result:
+        result = st.session_state.temp_result
         
         if result["found"]:
+            # 🟢 กรณีเจอรายชื่อใน Google Sheet: แสดงโปรไฟล์และเปิดปุ่มเข้าระบบ
             st.markdown(f"""
             <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
-                <span style="color: #16a34a; font-weight: bold; font-size: 15px;">✅ สแกนสำเร็จ ตรวจสอบข้อมูลพนักงาน:</span><br>
-                <div style="font-size: 14px; margin-top: 5px; color: #1e293b; text-align: left; padding-left: 10px;">
+                <span style="color: #16a34a; font-weight: bold; font-size: 15px;">✅ ตรวจพบข้อมูลพนักงานถูกต้อง:</span><br>
+                <div style="font-size: 14px; margin-top: 5px; color: #1e293b; text-align: left; padding-left: 15px;">
                     • <b>ชื่อพนักงาน:</b> {result['name']}<br>
-                    • <b>รหัส ID:</b> {result['id']}<br>
+                    • <b>รหัสพนักงาน (ID):</b> {result['id']}<br>
                     • <b>ตำแหน่งงาน:</b> {result['position']}<br>
-                    • <b>เวลา:</b> {datetime.now().strftime("%H:%M:%S")}
+                    • <b>เวลาลงชื่อเข้า:</b> {datetime.now().strftime("%H:%M:%S")}
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -250,25 +265,15 @@ if current_page == "login":
                 st.session_state.page = "select_defect"
                 st.rerun()
         else:
+            # ❌ กรณีไม่เจอรายชื่อ: ขึ้นเตือนสีแดง และบล็อกไม่ให้กดไปหน้าถัดไป
             st.markdown(f"""
             <div style="background-color: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
                 <span style="color: #dc2626; font-weight: bold; font-size: 15px;">❌ ไม่พบรายชื่อพนักงานในระบบ</span><br>
-                <small style="color: #7f1d1d; display:block; margin-top: 5px;">(รหัสสแกนที่ตรวจพบจากกล้อง: ID "{result['id']}") ไม่ได้รับอนุญาตให้เข้าใช้งาน</small>
+                <small style="color: #7f1d1d; display:block; margin-top: 5px;">(รหัสรหัสที่คุณป้อน: ID "{result['id']}") ไม่ได้รับอนุญาตให้ผ่านเข้าใช้งานหน้า Dashboard</small>
             </div>
             """, unsafe_allow_html=True)
             
     st.markdown('</div>', unsafe_allow_html=True)
-    
-    # ปุ่มคัตเอาท์จำลองเข้าดูแบบ Manual
-    st.markdown('<div style="text-align: center; width: 100%; margin-top: 25px; margin-bottom: 5px;"><div style="color:#2c3e50; font-size:15px; font-weight:500;">ต้องการจำลองสิทธิ์เข้าระบบ?</div></div>', unsafe_allow_html=True)
-    if st.button("📊 จำลองเข้าระบบแอดมิน (ID 20)", key="btn_guest_view"):
-        emp_info = get_employee_from_sheet("20")
-        st.session_state.user_info = {
-            "id": emp_info["id"], "name": emp_info["name"], "position": emp_info["position"],
-            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-        st.session_state.page = "select_defect"
-        st.rerun()
 
 # ---------------- หน้าสอง: คัดเลือก 3 แผงปุ่ม Defect ----------------
 elif current_page == "select_defect":
@@ -277,7 +282,7 @@ elif current_page == "select_defect":
         st.markdown(f"""
         <div class="user-profile-box">
             <div style="font-size: 14px; font-weight: bold; color: #1e293b;">👤 ผู้ใช้งาน: {info['name']}</div>
-            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">ID: {info['id']} | ตำแหน่ง: {info['position']} | เวลาแสกนเข้า: {info['time']}</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">ID: {info['id']} | ตำแหน่ง: {info['position']} | เวลาเข้างาน: {info['time']}</div>
         </div>
         """, unsafe_allow_html=True)
         

@@ -114,18 +114,16 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงาน (เพิ่มระบบรายงานสถานะแจ้งเตือนหาจุดขัดข้อง)
+# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงาน
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     gid = "0"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     try:
-        # ดึงไฟล์ผ่าน pandas ตรงๆ แบบไม่แคชเพื่อทดสอบความเสถียร
         df = pd.read_csv(url)
         df.columns = df.columns.str.strip()
         
         if 'ID' in df.columns:
-            # ล้างฟอร์แมตตัวแปรให้อยู่ในรูปข้อความเพียว
             df['ID'] = df['ID'].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
             target_id = str(input_id).strip().replace('.0', '')
             
@@ -141,7 +139,6 @@ def get_employee_from_sheet(input_id):
                 }
             return {"status": "success", "found": False, "id": target_id}
     except Exception as e:
-        # หากเชื่อมไม่สำเร็จ สลับโยนค่า error ไปแจ้งหน้าจอหลักเพื่อเช็คสิทธิ์
         return {"status": "error", "error_msg": str(e), "id": str(input_id)}
     
     return {"status": "success", "found": False, "id": str(input_id)}
@@ -226,7 +223,6 @@ if current_page == "login":
     if input_id.strip() != "":
         result = get_employee_from_sheet(input_id)
         
-        # 🎯 ตัวดักตรวจสอบสิทธิ์: กรณีขึ้น Error แปลว่ายังไม่ได้เปิดแชร์ลิ้งก์สาธารณะบนชีต
         if result["status"] == "error":
             st.error(f"⚠️ การเชื่อมต่อถูกปฏิเสธ! โปรดไปที่ Google Sheet แล้วกด 'แชร์' เปลี่ยนจาก 'จำกัด' ให้เป็น 'ทุกคนที่มีลิงก์'")
             st.caption(f"รายละเอียดทางเทคนิค: {result['error_msg']}")
@@ -307,7 +303,7 @@ elif current_page == "defect_view":
     # ดึงข้อมูลกราฟมาประมวลผล
     df_current = get_graph_data(defect)
     
-    # 🎯 ตัวแปรเตรียมแกะค่ารหัสจาก Chart
+    # ตัวแปรเตรียมแกะค่ารหัสจาก Chart
     selected_material_from_chart = ""
     
     if not df_current.empty:
@@ -322,19 +318,14 @@ elif current_page == "defect_view":
             showlegend=False, 
             paper_bgcolor='rgba(0,0,0,0)', 
             plot_bgcolor='rgba(0,0,0,0)',
-            clickmode='event+select' # เปิดโหมดล็อกเป้าหมายรับพิกัดคลิก
+            clickmode='event+select'
         )
         
-        # ⚡ สั่งรันคำสั่งแสดงพล็อตพร้อมดักจับข้อมูล Rerun แบบ On Select
+        # แสดงผล Plotly และใช้ฟังก์ชัน On Select เพื่อจับ Rerun แบบถูกวิธี
         chart_data = st.plotly_chart(fig, use_container_width=True, on_select="rerun")
         st.markdown('</div></div>', unsafe_allow_html=True)
         
-        # ถอดรหัสหาข้อความ Material เมื่อคลิกแท่งกราฟ
-        if chart_data := chart_data: # ตรวจสอบค่ากล่องพิกัด
-            pass
-        if chart_data := st.context.get("chart_click"): # ฟังก์ชันดึงพิกัดซอร์สตรงของ Streamlit
-            pass
-        # ลอจิกดึงชุดจุดพิกเซลจุดของ Plotly Chart ดั้งเดิม
+        # 🎯 จุดแก้ไข: ถอดรหัสค่าที่ถูกคลิกจากตัวแปร chart_data อย่างถูกต้องตามสเปกของ Streamlit
         if chart_data and "selection" in chart_data and "points" in chart_data["selection"]:
             points = chart_data["selection"]["points"]
             if len(points) > 0:
@@ -344,7 +335,7 @@ elif current_page == "defect_view":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#007bc3; font-size:14px; display:block; margin-bottom:5px;'>🖼️ กรอบที่ 1: {defect_title} เลือกภาพ Before</b>", unsafe_allow_html=True)
     
-    # 🎯 แสดงผลรหัสชิ้นงานที่คลิกเลือกแบบอัตโนมัติ
+    # แสดงผลรหัสชิ้นงานที่คลิกเลือกแบบอัตโนมัติ
     if selected_material_from_chart:
         st.success(f"🎯 เลือก Material อัตโนมัติ: **{selected_material_from_chart}**")
     else:
@@ -372,7 +363,7 @@ elif current_page == "defect_view":
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ กรอบที่ 2: ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
     
-    # 🎯 บรรจุค่า Material นำร่องเข้าไปกรอกให้ล่วงหน้าในช่อง After
+    # บรรจุค่า Material นำร่องเข้าไปกรอกให้ล่วงหน้าในช่อง After
     default_text = f"รายงานผลชิ้นงาน Material รหัส: {selected_material_from_chart}\n" if selected_material_from_chart else ""
     
     st.text_area(

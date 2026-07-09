@@ -8,7 +8,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งองค์ประกอบให้สวยหรู เท่ากันเป๊ะ
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งองค์ประกอบให้เป็นแนวโปร่งแสงหรูหรา
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -113,28 +113,31 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02) !important;
     }
 
-    /* 📊 ตกแต่งกรอบปุ่มให้ยาวเท่ากันเป๊ะแบบ 100% พื้นหลังสีฟ้าอ่อน ตัวอักษรสีดำ พร้อมมิติมินิมอล */
+    /* 💎 ✨ ปรับแต่งกรอบปุ่มเลือก Defect ให้เป็นสีฟ้าอ่อนแบบโปร่งแสง (Glassmorphic) สวยหรู */
     div.stButton > button {
-        background-color: #bae6fd !important;
+        background-color: rgba(186, 230, 253, 0.45) !important; /* ใช้สีฟ้าอ่อนโปร่งแสง (Alpha 0.45) */
+        backdrop-filter: blur(8px) !important; /* เพิ่มเอฟเฟกต์เบลอพื้นหลังกระจกเพิ่มความพรีเมียม */
+        -webkit-backdrop-filter: blur(8px) !important;
         color: #000000 !important;
         font-weight: bold !important;
         font-size: 14px !important;
-        border: 2px solid #ffffff !important;
+        border: 2px solid rgba(255, 255, 255, 0.6) !important; /* ขอบสีขาวโปร่งแสงเน้นมิติขอบปุ่มกระจก */
         border-radius: 16px !important;
-        width: 100% !important; /* จัดให้ยาวกว้างขนานเท่ากันทุกกล่อง */
+        width: 100% !important;
         padding: 12px 20px !important;
         margin-bottom: 12px !important;
         display: block !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05), inset 0 -3px 0 rgba(0,0,0,0.1) !important;
-        transition: all 0.2s ease !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03), inset 0 1px 2px rgba(255,255,255,0.4) !important;
+        transition: all 0.25s ease !important;
     }
     div.stButton > button:hover {
-        background-color: #7dd3fc !important;
+        background-color: rgba(125, 211, 252, 0.65) !important; /* เมื่อเอาเมาส์วาง จะเข้มขึ้นเล็กน้อยเพื่อตอบสนองผู้ใช้ */
+        border: 2px solid rgba(255, 255, 255, 0.8) !important;
         transform: translateY(-1px) !important;
     }
     div.stButton > button:active {
         transform: translateY(1px) !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        background-color: rgba(125, 211, 252, 0.45) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -238,12 +241,11 @@ if current_page == "login":
             
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสอง: คัดเลือก Defect (อัปเดตสั้นกระชับ-กรอบขนานเท่ากัน) ----------------
+# ---------------- หน้าสอง: คัดเลือก Defect (อัปเดตพื้นหลังปุ่มโปร่งแสงสไตล์กระจก) ----------------
 elif current_page == "select_defect":
-    # หัวข้อกล่องสีน้ำเงินอ่อน ตัวอักษรสีดำ
     st.markdown('<div class="defect-title-box">🎯 โปรดเลือกประเภท Defect ที่ต้องการปรับปรุง</div>', unsafe_allow_html=True)
     
-    # กรอบปุ่มทั้ง 3 ยืดกว้างเท่ากันเป๊ะ และเอาคำว่า "ดูข้อมูล" ออกตามบรีฟ
+    # ปุ่มควบคุมความยาวเท่ากัน และได้พื้นหลังโปร่งแสงหรูหราแล้วตาม CSS ด้านบน
     if st.button("🟠 Defect 260 (Rough Lines)"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
     if st.button("🔵 Defect 261 (Grinding Structure)"):

@@ -180,7 +180,7 @@ def load_real_defect_data():
     except Exception as e:
         return pd.DataFrame()
 
-# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม
+# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม (แก้ไขจุดบกพร่องแถว หน้า C แล้ว)
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -374,10 +374,11 @@ elif current_page == "defect_view":
             clickmode='event+select'
         )
         
+        # แก้ไขโค้ดที่ค้างคำว่า Implementers เรียบร้อยแล้วตรงจุดนี้
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         state_key = f"sel_mat_{defect}"
         
-        if selected_bar and "selection" in selected_bar Implementers and selected_bar["selection"]["points"]:
+        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             clicked_material = selected_bar["selection"]["points"][0]["x"]
             st.session_state[state_key] = clicked_material
         

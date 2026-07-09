@@ -125,7 +125,7 @@ st.markdown("""
         transform: translateY(-1px) !important;
     }
     
-    /* 💾 ตกแต่งปุ่ม Save สีเขียวสดใสโดดเด่นน่ากด */
+    /* 💾 ปรับแต่งปุ่ม Save สีเขียวเด่นชัดสำหรับคีย์ save_btn_ ทุกตัว */
     div.stButton > button[key^="save_btn_"] {
         background-color: #10b981 !important;
         color: white !important;
@@ -187,7 +187,7 @@ def load_real_defect_data():
     except Exception as e:
         return pd.DataFrame()
 
-# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม (ซ่อมแซมจุด "main_url" ของหน้า C แล้ว)
+# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -337,7 +337,6 @@ elif current_page == "defect_view":
         st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:8px; margin-bottom:5px;'>💡 เลือก Material ที่ต้องการปรับปรุงจากกราฟ</p>", unsafe_allow_html=True)
         
         state_key = f"sel_mat_{defect}"
-        # 🛠️ ✨ ซ่อมแซมเรียบร้อย ตัดคำแปลกปลอม Implementers ออกตามโครงสร้างปกติ
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]
         if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
@@ -385,8 +384,8 @@ elif current_page == "defect_view":
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 💾 ปุ่มบันทึกข้อมูลเข้าแผ่นงาน
-    if st.button("💾 บันทึกข้อมูลหลังปรับปรุง (Save)", key=f"save_btn_{defect}"):
+    # 💾 ✨ แก้ไขข้อความปุ่มเหลือเพียงคำว่า "บันทึกข้อมูล" ตามภาพตัวอย่างเรียบร้อยครับ
+    if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
         if not after_text.strip():
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
         else:

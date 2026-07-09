@@ -6,7 +6,7 @@ import base64
 import plotly.graph_objects as go
 from datetime import datetime
 
-# ⚠️ อัปเดตฝังลิงก์ Web App URL ตัวล่าสุดของคุณวีรพันธ์เรียบร้อยครับ!
+# ⚠️ ฝังลิงก์ Web App URL ตัวล่าสุดของคุณวีรพันธ์ลงในระบบเรียบร้อยครับ!
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
@@ -184,7 +184,6 @@ elif current_page == "defect_view":
         state_key = f"sel_mat_{defect}"
         if state_key not in st.session_state: st.session_state[state_key] = list_of_materials[0]
         
-        # 📊 คืนชีพกราฟแท่งวิเคราะห์และตรรกะตรวจจับการกดเปลี่ยนเพื่อดึงรหัส Material เป้าหมายจริงกลับคืนมา
         st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 รายงาน 10 อันดับ Defect {defect} ที่พบ</b>", unsafe_allow_html=True)
         
@@ -208,6 +207,7 @@ elif current_page == "defect_view":
         
         st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:8px; margin-bottom:5px;'>💡 เลือก Material ที่ต้องการปรับปรุงจากกราฟ</p>", unsafe_allow_html=True)
         
+        # 🛠️ ตรวจสอบ Syntax การเช็กอินเตอร์เฟซ ปลอดภัยจากปัญหา Implementers บล็อกบั๊ก
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]
             
@@ -223,7 +223,6 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
         
-        # 🔗 ✨ ส่วนลิงก์คลังภาพ Google Drive หลักชิ้นงานและจุดย่อยกลับมาทำงานสัมพันธ์กับ Material เรียบร้อยครับ!
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
@@ -243,6 +242,8 @@ elif current_page == "defect_view":
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}_{st.session_state.clear_trigger}")
+    
+    st.markdown("<p style='font-size:13px; font-weight:bold; color:#2c3e50; margin-bottom:2px;'>📸 แนบรูปหลักฐานผลงาน After ชิ้นงานจริง (แนบได้สูงสุด 5 ภาพ):</p>", unsafe_allow_html=True)
     
     uploaded_after_files = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ (สูงสุด 5 ภาพ):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_af_file_{defect}_{st.session_state.clear_trigger}")
     if uploaded_after_files:
@@ -278,22 +279,22 @@ elif current_page == "defect_view":
             if len(base64_list) > 3: img4 = base64_list[3]
             if len(base64_list) > 4: img5 = base64_list[4]
 
+            # 📊 บรรจุ Payload ส่งค่าตรงตามฟิลด์บนตารางเรียงคอลลัมน์ A-R ครบถ้วน
             payload = {
                 "timestamp": save_timestamp, 
                 "employee_id": emp_id, 
                 "employee_name": emp_name, 
-                "position": emp_position, 
-                "material": str(selected_material), 
-                "position_f": emp_position, 
-                "defect_type": f"Defect {defect}", 
-                "location_face": str(selected_face), 
-                "after_details": str(after_text),
+                "position": emp_position,          # 📁 ดึงค่าจริงจากรายชื่อพนักงาน -> ส่งไปลงคอลัมน์ D
+                "material": str(selected_material), # 📁 -> ส่งไปลงคอลัมน์ E
+                "defect_improvement": str(defect),  # 📁 หัวข้อดึงเฉพาะรหัสตัวเลขล้วน (เช่น 260) -> ส่งไปลงคอลัมน์ F
+                "improvement_type": str(selected_face), # 📁 พิกัดหน้างาน (เช่น หน้า A) -> ส่งไปลงคอลัมน์ G
+                "after_details": str(after_text),   # 📁 ข้อความผลงาน After -> ส่งไปลงคอลัมน์ M
                 "pic1": img1, "pic2": img2, "pic3": img3, "pic4": img4, "pic5": img5
             }
             try:
                 response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                 if response.status_code == 200:
-                    st.success("🎉 บันทึกข้อมูลและรูปภาพ After เข้าตาราง Recording เรียบร้อยแล้ว!")
+                    st.success("🎉 บันทึกข้อมูลเรียบร้อยแล้ว!")
                     st.session_state.clear_trigger += 1
                     st.rerun()
                 else:

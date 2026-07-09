@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+import re
 
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างธีมหน้าจอมือถือ ส้มพาสเทลสวยงาม
+# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างดีไซน์ปุ่มและช่องกรอกลิงก์ให้สวยงาม ส้มพาสเทลคลีน ๆ
 st.markdown("""
     <style>
     /* ซ่อนเมนูส่วนเกินดั้งเดิมของ Streamlit */
@@ -19,7 +19,7 @@ st.markdown("""
         visibility: hidden !important;
     }
 
-    /* ดีไซน์ธีมหน้าจอมือถือ */
+    /* ดีไซน์ธีมหน้าจอมือถือส้มพาสเทล */
     .stApp {
         max-width: 420px !important;
         margin: 0px auto !important;
@@ -32,10 +32,6 @@ st.markdown("""
         height: auto !important;
     }
     
-    [data-testid="stMainBlockContainer"], [data-testid="stVerticalBlock"], [data-testid="stVerticalBlockRoot"], div[data-testid="element-container"] {
-        width: 100% !important; max-width: 100% !important; background-color: transparent !important; border: none !important; box-shadow: none !important; padding: 0px !important; margin: 0px !important;
-    }
-
     .login-card {
         background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
     }
@@ -54,27 +50,37 @@ st.markdown("""
         width: 50px; height: 50px; background-color: #000000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-weight: bold; font-size: 15px; margin-bottom: 8px;
     }
 
-    /* ปุ่มลิงก์สไตล์กล่องใหญ่เพื่อให้พนักงานกดง่ายเต็มตา */
+    /* ปุ่มทางลัดเปิดโฟลเดอร์ Google Drive สีน้ำเงินเด่นชัด */
     .drive-action-link-btn {
         display: block !important;
         text-align: center !important;
         background-color: #007bc3 !important;
         color: white !important;
-        padding: 12px 20px !important;
+        padding: 10px 15px !important;
         border-radius: 12px !important;
         font-weight: bold !important;
+        font-size: 13px !important;
         text-decoration: none !important;
-        margin-top: 10px !important;
-        margin-bottom: 10px !important;
+        margin-top: 8px !important;
+        margin-bottom: 12px !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
-        transition: background-color 0.2s !important;
-    }
-    .drive-action-link-btn:hover {
-        background-color: #005aab !important;
-        color: white !important;
     }
     </style>
 """, unsafe_allow_html=True)
+
+# 🌐 ฟังก์ชันแปลงลิงก์ Google Drive แชร์ธรรมดา ให้เป็นลิงก์รูปภาพตรงเพื่อนำมาส่องพรีวิวในหน้าแอปได้ทันที
+def convert_drive_url_to_embed(url):
+    if not url:
+        return None
+    # แกะสกัดเอา File ID จากลิงก์รูปแบบต่าง ๆ ของ Google Drive
+    match = re.search(r'/file/d/([a-zA-Z0-9-_]+)', url)
+    if not match:
+        match = re.search(r'id=([a-zA-Z0-9-_]+)', url)
+    if match:
+        file_id = match.group(1)
+        # แปลงเป็น URL พรีวิวแบบ Direct Link ของ Google Docs/Drive
+        return f"https://docs.google.com/uc?export=view&id={file_id}"
+    return None
 
 # 🌐 ฟังก์ชันข้อมูลรายชื่อพนักงานจาก Google Sheet
 def get_employee_from_sheet(input_id):
@@ -93,7 +99,7 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 🔗 🔗 ฐานข้อมูลแมปปิ้งลิงก์โฟลเดอร์ปลายทาง Google Drive ทั้ง 18 โฟลเดอร์ตรงตามที่คุณส่งมาเป๊ะ ๆ
+# 🔗 คลังแมปปิ้งลิงก์โฟลเดอร์ Google Drive 18 ปลายทางตรงตามบรีฟเป๊ะ ๆ
 DRIVE_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0?usp=sharing", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0?usp=sharing", "slave_title": "SA_260"},
@@ -118,7 +124,6 @@ if 'current_defect' not in st.session_state: st.session_state.current_defect = N
 
 current_page = st.session_state.page
 
-# --- แถบนำทางด้านบนสุด ---
 st.markdown('<div class="custom-top-navbar"><a href="?nav=reset" target="_self" class="nav-btn-link">🏠 Home</a><a href="?nav=reset" target="_self" class="nav-btn-link">🚪 Logout</a></div>', unsafe_allow_html=True)
 if st.query_params.get("nav") == "reset":
     st.session_state.page = "login"; st.session_state.user_info = None; st.session_state.current_defect = None
@@ -150,7 +155,7 @@ elif current_page == "select_defect":
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
-# ---------------- หน้าสาม: ปรับโครงสร้างใหม่ เหลือกรอบละ 1 ภาพ และกดแล้วเด้งไป Drive ปลายทางทันที ----------------
+# ---------------- หน้าสาม: กรอบละ 1 ภาพ + ลอจิกวางลิงก์แล้วภาพเด้งโชว์คาโปรแกรมทันที ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -159,36 +164,53 @@ elif current_page == "defect_view":
         st.session_state.page = "select_defect"; st.rerun()
         
     st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 ส่วนคัดเลือกชิ้นงาน Before ของ {defect_title}</b></div>', unsafe_allow_html=True)
-    
-    selected_face = st.radio("เลือกพิกัดหน้างานเพื่อเปิดคลังภาพ:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
+    selected_face = st.radio("เลือกพิกัดหน้างานเพื่อดึงข้อมูลคลังภาพ:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
     
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"]:
         face_char = selected_face.split()[-1]
         folder_info = DRIVE_MAP[face_char][defect]
         
         # ----------------------------------------------------
-        # 🟢 กรอบที่ 1: ส่วนภาพใหญ่ ก่อนการแก้ไข (ลดเหลือ 1 ภาพ/ปุ่ม)
+        # 🟢 กรอบที่ 1: ส่วนภาพใหญ่ ก่อนการแก้ไข (กรอบเดี่ยว 1 ปุ่มตามสเปก)
         # ----------------------------------------------------
         st.markdown(f'<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:13px;'>🖼️ ส่วนที่ 1: เลือกภาพใหญ่ชิ้นงานต้นทาง (คลัง {folder_info['main_title']})</b>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size:11px; color:#64748b; margin:0;'>*กดปุ่มด้านล่างเพื่อเปิดคลังภาพต้นทางและเลือกภาพใหญ่ด้วยตนเอง:</p>", unsafe_allow_html=True)
         
-        # แสดงปุ่มลิงก์ขนาดใหญ่สำหรับเปิดโฟลเดอร์หลักจริงทางเบราว์เซอร์
-        st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-action-link-btn">📁 คลิกเพื่อไปเลือกภาพใหญ่ใน Drive</a>', unsafe_allow_html=True)
+        # 1. พนักงานกดปุ่มสีน้ำเงินเพื่อแวบไปส่องหรือก๊อปปี้ลิงก์ภาพในโฟลเดอร์ Google Drive
+        st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-action-link-btn">🔗 1. กดไปก๊อปปี้ลิงก์ภาพในคลังส่องดูภาพจริง</a>', unsafe_allow_html=True)
+        
+        # 2. นำลิงก์รูปที่พนักงานก๊อปปี้มาวางในช่องนี้เพื่อให้รูปแนบโชว์คาโปรแกรมทันที!
+        main_url_input = st.text_input("✍️ 2. วางลิงก์รูปภาพใหญ่ที่นี่เพื่อแนบโชว์:", key=f"input_main_link_{face_char}_{defect}", placeholder="วางลิงก์รูปภาพที่ก๊อปปี้มาจาก Drive...")
+        
+        if main_url_input.strip() != "":
+            embed_main_img = convert_drive_url_to_embed(main_url_input)
+            if embed_main_img:
+                st.image(embed_main_img, use_container_width=True, caption=f"🖼️ แนบภาพใหญ่จากแฟ้ม {folder_info['main_title']} สำเร็จ!")
+            else:
+                st.warning("⚠️ ลิงก์ไม่ถูกต้อง โปรดคัดลอกลิงก์แชร์ของ 'ไฟล์รูปภาพ' มาวางแทนลิงก์โฟลเดอร์ครับ")
         st.markdown('</div>', unsafe_allow_html=True)
 
         # ----------------------------------------------------
-        # 🔵 กรอบที่ 2: ส่วนรายละเอียดรูปย่อย (ลดลงเหลือแค่ 1 ภาพ/ปุ่ม ทั้งหมดเรียบร้อย)
+        # 🔵 กรอบที่ 2: ส่วนรายละเอียดรูปย่อย (กรอบเดี่ยว 1 ปุ่มตามสเปก)
         # ----------------------------------------------------
         st.markdown(f'<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:13px;'>📥 ส่วนที่ 2: เลือกรูปรายละเอียดจุดย่อย (คลัง {folder_info['slave_title']})</b>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size:11px; color:#64748b; margin:0;'>*กดปุ่มด้านล่างเพื่อเปิดคลังภาพย่อยและเลือกภาพจุดดีเฟคด้วยตนเอง:</p>", unsafe_allow_html=True)
         
-        # แสดงปุ่มลิงก์ขนาดใหญ่สำหรับเปิดโฟลเดอร์รอง (Slave) จริงทางเบราว์เซอร์
-        st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-action-link-btn">📂 คลิกเพื่อไปเลือกภาพย่อยใน Drive</a>', unsafe_allow_html=True)
+        # 1. พนักงานกดปุ่มสีน้ำเงินแวบไปส่องหรือก๊อปปี้ลิงก์ภาพย่อย
+        st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-action-link-btn">🔗 1. กดไปก๊อปปี้ลิงก์ภาพย่อยในคลังส่องดูภาพจริง</a>', unsafe_allow_html=True)
+        
+        # 2. นำลิงก์รูปย่อยมาวางเพื่อให้ระบบดึงมาแนบโชว์คาโปรแกรมทันที
+        slave_url_input = st.text_input("✍️ 2. วางลิงก์รูปภาพย่อยที่นี่เพื่อแนบโชว์:", key=f"input_slave_link_{face_char}_{defect}", placeholder="วางลิงก์รูปภาพย่อยที่ก๊อปปี้มาจาก Drive...")
+        
+        if slave_url_input.strip() != "":
+            embed_slave_img = convert_drive_url_to_embed(slave_url_input)
+            if embed_slave_img:
+                st.image(embed_slave_img, use_container_width=True, caption=f"📸 แนบภาพรายละเอียดจากแฟ้ม {folder_info['slave_title']} สำเร็จ!")
+            else:
+                st.warning("⚠️ ลิงก์ไม่ถูกต้อง โปรดคัดลอกลิงก์แชร์ของ 'ไฟล์รูปภาพ' มาวางแทนลิงก์โฟลเดอร์ครับ")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🔲 กรอบปิดท้าย: ส่วนอัปเดตงาน AFTER 
+    # 🔲 กรอบปิดท้าย: ส่วนสรุปงานหลังการแก้ไข (AFTER)
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
     st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")

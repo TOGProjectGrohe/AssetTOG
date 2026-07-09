@@ -6,13 +6,13 @@ import base64
 import plotly.graph_objects as go
 from datetime import datetime
 
-# ⚠️ ฝังลิงก์ Web App URL ตัวล่าสุดของคุณวีรพันธ์ลงในระบบเรียบร้อยครับ!
+# 🌐 ลิงก์ Web App URL ตัวล่าสุดของคุณวีรพันธ์ที่ได้รับการตรวจสอบความถูกต้องแล้ว
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ - แก้ไขข้อบกพร่องเรื่องปุ่มทับซ้อนกันเรียบร้อยครับ
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -25,7 +25,7 @@ st.markdown("""
         max-width: 420px !important; margin: 0px auto !important;
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
         border: 12px solid #1e293b !important; border-radius: 40px !important;
-        padding: 95px 24px 24px 24px !important; box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
+        padding: 105px 24px 24px 24px !important; box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
         min-height: 90vh !important; height: auto !important;
     }
     .login-card {
@@ -34,20 +34,24 @@ st.markdown("""
     .future-graph-card {
         background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
     }
+    
+    /* 🛠️ จัดระเบียบแถบควบคุม Navbar ด้านบนเพื่อไม่ให้ปุ่ม Home ซ้อนทับกัน */
     .custom-top-navbar {
-        position: absolute !important; top: 20px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
+        position: absolute !important; top: 25px !important; left: 24px !important; right: 24px !important; 
+        display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
     }
     .nav-btn-link {
         background-color: #bae6fd !important; color: #000000 !important; border: 1px solid rgba(0,0,0,0.05) !important;
-        border-radius: 20px !important; padding: 8px 16px !important; font-size: 13px !important; font-weight: bold !important; text-decoration: none !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        border-radius: 20px !important; padding: 8px 14px !important; font-size: 13px !important; font-weight: bold !important; text-decoration: none !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important; display: inline-block !important;
     }
+    
     .tog-logo-circle {
         width: 50px !important; height: 50px !important; background-color: rgba(0, 0, 0, 0.2) !important; border: 1px solid rgba(0, 0, 0, 0.1) !important;
         border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; color: #000000 !important; font-weight: bold !important; font-size: 15px !important; margin: 0 auto 8px auto !important;
     }
     .center-header-block {
-        display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
+        display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 15px !important; margin-bottom: 25px !important; width: 100% !important;
     }
     .drive-link-button {
         display: block !important; text-align: center !important; background-color: #10b981 !important; color: white !important;
@@ -162,6 +166,9 @@ elif current_page == "select_defect":
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
+    
+    # 🛠️ ย้ายปุ่มกลับไปเลือกประเภทอื่นๆ ลงมาด้านล่าง Navbar เล็กน้อยไม่ให้เบียดกัน
+    st.markdown("<br><br>", unsafe_allow_html=True)
     if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"): st.session_state.page = "select_defect"; st.rerun()
         
     st.markdown(f'<div class="login-card" style="text-align:center; color:#000000; font-weight:bold;"><b>📊 แผนภูมิ Defect {defect}</b></div>', unsafe_allow_html=True)
@@ -176,7 +183,7 @@ elif current_page == "defect_view":
         summary_df = filtered_df.groupby('Material', as_index=False)[qty_col].sum()
         chart_data = summary_df.sort_values(by=qty_col, ascending=False).head(10)
     else:
-        chart_data = pd.DataFrame({"Material": ["418230035", "408073135", "408101135", "407787135", "408242036", "417208135", "418675035", "401328035", "417207135", "418706035"], "rework quantity": [51, 45, 35, 35, 28, 21, 16, 11, 10, 8]})
+        chart_data = pd.DataFrame({"Material": ["407787135", "407652035"], "rework quantity": [51, 45]})
         qty_col = "rework quantity"
 
     if not chart_data.empty:
@@ -207,7 +214,6 @@ elif current_page == "defect_view":
         
         st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:8px; margin-bottom:5px;'>💡 เลือก Material ที่ต้องการปรับปรุงจากกราฟ</p>", unsafe_allow_html=True)
         
-        # 🛠️ ตรวจสอบ Syntax การเช็กอินเตอร์เฟซ ปลอดภัยจากปัญหา Implementers บล็อกบั๊ก
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]
             
@@ -279,22 +285,22 @@ elif current_page == "defect_view":
             if len(base64_list) > 3: img4 = base64_list[3]
             if len(base64_list) > 4: img5 = base64_list[4]
 
-            # 📊 บรรจุ Payload ส่งค่าตรงตามฟิลด์บนตารางเรียงคอลลัมน์ A-R ครบถ้วน
+            # 🛠️ ส่งจับคู่ข้อมูลตามสิทธิ์ของคอลัมน์ใหม่ (ตรงกับตาราง Google Sheet ล่าสุดที่คุณวีรพันธ์กำหนดไว้เป๊ะๆ)
             payload = {
                 "timestamp": save_timestamp, 
                 "employee_id": emp_id, 
                 "employee_name": emp_name, 
-                "position": emp_position,          # 📁 ดึงค่าจริงจากรายชื่อพนักงาน -> ส่งไปลงคอลัมน์ D
-                "material": str(selected_material), # 📁 -> ส่งไปลงคอลัมน์ E
-                "defect_improvement": str(defect),  # 📁 หัวข้อดึงเฉพาะรหัสตัวเลขล้วน (เช่น 260) -> ส่งไปลงคอลัมน์ F
-                "improvement_type": str(selected_face), # 📁 พิกัดหน้างาน (เช่น หน้า A) -> ส่งไปลงคอลัมน์ G
-                "after_details": str(after_text),   # 📁 ข้อความผลงาน After -> ส่งไปลงคอลัมน์ M
+                "position": emp_position,           # 📁 Column D: ตำแหน่งพนักงานจริง (GL)
+                "material": str(selected_material),  # 📁 Column E: รหัส Material 
+                "defect_improvement": str(defect),   # 📁 Column F: รหัสหมายเลข Defect ล้วน (เช่น 261)
+                "improvement_type": str(selected_face), # 📁 Column G: พิกัดหน้างาน (เช่น หน้า A)
+                "after_details": str(after_text),    # 📁 Column M: ข้อความผลงาน After
                 "pic1": img1, "pic2": img2, "pic3": img3, "pic4": img4, "pic5": img5
             }
             try:
                 response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                 if response.status_code == 200:
-                    st.success("🎉 บันทึกข้อมูลเรียบร้อยแล้ว!")
+                    st.success("🎉 บันทึกข้อมูลแยกคอลลัมน์ลงตารางเรียบร้อยแล้ว!")
                     st.session_state.clear_trigger += 1
                     st.rerun()
                 else:

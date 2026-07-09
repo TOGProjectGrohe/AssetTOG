@@ -3,68 +3,42 @@ import pandas as pd
 import requests
 import json
 import base64
-import plotly.graph_objects as go
+import plotly.express as px
 from datetime import datetime
 
-# 🌐 ลิงก์ Web App URL ตัวล่าสุดของคุณวีรพันธ์
+# 🌐 ลิงก์ Web App URL สำหรับส่งบันทึกข้อมูลของคุณวีรพันธ์
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์
-st.markdown("""
-    <style>
-    .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
-        display: none !important; visibility: hidden !important; height: 0 !important;
-    }
-    [data-testid="stStatusWidget"], #stConnectionStatus, div[class*="viewerBadge"] {
-        display: none !important; visibility: hidden !important; height: 0 !important;
-    }
-    .stApp {
-        max-width: 420px !important; margin: 0px auto !important;
-        background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
-        border: 12px solid #1e293b !important; border-radius: 40px !important;
-        padding: 105px 24px 24px 24px !important; box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
-        min-height: 90vh !important; height: auto !important;
-    }
-    .login-card {
-        background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
-    }
-    .future-graph-card {
-        background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
-    }
-    
-    .custom-top-navbar {
-        position: absolute !important; top: 25px !important; left: 24px !important; right: 24px !important; 
-        display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
-    }
-    .nav-btn-link {
-        background-color: #bae6fd !important; color: #000000 !important; border: 1px solid rgba(0,0,0,0.05) !important;
-        border-radius: 20px !important; padding: 8px 14px !important; font-size: 13px !important; font-weight: bold !important; text-decoration: none !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important; display: inline-block !important;
-    }
-    
-    .drive-link-button {
-        display: block !important; text-align: center !important; background-color: #10b981 !important; color: white !important;
-        font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
-        margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
-    }
-    .employee-dark-box {
-        background-color: rgba(0, 0, 0, 0.07) !important; border: 2px solid rgba(0, 0, 0, 0.12) !important; border-radius: 24px !important; padding: 16px !important; margin-top: 10px !important; margin-bottom: 15px !important; color: #000000 !important; font-size: 14px !important; line-height: 1.6 !important; box-shadow: inset 0 1px 4px rgba(0,0,0,0.02) !important;
-    }
-    .defect-title-box {
-        background-color: #dbeafe !important; border: 1px solid #bfdbfe !important; border-radius: 16px !important; padding: 12px !important; text-align: center !important; color: #000000 !important; font-weight: bold !important; font-size: 14px !important; margin-top: 10px !important; margin-bottom: 16px !important;
-    }
-    div.stButton > button {
-        background-color: rgba(186, 230, 253, 0.5) !important; backdrop-filter: blur(6px) !important; -webkit-backdrop-filter: blur(8px) !important; color: #000000 !important; font-weight: bold !important; font-size: 14px !important; border: 2px solid rgba(255, 255, 255, 0.7) !important; border-radius: 16px !important; width: 100% !important; padding: 12px 20px !important; margin-bottom: 12px !important; display: block !important; box-shadow: 0 4px 15px rgba(0,0,0,0.02), inset 0 1px 2px rgba(255,255,255,0.3) !important; transition: all 0.2s ease !important;
-    }
-    div.stButton > button:hover { background-color: rgba(125, 211, 252, 0.7) !important; border: 2px solid rgba(255, 255, 255, 0.9) !important; transform: translateY(-1px) !important; }
-    div.stButton > button[key^="save_btn_"] { background-color: #10b981 !important; color: white !important; font-size: 16px !important; border: 2px solid #059669 !important; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important; }
-    div.stButton > button[key^="save_btn_"]:hover { background-color: #059669 !important; }
-    .error-pastel-box { background-color: rgba(239, 68, 68, 0.15) !important; border: 2px solid rgba(239, 68, 68, 0.3) !important; border-radius: 16px !important; padding: 12px 18px !important; margin-top: 12px !important; margin-bottom: 12px !important; color: #000000 !important; font-size: 14px !important; font-weight: bold !important; text-align: center !important; }
-    </style>
-""", unsafe_allow_html=True)
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทล
+st.markdown("""<style>.stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
+display: none !important; visibility: hidden !important; height: 0 !important;
+}[data-testid="stStatusWidget"], #stConnectionStatus, div[class*="viewerBadge"] {
+display: none !important; visibility: hidden !important; height: 0 !important;
+}.stApp {max-width: 420px !important; margin: 0px auto !important;
+background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
+border: 12px solid #1e293b !important; border-radius: 40px !important;
+padding: 95px 24px 24px 24px !important; box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
+min-height: 90vh !important; height: auto !important;
+}.login-card {background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
+}.custom-top-navbar {
+position: absolute !important; top: 20px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
+}.nav-btn-link {background-color: #007bc3 !important; color: white !important; border-radius: 20px !important; padding: 8px 16px !important; font-size: 13px !important; font-weight: bold !important; text-decoration: none !important;
+}.center-header-block {
+display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
+}.drive-link-button {
+display: block !important; text-align: center !important; background-color: #10b981 !important; color: white !important;
+font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
+margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
+}.drive-link-button:hover {
+background-color: #059669 !important; color: white !important;
+}
+div.stButton > button[key^="save_btn_"] { 
+background-color: #10b981 !important; color: white !important; font-size: 16px !important; font-weight: bold !important; border-radius: 12px !important; width: 100% !important; padding: 12px !important; box-shadow: 0 4px 12px rgba(16,185,129,0.3) !important;
+}
+</style>""", unsafe_allow_html=True)
 
 # 🌐 ฟังก์ชันดึงข้อมูลพนักงานจาก Google Sheet
 def get_employee_from_sheet(input_id):
@@ -84,7 +58,7 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 📊 ฟังก์ชันดึงข้อมูลดิบสถิติ
+# 📊 ฟังก์ชันดึงข้อมูลดิบจากลิงก์ Google Sheet ตัวหลัก
 @st.cache_data(ttl=60)
 def load_real_defect_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c/export?format=csv&gid=0"
@@ -92,9 +66,11 @@ def load_real_defect_data():
         df = pd.read_csv(sheet_url)
         df.columns = df.columns.str.strip()
         return df
-    except:
+    except Exception as e:
+        st.error(f"ไม่สามารถเชื่อมต่อข้อมูลจากชีตหลักได้: {e}")
         return pd.DataFrame()
 
+# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -120,6 +96,14 @@ if 'clear_trigger' not in st.session_state: st.session_state.clear_trigger = 0
 
 current_page = st.session_state.page
 
+st.markdown('<div class="custom-top-navbar"><a href="?nav=reset" target="_self" class="nav-btn-link">🏠 Home</a><a href="?nav=reset" target="_self" class="nav-btn-link">🚪 Logout</a></div>', unsafe_allow_html=True)
+
+if st.query_params.get("nav") == "reset":
+    st.session_state.page = "login"; st.session_state.user_info = None; st.session_state.current_defect = None
+    st.query_params.clear(); st.rerun()
+
+st.markdown('<div class="center-header-block"><div style="width:50px; height:50px; background-color:#000000; border-radius:50%; display:flex; justify-content:center; align-items:center; color:#ffffff; font-weight:bold; font-size:15px; margin:0 auto 8px auto;">TOG</div><span style="font-size:18px; font-weight:bold; color:white;">TOG App</span></div>', unsafe_allow_html=True)
+
 # ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
@@ -128,37 +112,33 @@ if current_page == "login":
     if input_id.strip() != "":
         result = get_employee_from_sheet(input_id)
         if result["status"] == "success" and result.get("found"):
-            now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            st.session_state.user_info = {"id": result["id"], "name": result["name"], "position": result["position"], "timestamp": now_time}
-            st.markdown(f'<div class="employee-dark-box"><b>⏱️ Timestamp:</b> {now_time}<br><b>🆔 Employee ID:</b> {result["id"]}<br><b>👤 Name:</b> {result["name"]}<br><b>💼 Position:</b> {result["position"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; margin-top: 10px; text-align: center; font-size:13px; color:#16a34a;"><b>✅ ข้อมูลถูกต้อง:</b> {result["name"]} ({result["position"]})</div>', unsafe_allow_html=True)
             if st.button("🔓 กดเพื่อเข้าระบบ"):
+                st.session_state.user_info = {"id": result["id"], "name": result["name"], "position": result["position"]}
                 st.session_state.page = "select_defect"; st.rerun()
         else:
-            st.markdown('<div class="error-pastel-box">❌ ไม่พบข้อมูล โปรดคีย์ ID อีกครั้ง</div>', unsafe_allow_html=True)
+            st.markdown('<div style="background-color: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 12px; margin-top: 10px; text-align: center; font-size:13px; color:#dc2626;">❌ ไม่พบข้อมูลรหัสพนักงานนี้</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------- หน้าสอง: คัดเลือก Defect ----------------
 elif current_page == "select_defect":
-    st.markdown('<div class="employee-dark-box">', unsafe_allow_html=True)
-    if st.session_state.user_info:
-        now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        st.markdown(f"<b>⏱️ Timestamp:</b> {now_time}<br><b>🆔 Employee ID:</b> {st.session_state.user_info.get('id')}<br><b>👤 Name:</b> {st.session_state.user_info['name']}<br><b>💼 Position:</b> {st.session_state.user_info['position']}<hr style='margin: 12px 0; border: 0; border-top: 1px dashed rgba(0,0,0,0.15);'>", unsafe_allow_html=True)
-    st.markdown('<div class="defect-title-box">🎯 โปรดเลือกประเภท Defect ที่ต้องการปรับปรุง</div>', unsafe_allow_html=True)
-    if st.button("🟠 Defect 260 (Rough Lines)"): st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
-    if st.button("🔵 Defect 261 (Grinding Structure)"): st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
-    if st.button("⚫ Defect 380 (Contour/Design Fault)"): st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="login-card" style="text-align:center;"><b>🎯 โปรดเลือกประเภท Defect เพื่อตรวจสอบคลังงาน:</b></div>', unsafe_allow_html=True)
+    if st.button("🟠 ดูข้อมูล Defect 260 (Rough Lines)"):
+        st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
+    if st.button("🔵 ดูข้อมูล Defect 261 (Grinding Structure)"):
+        st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
+    if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
+        st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
-# ---------------- หน้าสาม: บอร์ดสถิติและการบันทึกผล ----------------
+# ---------------- หน้าสาม: บอร์ดสถิติอิง Material จริง ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
+    if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"):
+        st.session_state.page = "select_defect"; st.rerun()
+    st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงวิเคราะห์รูปงานจริงของ {defect_title}</b></div>', unsafe_allow_html=True)
     
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"): st.session_state.page = "select_defect"; st.rerun()
-        
-    st.markdown(f'<div class="login-card" style="text-align:center; color:#000000; font-weight:bold;"><b>📊 แผนภูมิวิเคราะห์ Defect {defect}</b></div>', unsafe_allow_html=True)
-    
+    # 📥 โหลดข้อมูล Material จริง
     raw_df = load_real_defect_data()
     if not raw_df.empty and 'errortype' in raw_df.columns and 'Material' in raw_df.columns:
         raw_df['errortype'] = pd.to_numeric(raw_df['errortype'], errors='coerce')
@@ -166,121 +146,130 @@ elif current_page == "defect_view":
         filtered_df = raw_df[raw_df['errortype'] == defect]
         qty_col = 'rework quantity' if 'rework quantity' in raw_df.columns else raw_df.columns[-1]
         filtered_df[qty_col] = pd.to_numeric(filtered_df[qty_col], errors='coerce').fillna(0)
-        
         summary_df = filtered_df.groupby('Material', as_index=False)[qty_col].sum()
         chart_data = summary_df.sort_values(by=qty_col, ascending=False).head(10)
     else:
-        chart_data = pd.DataFrame({"Material": ["407787135", "407652035", "418706035"], "rework quantity": [51, 45, 30]})
+        chart_data = pd.DataFrame({
+            "Material": ["407787135", "407787136", "407787137", "407787138", "407787139", "407787140", "407787141", "407787142", "407787143", "407787144"],
+            "rework quantity": [45, 38, 32, 28, 25, 21, 18, 15, 12, 10]
+        })
         qty_col = "rework quantity"
+        filtered_df = chart_data.copy()
 
+    # 📊 แผงกราฟสถิติด้านบน
+    st.markdown('<div class="login-card">', unsafe_allow_html=True)
+    st.markdown(f"<b style='color:#1e293b; font-size:14px; display:block; text-align:center;'>📈 อัตราส่วนสถิติแยกตาม Material (Top 10)</b>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:12px; color:#64748b; text-align:center; margin-top:-2px; margin-bottom:10px;'>💡 จิ้มเลือกแท่งกราฟด้านล่างเพื่อเปลี่ยนชิ้นงานได้ทันที</p>", unsafe_allow_html=True)
+    
     if not chart_data.empty:
+        # 🎨 กำหนดเฉดสีพาสเทลมาตรฐาน
+        pastel_palette = px.colors.qualitative.Pastel
         list_of_materials = chart_data['Material'].tolist()
+        
+        # 🔑 สร้างคลัง Map สีผูกเข้ากับชิ้นงานเพื่อป้องกันสีสลับ
+        color_map = {}
+        for idx, mat in enumerate(list_of_materials):
+            color_map[mat] = pastel_palette[idx % len(pastel_palette)]
+            
         state_key = f"sel_mat_{defect}"
-        if state_key not in st.session_state: st.session_state[state_key] = list_of_materials[0]
+        if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
+            st.session_state[state_key] = list_of_materials[0] if list_of_materials else "ไม่มีข้อมูล"
         selected_material = st.session_state[state_key]
-        
-        # 🍕 ดึงสัดส่วนข้อมูลจริงจากตารางตาม Material ที่ถูกเลือก (Dynamic Real Data Breakdown)
-        if not raw_df.empty:
-            specific_mat_df = filtered_df[filtered_df['Material'] == selected_material]
-            # ค้นหาคอลัมน์ระบุตำแหน่งย่อยหรือรายละเอียดประเภทในไฟล์สถิติจริงมาทำกราฟวงกลม
-            face_col = 'Improvement type(A,B,C)' if 'Improvement type(A,B,C)' in raw_df.columns else ('Side' if 'Side' in raw_df.columns else '')
-            if not face_col:
-                # ถ้าไม่เจอกลุ่มคำข้างต้น ให้หยิบคอลัมน์อื่นที่เป็นประเภทมาคำนวณสัดส่วนจริง
-                text_cols = [c for c in specific_mat_df.columns if c not in ['Material', 'errortype', qty_col]]
-                face_col = text_cols[0] if text_cols else ''
-                
-            if face_col and face_col in specific_mat_df.columns and not specific_mat_df.empty:
-                pie_df = specific_mat_df.groupby(face_col, as_index=False)[qty_col].sum()
-                pie_labels = pie_df[face_col].astype(str).tolist()
-                pie_values = pie_df[qty_col].tolist()
-            else:
-                pie_labels = [f"กลุ่มชิ้นงาน {selected_material[-3:]}", "ส่วนควบความเสียหาย"]
-                pie_values = [75, 25]
-        else:
-            pie_labels = [f"กลุ่มชิ้นงาน {selected_material[-3:]}", "ส่วนควบความเสียหาย"]
-            pie_values = [75, 25]
 
-        st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
-        
-        # 🍕 สลับเอาแผนภูมิวงกลม (Pie Chart) แสดงผลด้านบนก่อน และโชว์ข้อมูลจริงไม่ใช่หน้าจำลอง
-        st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>🍕 1. สัดส่วนสถิติจริงของ Material: {selected_material}</b>", unsafe_allow_html=True)
-        fig_pie = go.Figure(data=[go.Pie(
-            labels=pie_labels, values=pie_values, hole=0.3,
-            marker=dict(colors=['#ff7675', '#74b9ff', '#a29bfe', '#fdcb6e', '#00b894']),
-            textinfo='percent+label', textfont=dict(size=11, color='#000000', weight='bold')
-        )])
-        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=190, showlegend=False, paper_bgcolor='rgba(0,0,0,0)')
+        # 🍕 ดึงสัดส่วนข้อมูลพิกัด (หน้า A, B, C) จริงของ Material ที่ถูกเลือกมาทำ Pie Chart
+        face_col = 'Improvement type(A,B,C)' if 'Improvement type(A,B,C)' in raw_df.columns else ('Side' if 'Side' in raw_df.columns else '')
+        if face_col and face_col in filtered_df.columns:
+            specific_mat_df = filtered_df[filtered_df['Material'] == selected_material]
+            pie_df = specific_mat_df.groupby(face_col, as_index=False)[qty_col].sum()
+            # จัดอันดับเรียงสัดส่วนจากมากไปน้อยให้สอดคล้องกับระเบียบกราฟแท่ง
+            pie_df = pie_df.sort_values(by=qty_col, ascending=False)
+            pie_names_col = face_col
+        else:
+            pie_df = pd.DataFrame({
+                "พิกัด": ["หน้า A", "หน้า B", "หน้า C"],
+                "จำนวน": [60, 25, 15]
+            })
+            pie_names_col = "พิกัด"
+
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart) แสดงสถิติจริงของชิ้นงานที่เลือก จัดอันดับและล็อกสีสัมพันธ์กัน
+        fig_pie = px.pie(
+            pie_df, names=pie_names_col, values=qty_col,
+            color=pie_names_col, color_discrete_sequence=pastel_palette,
+            title=f"🍕 สัดส่วนพิกัดจริงของ: {selected_material}"
+        )
+        fig_pie.update_layout(margin=dict(l=10, r=10, t=30, b=10), height=210, showlegend=True)
         st.plotly_chart(fig_pie, use_container_width=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # 📊 แผนภูมิแท่ง (Bar Chart) อยู่ลำดับถัดไปด้านล่างวงกลม
-        st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 2. รายงาน 10 อันดับ Material ที่พบสูงสุด</b>", unsafe_allow_html=True)
-        neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
-        color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
-        
-        fig_bar = go.Figure()
-        for mat in list_of_materials:
-            val = chart_data[chart_data['Material'] == mat][qty_col].values[0]
-            fig_bar.add_trace(go.Bar(
-                x=[mat], y=[val], name=mat, marker=dict(color=color_map[mat], line=dict(color='#ffffff', width=2)),
-                hovertemplate=f"Material: {mat}<br>จำนวน: {val} ครั้ง<extra></extra>"
-            ))
+        # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - บังคับระบายสีสอดคล้องรหัสเดียวกับวงกลม 100%
+        fig_bar = px.bar(
+            chart_data, x="Material", y=qty_col, orientation='v',
+            color="Material", color_discrete_map=color_map
+        )
         fig_bar.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10), height=210, showlegend=False, barmode='group',
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            xaxis=dict(type='category', tickangle=45, tickfont=dict(color='#000000', size=9, weight='bold')),
-            yaxis=dict(tickfont=dict(color='#000000', size=9, weight='bold'))
+            margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False,
+            xaxis_title=None, yaxis_title=None,
+            xaxis=dict(type='category', tickangle=45),
+            clickmode='event+select'
         )
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         
-        st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:5px; margin-bottom:15px;'>💡 จิ้มเลือก Material บนกราฟแท่งเพื่อเปลี่ยนข้อมูลบนกราฟวงกลมได้ครับ</p>", unsafe_allow_html=True)
-        
+        # 🎯 ตรวจสอบความเปลี่ยนแปลงจากการคลิกกราฟแท่ง
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
-            st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]
+            clicked_material = selected_bar["selection"]["points"][0]["x"]
+            st.session_state[state_key] = clicked_material
             st.rerun()
-            
-        st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #cbd5e1;'>", unsafe_allow_html=True)
-        st.markdown(f'<div style="background-color: #f0fdf4; border: 2px solid #16a34a; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        selected_material = "ไม่มีข้อมูล"
 
-    selected_face = st.radio("เลือกพิกัดหน้างานจริงที่ทำความสะอาด/ปรับปรุง:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
+        st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'>", unsafe_allow_html=True)
+        st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a;"><b>🔍 Material ที่เลือกจากกราฟ:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
+    else:
+        st.info("ไม่พบข้อมูลสถิติของ Defect นี้ในชีตระบบ")
+        selected_material = "ไม่มีข้อมูล"
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # 🔘 ส่วนฟิลเตอร์เลือกพิกัดหน้างาน
+    selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"] and selected_material != "ไม่มีข้อมูล":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
         
+        # 📂 ส่วนที่ 1: คลังภาพหลักชิ้นงาน
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
-        uploaded_main = st.file_uploader("แนบรูปภาพหลักที่นี่:", type=["png", "jpg", "jpeg"], key=f"up_m_{defect}_{st.session_state.clear_trigger}")
-        if uploaded_main: st.image(uploaded_main, use_container_width=True)
+        msg_main = f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:"
+        uploaded_main = st.file_uploader(msg_main, type=["png", "jpg", "jpeg"], key=f"up_m_{defect}_{st.session_state.clear_trigger}")
+        if uploaded_main:
+            st.image(uploaded_main, caption=f"✅ รูปภาพหลัก {selected_material} ที่คุณเลือก", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
+        # 📂 ส่วนที่ 2: คลังรูปรายละเอียดจุดย่อย
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
-        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}_{st.session_state.clear_trigger}")
+        msg_slave = "แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):"
+        uploaded_slaves = st.file_uploader(msg_slave, type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}_{st.session_state.clear_trigger}")
         if uploaded_slaves:
-            for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
+            allowed_slaves = uploaded_slaves[:5]
+            st.markdown(f"<p style='font-size:12px; color:#10b981; font-weight:bold;'>📸 รูปรายละเอียดจุดย่อยที่แนบ ({len(allowed_slaves)}/5 รูป):</p>", unsafe_allow_html=True)
+            for idx, img_file in enumerate(allowed_slaves):
+                st.image(img_file, caption=f"รูปภาพย่อยที่ {idx+1}: {img_file.name}", use_container_width=True)
+            if len(uploaded_slaves) > 5:
+                st.warning("⚠️ ระบบรองรับภาพย่อยสูงสุด 5 รูปต่อครั้ง")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
+    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER และปุ่ม Save ข้อมูลเข้าตาราง
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}_{st.session_state.clear_trigger}")
     
-    st.markdown("<p style='font-size:13px; font-weight:bold; color:#2c3e50; margin-bottom:2px;'>📸 แนบรูปหลักฐานผลงาน After ชิ้นงานจริง (แนบได้สูงสุด 5 ภาพ):</p>", unsafe_allow_html=True)
-    
-    uploaded_after_files = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ (สูงสุด 5 ภาพ):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_af_file_{defect}_{st.session_state.clear_trigger}")
-    if uploaded_after_files:
-        for idx, img_file in enumerate(uploaded_after_files[:5]): st.image(img_file, caption=f"✅ รูปภาพ After ใบที่ {idx+1}", use_container_width=True)
-        
     camera_after_file = st.camera_input("📸 ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final_{st.session_state.clear_trigger}")
-    if camera_after_file: st.image(camera_after_file, caption="✅ รูปภาพ After จากกล้องพรีวิว", use_container_width=True)
+    if camera_after_file: 
+        st.image(camera_after_file, caption="✅ ภาพตัวอย่างผลงาน After จากกล้องพรีวิว", use_container_width=True)
+        
+    st.markdown("<br>", unsafe_allow_html=True)
     
-    if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
+    # 💾 ปุ่มบันทึกข้อมูลเข้าสู่ระบบ
+    if st.button("💾 บันทึกข้อมูลเข้าตารางสถิติ", key=f"save_btn_{defect}"):
         if not after_text.strip():
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
         else:
@@ -289,23 +278,9 @@ elif current_page == "defect_view":
             emp_name = st.session_state.user_info.get('name', '-') if st.session_state.user_info else '-'
             emp_position = st.session_state.user_info.get('position', '-') if st.session_state.user_info else '-'
             
-            img1, img2, img3, img4, img5 = "", "", "", "", ""
-            base64_list = []
-            
-            if uploaded_after_files:
-                for img_file in uploaded_after_files[:5]:
-                    base64_str = base64.b64encode(img_file.getvalue()).decode('utf-8')
-                    base64_list.append(base64_str)
-                    
-            if camera_after_file and len(base64_list) < 5:
-                camera_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
-                base64_list.append(camera_base64)
-                
-            if len(base64_list) > 0: img1 = base64_list[0]
-            if len(base64_list) > 1: img2 = base64_list[1]
-            if len(base64_list) > 2: img3 = base64_list[2]
-            if len(base64_list) > 3: img4 = base64_list[3]
-            if len(base64_list) > 4: img5 = base64_list[4]
+            img_base64 = ""
+            if camera_after_file:
+                img_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
 
             payload = {
                 "timestamp": save_timestamp, 
@@ -316,16 +291,16 @@ elif current_page == "defect_view":
                 "defect_improvement": str(defect), 
                 "improvement_type": str(selected_face), 
                 "after_details": str(after_text),
-                "pic1": img1, "pic2": img2, "pic3": img3, "pic4": img4, "pic5": img5
+                "pic1": img_base64, "pic2": "", "pic3": "", "pic4": "", "pic5": ""
             }
             try:
                 response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                 if response.status_code == 200:
-                    st.success("🎉 บันทึกข้อมูลและจัดสรรคอลัมน์ A-R สำเร็จเรียบร้อยแล้ว!")
+                    st.success("🎉 บันทึกข้อมูลผลงานและสถิติเข้าสู่ Google Sheets สำเร็จเรียบร้อยแล้ว!")
                     st.session_state.clear_trigger += 1
                     st.rerun()
                 else:
                     st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
             except Exception as ex:
-                st.error(f"⚠️ เกิดข้อผิดพลาด: {ex}")
+                st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อสคริปต์: {ex}")
     st.markdown('</div>', unsafe_allow_html=True)

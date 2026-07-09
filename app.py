@@ -6,14 +6,14 @@ import plotly.express as px
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลและกล่องแสดงผลให้คลีนสวยงาม
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทล
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
         display: none !important; visibility: hidden !important; height: 0 !important;
     }
     [data-testid="stStatusWidget"], #stConnectionStatus, div[class*="viewerBadge"] {
-        display: none !important; visibility: hidden !important;
+        display: none !important; visibility: hidden !important; height: 0 !important;
     }
     .stApp {
         max-width: 420px !important; margin: 0px auto !important;
@@ -35,7 +35,6 @@ st.markdown("""
         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
     }
     
-    /* 🎯 ปุ่มลิงก์สีเขียวเปิดคลังภาพ Google Drive */
     .drive-link-button {
         display: block !important; text-align: center !important; background-color: #10b981 !important; color: white !important;
         font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
@@ -47,7 +46,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานจาก Google Sheet
+# 🌐 ฟังก์ชันดึงข้อมูลพนักงานจาก Google Sheet
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
@@ -120,7 +119,7 @@ elif current_page == "select_defect":
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
-# ---------------- หน้าสาม: กราฟสถิติ 1-10 อันดับแรก + ลิงก์ตรงคลังภาพและอัปโหลด 5 รูป ----------------
+# ---------------- หน้าสาม: บอร์ดสถิติอิง Material ลำดับ 1-10 ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -130,19 +129,20 @@ elif current_page == "defect_view":
         
     st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงวิเคราะห์และเลือกรูปงานจริงของ {defect_title}</b></div>', unsafe_allow_html=True)
     
-    # 📊 แผงกราฟสถิติด้านบน (Dashboard 1-10 อันดับแรก)
+    # 📊 แผงกราฟสถิติด้านบน (Dashboard เรียงตาม Material 1-10 อันดับแรก)
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown("<b style='color:#1e293b; font-size:14px; display:block; text-align:center;'>📈 สถิติอัตราส่วน Defect 1-10 อันดับแรก</b>", unsafe_allow_html=True)
+    st.markdown("<b style='color:#1e293b; font-size:14px; display:block; text-align:center;'>📈 สถิติอัตราส่วน Defect แยกตาม Material (Top 10)</b>", unsafe_allow_html=True)
     
+    # 🛠️ ปรับเปลี่ยนข้อมูลให้ล้อกับ Material จริงในโรงงาน (เรียงลำดับจากเจอเยอะสุดไปน้อยสุด 1-10)
     chart_data = pd.DataFrame({
-        "รายการชิ้นงาน": [f"ชิ้นงานที่ {i}" for i in range(1, 11)],
+        "Material": ["SV 1.50", "CR-39", "MR-8 1.60", "SV 1.67", "ORMA", "1.60 Hi-Index", "MR-7 1.67", "1.74 Ultra", "Polycarbonate", "Trivex"],
         "จำนวนที่พบ (ครั้ง)": [45, 38, 32, 28, 25, 21, 18, 15, 12, 10]
     })
     
-    # 🍕 1. แผนภูมิวงกลม (Pie Chart) - ซ่อมแซมระบบเรียกจานสีผ่านฉลุย
+    # 🍕 1. แผนภูมิวงกลม (Pie Chart) 
     fig_pie = px.pie(
         chart_data, 
-        names="รายการชิ้นงาน", 
+        names="Material", 
         values="จำนวนที่พบ (ครั้ง)", 
         color_discrete_sequence=px.colors.qualitative.Pastel
     )
@@ -153,19 +153,21 @@ elif current_page == "defect_view":
     )
     st.plotly_chart(fig_pie, use_container_width=True)
     
-    # 📊 2. แผนภูมิแท่ง (Bar Chart) อยู่ด้านล่าง
+    # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - คลีนป้ายคลิกโชว์ออก ลำดับตรงตาม Pie เป๊ะ
     fig_bar = px.bar(
-        chart_data.iloc[::-1],
-        x="จำนวนที่พบ (ครั้ง)", 
-        y="รายการชิ้นงาน", 
-        orientation='h',
+        chart_data,
+        x="Material", 
+        y="จำนวนที่พบ (ครั้ง)", 
+        orientation='v',
         color="จำนวนที่พบ (ครั้ง)",
         color_continuous_scale="Purples"
     )
     fig_bar.update_layout(
         margin=dict(l=10, r=10, t=10, b=10),
         height=240,
-        coloraxis_showscale=False
+        coloraxis_showscale=False,
+        xaxis_title=None,  # ซ่อนป้ายคำว่า Material เมื่อคลิกหรือดูภาพรวม
+        yaxis_title=None
     )
     st.plotly_chart(fig_bar, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -182,19 +184,17 @@ elif current_page == "defect_view":
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        # 🛠️ ย่อข้อความลงตัวแปร String สั้น ๆ ป้องกันข้อผิดพลาด Syntax Error หลุดบรรทัด
         msg_main = "แนบรูปภาพหลักที่เลือกที่นี่:"
         uploaded_main = st.file_uploader(msg_main, type=["png", "jpg", "jpeg"], key=f"up_m_{defect}")
         if uploaded_main:
             st.image(uploaded_main, caption="✅ รูปภาพหลักที่คุณเลือก", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 📂 ส่วนที่ 2: คลังรูปรายละเอียดจุดย่อย (อัปโหลดพร้อมกันได้สูงสุด 5 รูป)
+        # 📂 ส่วนที่ 2: คลังรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        # 🛠️ ย่อข้อความป้องกันการเออเร่อ
         msg_slave = "แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):"
         uploaded_slaves = st.file_uploader(
             msg_slave, 

@@ -74,13 +74,15 @@ st.markdown("""
         font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
         margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
     }
+    
+    /* 🕋 กล่องดีไซน์พิเศษ: พื้นหลังสีดำอ่อนโปร่งแสง สวยงาม ตัวอักษรสีดำเข้ม */
     .employee-dark-box {
         background-color: rgba(0, 0, 0, 0.08) !important; 
         border: 2px solid rgba(0, 0, 0, 0.15) !important; 
         border-radius: 16px !important; 
         padding: 14px 18px !important; 
         margin-top: 12px !important; 
-        margin-bottom: 12px !important;
+        margin-bottom: 15px !important;
         color: #000000 !important;
         font-size: 14px !important;
         line-height: 1.6 !important;
@@ -109,19 +111,20 @@ st.markdown("""
         color: #000000 !important;
         font-weight: bold !important;
         font-size: 15px !important;
+        margin-top: 10px !important;
         margin-bottom: 20px !important;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02) !important;
     }
 
-    /* 💎 ✨ ปรับแต่งกรอบปุ่มเลือก Defect ให้เป็นสีฟ้าอ่อนแบบโปร่งแสง (Glassmorphic) สวยหรู */
+    /* 💎 ปรับแต่งกรอบปุ่มเลือก Defect ให้เป็นสีฟ้าอ่อนแบบโปร่งแสง (Glassmorphic) สวยหรู กว้างเท่ากัน */
     div.stButton > button {
-        background-color: rgba(186, 230, 253, 0.45) !important; /* ใช้สีฟ้าอ่อนโปร่งแสง (Alpha 0.45) */
-        backdrop-filter: blur(8px) !important; /* เพิ่มเอฟเฟกต์เบลอพื้นหลังกระจกเพิ่มความพรีเมียม */
+        background-color: rgba(186, 230, 253, 0.45) !important;
+        backdrop-filter: blur(8px) !important;
         -webkit-backdrop-filter: blur(8px) !important;
         color: #000000 !important;
         font-weight: bold !important;
         font-size: 14px !important;
-        border: 2px solid rgba(255, 255, 255, 0.6) !important; /* ขอบสีขาวโปร่งแสงเน้นมิติขอบปุ่มกระจก */
+        border: 2px solid rgba(255, 255, 255, 0.6) !important;
         border-radius: 16px !important;
         width: 100% !important;
         padding: 12px 20px !important;
@@ -131,7 +134,7 @@ st.markdown("""
         transition: all 0.25s ease !important;
     }
     div.stButton > button:hover {
-        background-color: rgba(125, 211, 252, 0.65) !important; /* เมื่อเอาเมาส์วาง จะเข้มขึ้นเล็กน้อยเพื่อตอบสนองผู้ใช้ */
+        background-color: rgba(125, 211, 252, 0.65) !important;
         border: 2px solid rgba(255, 255, 255, 0.8) !important;
         transform: translateY(-1px) !important;
     }
@@ -219,6 +222,15 @@ if current_page == "login":
         
         if result["status"] == "success" and result.get("found"):
             now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # เก็บข้อมูลลงใน Session เพื่อส่งไปใช้หน้าถัดๆ ไป
+            st.session_state.user_info = {
+                "id": result["id"], 
+                "name": result["name"], 
+                "position": result["position"],
+                "timestamp": now_time
+            }
+            
             st.markdown(f"""
                 <div class="employee-dark-box">
                     <b>⏱️ Timestamp:</b> {now_time}<br>
@@ -229,7 +241,6 @@ if current_page == "login":
             """, unsafe_allow_html=True)
             
             if st.button("🔓 กดเพื่อเข้าระบบ"):
-                st.session_state.user_info = {"id": result["id"], "name": result["name"]}
                 st.session_state.page = "select_defect"; st.rerun()
                 
         else:
@@ -241,11 +252,25 @@ if current_page == "login":
             
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสอง: คัดเลือก Defect (อัปเดตพื้นหลังปุ่มโปร่งแสงสไตล์กระจก) ----------------
+# ---------------- หน้าสอง: คัดเลือก Defect (เพิ่มกล่องข้อมูลพนักงานโชว์ด้านบนแบบโปร่งแสง) ----------------
 elif current_page == "select_defect":
+    # 👤 ดึงข้อมูลพนักงานขึ้นมาโชว์ในกรอบพื้นหลังสีดำอ่อน โปร่งแสง ตัวอักษรสีดำ ก่อนเลือก Defect เพื่อความต่อเนื่อง
+    if st.session_state.user_info:
+        u_info = st.session_state.user_info
+        now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        st.markdown(f"""
+            <div class="employee-dark-box">
+                <b>⏱️ Timestamp:</b> {now_time}<br>
+                <b>🆔 Employee ID:</b> {st.session_state.user_info.get('id')}<br>
+                <b>👤 Name:</b> {st.session_state.user_info['name']}<br>
+                <b>💼 Position:</b> GL
+            </div>
+        """, unsafe_allow_html=True)
+
+    # หัวข้อกล่องสีน้ำเงินอ่อน ตัวอักษรดำ
     st.markdown('<div class="defect-title-box">🎯 โปรดเลือกประเภท Defect ที่ต้องการปรับปรุง</div>', unsafe_allow_html=True)
     
-    # ปุ่มควบคุมความยาวเท่ากัน และได้พื้นหลังโปร่งแสงหรูหราแล้วตาม CSS ด้านบน
+    # ปุ่มเลือกแบบโปร่งแสง สีฟ้าอ่อน กรอบเท่ากันขนานเป๊ะ 
     if st.button("🟠 Defect 260 (Rough Lines)"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
     if st.button("🔵 Defect 261 (Grinding Structure)"):
@@ -352,7 +377,7 @@ elif current_page == "defect_view":
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         state_key = f"sel_mat_{defect}"
         
-        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
+        if selected_bar and "selection" in selected_bar Implementers and selected_bar["selection"]["points"]:
             clicked_material = selected_bar["selection"]["points"][0]["x"]
             st.session_state[state_key] = clicked_material
         

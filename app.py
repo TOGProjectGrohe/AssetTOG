@@ -58,6 +58,20 @@ st.markdown("""
         line-height: 1.6 !important;
         box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
     }
+
+    /* 🚨 กล่องแจ้งเตือนสีแดงอ่อนสไตล์พาสเทล ตัวอักษรสีดำเข้มตามสั่ง */
+    .error-pastel-box {
+        background-color: rgba(239, 68, 68, 0.15) !important;
+        border: 2px solid rgba(239, 68, 68, 0.3) !important;
+        border-radius: 16px !important;
+        padding: 12px 18px !important;
+        margin-top: 12px !important;
+        margin-bottom: 12px !important;
+        color: #000000 !important;
+        font-size: 14px !important;
+        font-weight: bold !important;
+        text-align: center !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -136,9 +150,10 @@ if current_page == "login":
     input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="พิมพ์ตัวเลขรหัส เช่น 20", label_visibility="collapsed")
     if input_id.strip() != "":
         result = get_employee_from_sheet(input_id)
+        
+        # 🟢 กรณีพบข้อมูลพนักงานในระบบ
         if result["status"] == "success" and result.get("found"):
-            
-            # 🛠️ จัดข้อมูลพนักงานลงในกล่องกรอบพื้นหลังสีดำอ่อนโปร่งแสง สวยหรู ตัวอักษรสีดำตามบรีฟเป๊ะๆ
+            # จัดข้อมูลพนักงานลงในกล่องกรอบพื้นหลังสีดำอ่อนโปร่งแสง สวยหรู ตัวอักษรสีดำ
             now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             st.markdown(f"""
                 <div class="employee-dark-box">
@@ -152,6 +167,15 @@ if current_page == "login":
             if st.button("🔓 กดเพื่อเข้าระบบ"):
                 st.session_state.user_info = {"id": result["id"], "name": result["name"]}
                 st.session_state.page = "select_defect"; st.rerun()
+                
+        # 🔴 กรณีไม่พบข้อมูลในระบบ (แสดงคำเตือนตามบรีฟ ตัวอักษรสีดำเข้มชัดเจน)
+        else:
+            st.markdown("""
+                <div class="error-pastel-box">
+                    ❌ ไม่พบข้อมูล โปรดคีย์ ID อีกครั้ง
+                </div>
+            """, unsafe_allow_html=True)
+            
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------- หน้าสอง: คัดเลือก Defect ----------------

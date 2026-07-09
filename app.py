@@ -128,7 +128,6 @@ st.markdown("""
         transform: translateY(1px) !important;
     }
     
-    /* 💾 ปรับแต่งปุ่ม Save สีเขียวเด่นชัดสำหรับคีย์ save_btn_ ทุกตัว */
     div.stButton > button[key^="save_btn_"] {
         background-color: #10b981 !important;
         color: white !important;
@@ -383,15 +382,15 @@ elif current_page == "defect_view":
     
     after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")
     
-    # 🛠️ 📸 ส่วนที่อัปเกรดใหม่: เพิ่มช่องเลือกรูปภาพ After จากไฟล์เครื่อง ควบคู่กับการเปิดกล้องถ่ายรูปจริง
     st.markdown("<p style='font-size:13px; font-weight:bold; color:#2c3e50; margin-bottom:2px;'>📸 แนบรูปหลักฐานผลงาน After ชิ้นงานจริง (เลือกทำอย่างใดอย่างหนึ่งหรือทั้งสองอย่าง):</p>", unsafe_allow_html=True)
     
-    # ทางเลือกที่ 1: อัปโหลดรูปภาพจากคลัง
-    uploaded_after_file = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ:", type=["png", "jpg", "jpeg"], key=f"up_af_file_{defect}")
-    if uploaded_after_file:
-        st.image(uploaded_after_file, caption="✅ รูปภาพ After จากไฟล์เครื่องพรีวิว", use_container_width=True)
+    # 🛠️ 📸 ปรับปรุงส่วนนี้: สั่งให้ระบุเปิดการรับไฟล์แบบหลายไฟล์พร้อมกันและคุมสิทธิ์สูงสุดไว้ไม่เกิน 5 รูปภาพ
+    uploaded_after_files = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ (แนบได้สูงสุด 5 ภาพ):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_af_file_{defect}")
+    if uploaded_after_files:
+        allowed_files = uploaded_after_files[:5] # ตัดสิทธิ์แสดงผลไม่เกิน 5 รูป
+        for idx, img_file in enumerate(allowed_files):
+            st.image(img_file, caption=f"✅ รูปภาพ After จากคลังไฟล์ ใบที่ {idx+1}", use_container_width=True)
         
-    # ทางเลือกที่ 2: ถ่ายรูปสดๆ ผ่านกล้องหน้างาน
     camera_after_file = st.camera_input("📸 ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final")
     if camera_after_file:
         st.image(camera_after_file, caption="✅ รูปภาพ After จากกล้องพรีวิว", use_container_width=True)

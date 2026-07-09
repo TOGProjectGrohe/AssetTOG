@@ -2,17 +2,17 @@ import streamlit as st
 import pandas as pd
 import requests
 import json
-import plotly.express as px
+import base64
 import plotly.graph_objects as go
 from datetime import datetime
 
-# ⚠️ อัปเดตฝังลิงก์ Google Apps Script ตัวล่าสุดของคุณวีรพันธ์เรียบร้อยครับ
+# 🌐 ลิงก์ Google Apps Script ตัวล่าสุดของคุณวีรพันธ์
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งแผงควบคุมโปร่งแสงยาวกรอบเดียวกัน
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -37,37 +37,15 @@ st.markdown("""
     .custom-top-navbar {
         position: absolute !important; top: 20px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
     }
-    
     .nav-btn-link {
-        background-color: #bae6fd !important; 
-        color: #000000 !important; 
-        border: 1px solid rgba(0,0,0,0.05) !important;
-        border-radius: 20px !important; 
-        padding: 8px 16px !important; 
-        font-size: 13px !important; 
-        font-weight: bold !important; 
-        text-decoration: none !important;
+        background-color: #bae6fd !important; color: #000000 !important; border: 1px solid rgba(0,0,0,0.05) !important;
+        border-radius: 20px !important; padding: 8px 16px !important; font-size: 13px !important; font-weight: bold !important; text-decoration: none !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
     }
-    .nav-btn-link:hover {
-        background-color: #7dd3fc !important;
-    }
-
     .tog-logo-circle {
-        width: 50px !important; 
-        height: 50px !important; 
-        background-color: rgba(0, 0, 0, 0.2) !important; 
-        border: 1px solid rgba(0, 0, 0, 0.1) !important;
-        border-radius: 50% !important; 
-        display: flex !important; 
-        justify-content: center !important; 
-        align-items: center !important; 
-        color: #000000 !important; 
-        font-weight: bold !important; 
-        font-size: 15px !important; 
-        margin: 0 auto 8px auto !important;
+        width: 50px !important; height: 50px !important; background-color: rgba(0, 0, 0, 0.2) !important; border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; color: #000000 !important; font-weight: bold !important; font-size: 15px !important; margin: 0 auto 8px auto !important;
     }
-
     .center-header-block {
         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
     }
@@ -76,82 +54,19 @@ st.markdown("""
         font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
         margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
     }
-
     .employee-dark-box {
-        background-color: rgba(0, 0, 0, 0.07) !important; 
-        border: 2px solid rgba(0, 0, 0, 0.12) !important; 
-        border-radius: 24px !important; 
-        padding: 16px !important; 
-        margin-top: 10px !important; 
-        margin-bottom: 15px !important;
-        color: #000000 !important;
-        font-size: 14px !important;
-        line-height: 1.6 !important;
-        box-shadow: inset 0 1px 4px rgba(0,0,0,0.02) !important;
+        background-color: rgba(0, 0, 0, 0.07) !important; border: 2px solid rgba(0, 0, 0, 0.12) !important; border-radius: 24px !important; padding: 16px !important; margin-top: 10px !important; margin-bottom: 15px !important; color: #000000 !important; font-size: 14px !important; line-height: 1.6 !important; box-shadow: inset 0 1px 4px rgba(0,0,0,0.02) !important;
     }
-
     .defect-title-box {
-        background-color: #dbeafe !important;
-        border: 1px solid #bfdbfe !important;
-        border-radius: 16px !important;
-        padding: 12px !important;
-        text-align: center !important;
-        color: #000000 !important;
-        font-weight: bold !important;
-        font-size: 14px !important;
-        margin-top: 10px !important;
-        margin-bottom: 16px !important;
+        background-color: #dbeafe !important; border: 1px solid #bfdbfe !important; border-radius: 16px !important; padding: 12px !important; text-align: center !important; color: #000000 !important; font-weight: bold !important; font-size: 14px !important; margin-top: 10px !important; margin-bottom: 16px !important;
     }
-
     div.stButton > button {
-        background-color: rgba(186, 230, 253, 0.5) !important; 
-        backdrop-filter: blur(6px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
-        color: #000000 !important;
-        font-weight: bold !important;
-        font-size: 14px !important;
-        border: 2px solid rgba(255, 255, 255, 0.7) !important; 
-        border-radius: 16px !important;
-        width: 100% !important; 
-        padding: 12px 20px !important;
-        margin-bottom: 12px !important;
-        display: block !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.02), inset 0 1px 2px rgba(255,255,255,0.3) !important;
-        transition: all 0.2s ease !important;
+        background-color: rgba(186, 230, 253, 0.5) !important; backdrop-filter: blur(6px) !important; -webkit-backdrop-filter: blur(8px) !important; color: #000000 !important; font-weight: bold !important; font-size: 14px !important; border: 2px solid rgba(255, 255, 255, 0.7) !important; border-radius: 16px !important; width: 100% !important; padding: 12px 20px !important; margin-bottom: 12px !important; display: block !important; box-shadow: 0 4px 15px rgba(0,0,0,0.02), inset 0 1px 2px rgba(255,255,255,0.3) !important; transition: all 0.2s ease !important;
     }
-    div.stButton > button:hover {
-        background-color: rgba(125, 211, 252, 0.7) !important;
-        border: 2px solid rgba(255, 255, 255, 0.9) !important;
-        transform: translateY(-1px) !important;
-    }
-    div.stButton > button:active {
-        transform: translateY(1px) !important;
-    }
-    
-    /* 💾 ตกแต่งปุ่ม Save สีเขียวเด่นชัด */
-    div.stButton > button[key^="save_btn_"] {
-        background-color: #10b981 !important;
-        color: white !important;
-        font-size: 16px !important;
-        border: 2px solid #059669 !important;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
-    }
-    div.stButton > button[key^="save_btn_"]:hover {
-        background-color: #059669 !important;
-    }
-    
-    .error-pastel-box {
-        background-color: rgba(239, 68, 68, 0.15) !important;
-        border: 2px solid rgba(239, 68, 68, 0.3) !important;
-        border-radius: 16px !important;
-        padding: 12px 18px !important;
-        margin-top: 12px !important;
-        margin-bottom: 12px !important;
-        color: #000000 !important;
-        font-size: 14px !important;
-        font-weight: bold !important;
-        text-align: center !important;
-    }
+    div.stButton > button:hover { background-color: rgba(125, 211, 252, 0.7) !important; border: 2px solid rgba(255, 255, 255, 0.9) !important; transform: translateY(-1px) !important; }
+    div.stButton > button[key^="save_btn_"] { background-color: #10b981 !important; color: white !important; font-size: 16px !important; border: 2px solid #059669 !important; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important; }
+    div.stButton > button[key^="save_btn_"]:hover { background-color: #059669 !important; }
+    .error-pastel-box { background-color: rgba(239, 68, 68, 0.15) !important; border: 2px solid rgba(239, 68, 68, 0.3) !important; border-radius: 16px !important; padding: 12px 18px !important; margin-top: 12px !important; margin-bottom: 12px !important; color: #000000 !important; font-size: 14px !important; font-weight: bold !important; text-align: center !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -179,7 +94,7 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 📊 ฟังก์ชันดึงข้อมูลดิบจากลิงก์ Google Sheet สถิติ
+# 📊 ฟังก์ชันดึงข้อมูลดิบสถิติ
 @st.cache_data(ttl=60)
 def load_real_defect_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c/export?format=csv&gid=0"
@@ -187,7 +102,7 @@ def load_real_defect_data():
         df = pd.read_csv(sheet_url)
         df.columns = df.columns.str.strip()
         return df
-    except Exception as e:
+    except:
         return pd.DataFrame()
 
 FOLDER_LINK_MAP = {
@@ -212,6 +127,9 @@ if 'page' not in st.session_state: st.session_state.page = "login"
 if 'user_info' not in st.session_state: st.session_state.user_info = None
 if 'current_defect' not in st.session_state: st.session_state.current_defect = None
 
+# ใช้สำหรับ Clear ฟอร์มหลักการบันทึกเมื่อเสร็จสิ้นงาน
+if 'clear_trigger' not in st.session_state: st.session_state.clear_trigger = 0
+
 current_page = st.session_state.page
 
 st.markdown('<div class="custom-top-navbar"><a href="?nav=reset" target="_self" class="nav-btn-link">🏠 Home</a><a href="?nav=reset" target="_self" class="nav-btn-link">🚪 Logout</a></div>', unsafe_allow_html=True)
@@ -228,7 +146,6 @@ if current_page == "login":
     input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="พิมพ์ตัวเลขรหัส เช่น 20", label_visibility="collapsed")
     if input_id.strip() != "":
         result = get_employee_from_sheet(input_id)
-        
         if result["status"] == "success" and result.get("found"):
             now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             st.session_state.user_info = {
@@ -237,7 +154,6 @@ if current_page == "login":
                 "position": result["position"],
                 "timestamp": now_time
             }
-            
             st.markdown(f"""
                 <div class="employee-dark-box">
                     <b>⏱️ Timestamp:</b> {now_time}<br>
@@ -246,7 +162,6 @@ if current_page == "login":
                     <b>💼 Position:</b> {result['position']}
                 </div>
             """, unsafe_allow_html=True)
-            
             if st.button("🔓 กดเพื่อเข้าระบบ"):
                 st.session_state.page = "select_defect"; st.rerun()
         else:
@@ -262,7 +177,7 @@ elif current_page == "select_defect":
             <b>⏱️ Timestamp:</b> {now_time}<br>
             <b>🆔 Employee ID:</b> {st.session_state.user_info.get('id')}<br>
             <b>👤 Name:</b> {st.session_state.user_info['name']}<br>
-            <b>💼 Position:</b> GL
+            <b>💼 Position:</b> {st.session_state.user_info['position']}
             <hr style="margin: 12px 0; border: 0; border-top: 1px dashed rgba(0,0,0,0.15);">
         """, unsafe_allow_html=True)
 
@@ -336,8 +251,6 @@ elif current_page == "defect_view":
         )
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         
-        st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:8px; margin-bottom:5px;'>💡 เลือก Material ที่ต้องการปรับปรุงจากกราฟ</p>", unsafe_allow_html=True)
-        
         state_key = f"sel_mat_{defect}"
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]
@@ -348,7 +261,6 @@ elif current_page == "defect_view":
         st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #cbd5e1;'>", unsafe_allow_html=True)
         st.markdown(f'<div style="background-color: #f0fdf4; border: 2px solid #16a34a; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
     else:
-        st.info("ไม่พบข้อมูลสถิติในระบบ")
         selected_material = "ไม่มีข้อมูล"
     st.markdown('</div>', unsafe_allow_html=True)
     
@@ -362,39 +274,27 @@ elif current_page == "defect_view":
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:", type=["png", "jpg", "jpeg"], key=f"up_m_{defect}")
-        if uploaded_main:
-            st.image(uploaded_main, caption=f"✅ รูปภาพหลัก {selected_material}", use_container_width=True)
+        st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:", type=["png", "jpg", "jpeg"], key=f"up_m_{defect}")
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}")
-        if uploaded_slaves:
-            for idx, img_file in enumerate(uploaded_slaves[:5]):
-                st.image(img_file, caption=f"รูปย่อยที่ {idx+1}", use_container_width=True)
+        st.file_uploader("แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER พร้อมปุ่มส่งเซฟข้อมูลลงชีตจริง
+    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     
-    after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")
+    # 📝 ใช้ clear_trigger เพื่อสั่งล้างข้อความในฟอร์มหลังจากเซฟเสร็จ
+    after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}_{st.session_state.clear_trigger}")
     
-    st.markdown("<p style='font-size:13px; font-weight:bold; color:#2c3e50; margin-bottom:2px;'>📸 แนบรูปหลักฐานผลงาน After ชิ้นงานจริง (เลือกทำอย่างใดอย่างหนึ่งหรือทั้งสองอย่าง):</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:13px; font-weight:bold; color:#2c3e50; margin-bottom:2px;'>📸 แนบรูปหลักฐานผลงาน After ชิ้นงานจริง (แนบได้สูงสุด 5 ภาพ):</p>", unsafe_allow_html=True)
     
-    # ส่วนรับไฟล์รูปภาพ After แบบหลายไฟล์พร้อมกัน สูงสุดไม่เกิน 5 รูปภาพ
-    uploaded_after_files = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ (แนบได้สูงสุด 5 ภาพ):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_af_file_{defect}")
-    if uploaded_after_files:
-        allowed_files = uploaded_after_files[:5] # ตัดสิทธิ์แสดงผลไม่เกิน 5 รูป
-        for idx, img_file in enumerate(allowed_files):
-            st.image(img_file, caption=f"✅ รูปภาพ After จากคลังไฟล์ ใบที่ {idx+1}", use_container_width=True)
-        
-    camera_after_file = st.camera_input("📸 ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final")
-    if camera_after_file:
-        st.image(camera_after_file, caption="✅ รูปภาพ After จากกล้องพรีวิว", use_container_width=True)
+    uploaded_after_files = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ (สูงสุด 5 ภาพ):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_af_file_{defect}_{st.session_state.clear_trigger}")
+    camera_after_file = st.camera_input("📸 หรือเปิดกล้องถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final_{st.session_state.clear_trigger}")
     
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -406,24 +306,57 @@ elif current_page == "defect_view":
             save_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             emp_id = st.session_state.user_info.get('id', '-') if st.session_state.user_info else '-'
             emp_name = st.session_state.user_info.get('name', '-') if st.session_state.user_info else '-'
+            emp_position = st.session_state.user_info.get('position', '-') if st.session_state.user_info else '-'
             
+            # 🔄 ทำการตรวจสอบและแปลงไฟล์รูปภาพ After เป็นรูปแบบ Base64 เพื่อยิงเข้าระบบ
+            image_payloads = []
+            
+            # 1. จัดการรูปภาพจากช่อง Uploader (สูงสุด 5 ภาพแรก)
+            if uploaded_after_files:
+                for img_file in uploaded_after_files[:5]:
+                    bytes_data = img_file.getvalue()
+                    base64_str = base64.b64encode(bytes_data).decode('utf-8')
+                    image_payloads.append({
+                        "filename": f"After_File_{img_file.name}",
+                        "mimeType": img_file.type,
+                        "data": base64_str
+                    })
+            
+            # 2. จัดการรูปภาพที่มาจากกล้อง Camera Input
+            if camera_after_file:
+                camera_bytes = camera_after_file.getvalue()
+                camera_base64 = base64.b64encode(camera_bytes).decode('utf-8')
+                image_payloads.append({
+                    "filename": f"After_Camera_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg",
+                    "mimeType": "image/jpeg",
+                    "data": camera_base64
+                })
+
+            # 📊 บรรจุชุด Payload ข้อมูลตามลำดับคอลัมน์ใหม่ใน Google Sheets
             payload = {
                 "timestamp": save_timestamp,
                 "employee_id": emp_id,
                 "employee_name": emp_name,
-                "defect_type": str(defect),
+                "position": emp_position,               # 📁 Column D และส่งต่อไป Column F
+                "defect_type": f"Defect {defect}",       # 📁 ไปอยู่ที่ Column G
                 "material": str(selected_material),
                 "location_face": str(selected_face),
-                "after_details": str(after_text)
+                "after_details": str(after_text),        # 📁 ย้ายไปเขียนที่ Column M
+                "images": image_payloads                 # 📸 ส่งแนบไฟล์รูปภาพจริงทั้งหมดเข้าไปในระบบ Google Script
             }
             
-            try:
-                response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
-                if response.status_code == 200:
-                    st.success(f"🎉 บันทึกข้อมูลของ Material {selected_material} ลงแท็บ 'Recording' เรียบร้อยแล้วเมื่อ {save_timestamp}!")
-                else:
-                    st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) โปรดตรวจสอบสิทธิ์เว็บแอป Apps Script ของคุณ")
-            except Exception as ex:
-                st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
+            with st.spinner("⏳ กำลังอัปโหลดภาพและบันทึกข้อมูลลงฐานข้อมูล..."):
+                try:
+                    response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
+                    if response.status_code == 200:
+                        st.success(f"🎉 บันทึกข้อมูลเรียบร้อยแล้ว! รูปภาพและรายละเอียดถูกบันทึกลงตารางแล้ว")
+                        
+                        # 🧼 สั่ง Clear ล้างฟอร์มข้อมูลเก่าทั้งหมดออกทันที เพื่อรอรับคำสั่งใหม่
+                        st.session_state.clear_trigger += 1
+                        st.rerun()
+                    else:
+                        st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) โปรดตรวจสอบสิทธิ์เว็บแอป Apps Script ของคุณ")
+                except Exception as ex:
+                    st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
                 
     st.markdown('</div>', unsafe_allow_html=True)

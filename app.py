@@ -111,6 +111,16 @@ st.markdown("""
     .user-profile-box {
         text-align: center !important; background: rgba(255, 255, 255, 0.9) !important; border-radius: 15px !important; padding: 12px !important; margin-bottom: 15px !important; border-left: 5px solid #007bc3 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
     }
+    
+    /* สไตล์กล่องบล็อกรูปภาพย่อยแบบแยกส่วนเดี่ยว */
+    .sub-image-block {
+        border: 1px solid #e2e8f0 !important;
+        background-color: #f8fafc !important;
+        border-radius: 12px !important;
+        padding: 10px !important;
+        margin-top: 8px !important;
+        margin-bottom: 8px !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -159,7 +169,7 @@ DRIVE_MAP = {
     }
 }
 
-# 🖼️ ฐานข้อมูล URL คลังรูปภาพสำหรับดึงมาแสดงผลบนหน้าจอแอปโดยตรงตามเงื่อนไข (สลับรูปภาพตามปุ่มกด)
+# 🖼️ ฐานข้อมูลภาพพรีวิวมุมมองเลนส์แล็บสยามจำลอง (ดึงมาแมตช์โชว์ 5 บล็อก)
 IMAGE_PREVIEW_DATABASE = {
     "หน้า A": [
         "https://images.unsplash.com/photo-1576086213369-97a306d36557?w=400&q=80",
@@ -348,7 +358,7 @@ elif current_page == "defect_view":
             if len(points) > 0:
                 selected_material_from_chart = points[0].get("x", "")
 
-    # 🔲 กรอบย่อยที่ 1: คลังรูปภาพ BEFORE
+    # 🔲 กรอบย่อยที่ 1: คลังรูปภาพ BEFORE (ปรับเปลี่ยนสไตล์กาง 5 แผงย่อยแยกส่วนอิสระ)
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#007bc3; font-size:14px; display:block; margin-bottom:5px;'>🖼️ กรอบที่ 1: {defect_title} เลือกภาพ Before</b>", unsafe_allow_html=True)
     
@@ -363,36 +373,42 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = DRIVE_MAP[face_char][defect]
         
+        # 📂 ส่วนหัวแสดงโฟลเดอร์หลัก-รองตามพิกัดหน้างาน
         st.markdown(f"""
-        <div style="background-color:#f1f5f9; padding:10px; border-radius:10px; font-size:12px; margin: 5px 0 10px 0;">
+        <div style="background-color:#f1f5f9; padding:10px; border-radius:10px; font-size:12px; margin: 5px 0 15px 0;">
             <b>📂 พิกัดโฟลเดอร์ระบบ ({face_char}_{defect}):</b><br>
-            • โฟลเดอร์หลัก: <a href="{folder_info['main']}" target="_blank">คลิกเพื่อเปิดดูภาพไว</a><br>
-            • ชั้นรอง (Slave): <a href="{folder_info['slave']}" target="_blank">คลิกเข้าสู่คลังภาพ {folder_info['slave_name']}</a>
+            • โฟลเดอร์หลัก: <a href="{folder_info['main']}" target="_blank">คลิกเพื่อเปิดคลังใหญ่</a><br>
+            • ชั้นรอง (Slave): <a href="{folder_info['slave']}" target="_blank">คลิกเข้าคลังภาพย่อย {folder_info['slave_name']}</a>
         </div>
         """, unsafe_allow_html=True)
         
-        # กล่องเลือกรายละเอียดภาพ 5 ภาพ
-        sub_img_index = st.selectbox(
-            "เลือกรายละเอียดภาพย่อย (เลือกได้ 5 ภาพ):", 
-            ["ภาพรายละเอียดชิ้นงานย่อยที่ 1", "ภาพรายละเอียดชิ้นงานย่อยที่ 2", "ภาพรายละเอียดชิ้นงานย่อยที่ 3", "ภาพรายละเอียดชิ้นงานย่อยที่ 4", "ภาพรายละเอียดชิ้นงานย่อยที่ 5"], 
-            key=f"sb_{defect}"
-        )
+        st.markdown("<p style='font-size:13px; font-weight:bold; color:#1e293b; margin-bottom:5px;'>🔍 ตารางรายการพรีวิวรูปภาพรายละเอียด Before ทั้ง 5 จุด:</p>", unsafe_allow_html=True)
         
-        # 🎯 🎯 ส่วนที่แก้ไข: ดึงรูปภาพในคลังมาโชว์แผงหน้าแอปทันที ไม่ต้องกดเข้าไปดูเปล่า ๆ
-        img_idx = ["ภาพรายละเอียดชิ้นงานย่อยที่ 1", "ภาพรายละเอียดชิ้นงานย่อยที่ 2", "ภาพรายละเอียดชิ้นงานย่อยที่ 3", "ภาพรายละเอียดชิ้นงานย่อยที่ 4", "ภาพรายละเอียดชิ้นงานย่อยที่ 5"].index(sub_img_index)
-        target_img_url = IMAGE_PREVIEW_DATABASE[selected_face][img_idx]
-        
-        st.markdown("<p style='font-size:12px; font-weight:bold; margin-top:10px; color:#475569;'>📷 รูปภาพตัวอย่าง Before จากคลังงานระบบ:</p>", unsafe_allow_html=True)
-        st.image(target_img_url, use_column_width=True, caption=f"พรีวิว: {selected_face} - {sub_img_index}")
+        # 🎯 🎯 🎯 ส่วนไฮไลท์หลัก: ใช้ Loop กางออกมาเป็น 5 บล็อกเรียงลำดับลงมาตามเงื่อนไขบรีฟใหม่
+        for i in range(1, 6):
+            st.markdown(f"""
+            <div class="sub-image-block">
+                <span style="font-size:13px; font-weight:bold; color:#007bc3;">📸 เพิ่มรูปรายละเอียดย่อยที่ {i}</span><br>
+                <small style="color:#64748b;">ลิงก์ส่งตรงสิทธิ์อ่าน: <a href="{folder_info['slave']}" target="_blank">เปิดเลือกรูปจุดที่ {i} ใน Folder {folder_info['slave_name']}</a></small>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # ดึงรูปจากฐานข้อมูลจำลองสากลมาแสดงคาไว้ในแต่ละบล็อกย่อย (i-1 คือตำแหน่งดัชนีรูปที่ 0 ถึง 4)
+            img_url = IMAGE_PREVIEW_DATABASE[selected_face][i - 1]
+            st.image(img_url, use_container_width=True, caption=f"พรีวิวรายละเอียดภาพย่อยชิ้นงานจุดที่ {i}")
+            st.markdown("<hr style='margin: 10px 0; border: 0; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
 
     elif selected_face == "อื่นๆ":
+        st.markdown("<p style='color:#64748b; font-size:12px;'>📸 โหมดหน้างานเสริม: กดบันทึกรูปภาพชิ้นงาน Before ได้ด้วยตนเอง</p>", unsafe_allow_html=True)
         st.camera_input("ถ่ายภาพ Before (กำหนดเอง)", key=f"c_bef_{defect}")
+        
     st.markdown('</div>', unsafe_allow_html=True)
 
     # 🔲 กรอบย่อยที่ 2: จัดการเก็บข้อมูลความเห็นและภาพถ่าย AFTER
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ กรอบที่ 2: ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
     
+    # บรรจุค่า Material นำร่องเข้าไปกรอกให้ล่วงหน้าในช่อง After
     default_text = f"รายงานผลชิ้นงาน Material รหัส: {selected_material_from_chart}\n" if selected_material_from_chart else ""
     
     st.text_area(

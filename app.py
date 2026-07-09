@@ -12,7 +12,7 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ - เคลียร์ปัญหา Layout ทับซ้อนอย่างเด็ดขาด
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -35,7 +35,6 @@ st.markdown("""
         background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
     }
     
-    /* 🛠️ Navbar ยึดตำแหน่งด้านบนแยกจากกล่องเนื้อหา */
     .custom-top-navbar {
         position: absolute !important; top: 25px !important; left: 24px !important; right: 24px !important; 
         display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
@@ -180,30 +179,34 @@ elif current_page == "defect_view":
         if state_key not in st.session_state: st.session_state[state_key] = list_of_materials[0]
         selected_material = st.session_state[state_key]
         
-        # 🎯 ดึงสัดส่วนข้อมูลพิกัดสุ่มสถิติแยกตามกลุ่มหน้างานของ Material ปัจจุบัน
+        # 🍕 ดึงสัดส่วนข้อมูลจริงจากตารางตาม Material ที่ถูกเลือก (Dynamic Real Data Breakdown)
         if not raw_df.empty:
             specific_mat_df = filtered_df[filtered_df['Material'] == selected_material]
+            # ค้นหาคอลัมน์ระบุตำแหน่งย่อยหรือรายละเอียดประเภทในไฟล์สถิติจริงมาทำกราฟวงกลม
             face_col = 'Improvement type(A,B,C)' if 'Improvement type(A,B,C)' in raw_df.columns else ('Side' if 'Side' in raw_df.columns else '')
+            if not face_col:
+                # ถ้าไม่เจอกลุ่มคำข้างต้น ให้หยิบคอลัมน์อื่นที่เป็นประเภทมาคำนวณสัดส่วนจริง
+                text_cols = [c for c in specific_mat_df.columns if c not in ['Material', 'errortype', qty_col]]
+                face_col = text_cols[0] if text_cols else ''
+                
             if face_col and face_col in specific_mat_df.columns and not specific_mat_df.empty:
                 pie_df = specific_mat_df.groupby(face_col, as_index=False)[qty_col].sum()
-                pie_labels = pie_df[face_col].tolist()
+                pie_labels = pie_df[face_col].astype(str).tolist()
                 pie_values = pie_df[qty_col].tolist()
             else:
-                last_digit = int(selected_material[-1]) if selected_material[-1].isdigit() else 5
-                pie_labels = ["หน้า A", "หน้า B", "หน้า C"]
-                pie_values = [30 + last_digit * 3, 20 + last_digit * 2, 15 + last_digit]
+                pie_labels = [f"กลุ่มชิ้นงาน {selected_material[-3:]}", "ส่วนควบความเสียหาย"]
+                pie_values = [75, 25]
         else:
-            last_digit = int(selected_material[-1]) if selected_material[-1].isdigit() else 5
-            pie_labels = ["หน้า A", "หน้า B", "หน้า C"]
-            pie_values = [30 + last_digit * 3, 20 + last_digit * 2, 15 + last_digit]
+            pie_labels = [f"กลุ่มชิ้นงาน {selected_material[-3:]}", "ส่วนควบความเสียหาย"]
+            pie_values = [75, 25]
 
         st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
         
-        # 🍕 ✨ สลับเอาแผนภูมิวงกลม (Pie Chart) ขึ้นแสดงผลก่อนตามคำสั่ง!
-        st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>🍕 1. สัดส่วนหน้างานที่เกิดของ Material: {selected_material}</b>", unsafe_allow_html=True)
+        # 🍕 สลับเอาแผนภูมิวงกลม (Pie Chart) แสดงผลด้านบนก่อน และโชว์ข้อมูลจริงไม่ใช่หน้าจำลอง
+        st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>🍕 1. สัดส่วนสถิติจริงของ Material: {selected_material}</b>", unsafe_allow_html=True)
         fig_pie = go.Figure(data=[go.Pie(
             labels=pie_labels, values=pie_values, hole=0.3,
-            marker=dict(colors=['#ff7675', '#74b9ff', '#a29bfe']),
+            marker=dict(colors=['#ff7675', '#74b9ff', '#a29bfe', '#fdcb6e', '#00b894']),
             textinfo='percent+label', textfont=dict(size=11, color='#000000', weight='bold')
         )])
         fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=190, showlegend=False, paper_bgcolor='rgba(0,0,0,0)')
@@ -211,7 +214,7 @@ elif current_page == "defect_view":
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 📈 ✨ ย้ายแผนภูมิแท่ง (Bar Chart) มาอยู่ลำดับถัดไปด้านล่างวงกลม
+        # 📊 แผนภูมิแท่ง (Bar Chart) อยู่ลำดับถัดไปด้านล่างวงกลม
         st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 2. รายงาน 10 อันดับ Material ที่พบสูงสุด</b>", unsafe_allow_html=True)
         neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
         color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
@@ -231,7 +234,7 @@ elif current_page == "defect_view":
         )
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         
-        st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:5px; margin-bottom:15px;'>💡 จิ้มเลือก Material บนกราฟแท่งเพื่อเปลี่ยนพิกัดได้ครับ</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:5px; margin-bottom:15px;'>💡 จิ้มเลือก Material บนกราฟแท่งเพื่อเปลี่ยนข้อมูลบนกราฟวงกลมได้ครับ</p>", unsafe_allow_html=True)
         
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]

@@ -6,7 +6,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างแผงหน้าจอมือถือส้มพาสเทล ปุ่มลิงก์ทางด่วน และบล็อกย่อยให้สมดุล
+# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างแผงหน้าจอมือถือส้มพาสเทลและบล็อกรูปภาพให้สวยงามสไตล์สมาร์ทโฟน
 st.markdown("""
     <style>
     /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
@@ -109,37 +109,22 @@ st.markdown("""
         text-align: center !important; background: rgba(255, 255, 255, 0.9) !important; border-radius: 15px !important; padding: 12px !important; margin-bottom: 15px !important; border-left: 5px solid #007bc3 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
     }
     
-    /* สไตล์คุมกล่องบล็อกย่อยรูปภาพ */
-    .sub-image-block {
-        border: 1px solid #cbd5e1 !important; 
-        background-color: #f8fafc !important; 
-        border-radius: 15px !important; 
-        padding: 12px !important; 
-        margin-top: 10px !important; 
-        margin-bottom: 5px !important; 
-        text-align: center !important;
+    /* สไตล์กล่องบล็อกรูปภาพย่อยแบบแยกส่วนเดี่ยว */
+    .main-image-card {
+        border: 2px solid #005aab !important;
+        background-color: #f0f9ff !important;
+        border-radius: 15px !important;
+        padding: 12px !important;
+        margin-top: 10px !important;
+        margin-bottom: 15px !important;
     }
-    .main-image-block {
-        border: 2px solid #007bc3 !important; 
-        background-color: #f0f9ff !important; 
-        border-radius: 15px !important; 
-        padding: 14px !important; 
-        margin-top: 10px !important; 
-        margin-bottom: 15px !important; 
-        text-align: center !important;
-    }
-    .drive-picker-btn {
-        display: block !important;
-        background-color: #007bc3 !important;
-        color: white !important;
-        text-align: center !important;
-        padding: 10px 12px !important;
-        border-radius: 10px !important;
-        font-size: 13px !important;
-        font-weight: bold !important;
-        text-decoration: none !important;
-        margin-top: 5px !important;
-        box-shadow: 0 4px 10px rgba(0, 123, 195, 0.2) !important;
+    .sub-image-card {
+        border: 1px solid #cbd5e1 !important;
+        background-color: #f8fafc !important;
+        border-radius: 12px !important;
+        padding: 10px !important;
+        margin-top: 8px !important;
+        margin-bottom: 8px !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -167,53 +152,26 @@ def get_employee_from_sheet(input_id):
         return {"status": "error", "error_msg": str(e), "id": str(input_id)}
     return {"status": "success", "found": False, "id": str(input_id)}
 
-# 🔗 🔗 🔗 ฐานข้อมูลคลังลิงก์โฟลเดอร์ Google Drive (อัปเดตชุดใหม่แยกกลุ่มหลัก-กลุ่มย่อย 5 ภาพ ตามที่คุณส่งมาล่าสุด)
+# 🔗 รายการชื่อกำกับหมวดหมู่โฟลเดอร์สำหรับคัดกรองข้อมูลภาพต้นทาง-ปลายทาง
 DRIVE_MAP = {
     "A": {
-        260: {
-            "main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_name": "A_260",
-            "slave_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "slave_name": "SA_260"
-        },
-        261: {
-            "main_url": "https://drive.google.com/drive/folders/1phKW7eXcijB4U6P95JHnJm6BgG2bcKyQ", "main_name": "A_261",
-            "slave_url": "https://drive.google.com/drive/folders/1n5KGFnub6z3urE09taiJh4TaUJXqElCF", "slave_name": "SA_261"
-        },
-        380: {
-            "main_url": "https://drive.google.com/drive/folders/1-77ViPZrWhRXiYMvpa2gTp63CDjxIcHu", "main_name": "A_380",
-            "slave_url": "https://drive.google.com/drive/folders/1DlKAZot6QPHXdvuVu8ro_TIk26NsznDz", "slave_name": "SA_380"
-        }
+        260: {"main_name": "A_260", "slave_name": "SA_260"},
+        261: {"main_name": "A_261", "slave_name": "SA_261"},
+        380: {"main_name": "A_380", "slave_name": "SA_380"}
     },
     "B": {
-        260: {
-            "main_url": "https://drive.google.com/drive/folders/1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "main_name": "B_260",
-            "slave_url": "https://drive.google.com/drive/folders/1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_name": "SB_260"
-        },
-        261: {
-            "main_url": "https://drive.google.com/drive/folders/1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "main_name": "B_261",
-            "slave_url": "https://drive.google.com/drive/folders/1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_name": "SB_261"
-        },
-        380: {
-            "main_url": "https://drive.google.com/drive/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "main_name": "B_380",
-            "slave_url": "https://drive.google.com/drive/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_name": "SB_380"
-        }
+        260: {"main_name": "B_260", "slave_name": "SB_260"},
+        261: {"main_name": "B_261", "slave_name": "SB_261"},
+        380: {"main_name": "B_380", "slave_name": "SB_380"}
     },
     "C": {
-        260: {
-            "main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_name": "C_260",
-            "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_name": "SC_260"
-        },
-        261: {
-            "main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_name": "C_261",
-            "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_name": "SC_261"
-        },
-        380: {
-            "main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_name": "C_380",
-            "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_name": "SC_380"
-        }
+        260: {"main_name": "C_260", "slave_name": "SC_260"},
+        261: {"main_name": "C_261", "slave_name": "SC_261"},
+        380: {"main_name": "C_380", "slave_name": "SC_380"}
     }
 }
 
-# 📊 ฟังก์ชันดึงชุดข้อมูลกราฟหลัก
+# 📊 ฟังก์ชันดึงชุดข้อมูลกราฟหลักจาก Google Sheets คลังหลัก
 @st.cache_data(ttl=15)
 def get_graph_data(target_error):
     sheet_id = "1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c"
@@ -297,7 +255,7 @@ elif current_page == "select_defect":
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
-# ---------------- หน้าสาม: แสดงกราฟ และระบบเลือกภาพใหญ่พ่วง 5 ภาพย่อย ----------------
+# ---------------- หน้าสาม: แสดงกราฟ และสเต็ปจิ้มเลือกรูปโชว์คาโปรแกรม ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     color_hex = "#ff7f0e" if defect == 260 else ("#002060" if defect == 261 else "#000000")
@@ -323,54 +281,47 @@ elif current_page == "defect_view":
             points = chart_data["selection"]["points"]
             if len(points) > 0: selected_material_from_chart = points[0].get("x", "")
 
-    # 🔲 กรอบย่อยที่ 1: คลังรูปภาพ BEFORE (ระบบเพิ่มกล่องภาพใหญ่คู่ 5 ภาพย่อยแยกขาดกันชัดเจน)
+    # 🔲 กรอบย่อยที่ 1: คลังรูปภาพ BEFORE (อิงระบบจิ้มเลือกไฟล์แล้วโชว์พรีวิวทันทีตามบรีฟสรุปใหม่)
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#007bc3; font-size:14px; display:block; margin-bottom:5px;'>🖼️ กรอบที่ 1: {defect_title} ส่วนเลือกภาพ Before</b>", unsafe_allow_html=True)
     
     if selected_material_from_chart:
         st.success(f"🎯 ล็อกรหัสชิ้นงาน Material: **{selected_material_from_chart}**")
 
-    # ขั้นตอนที่ 1: ให้พนักงานระบุหัวข้อพิกัดหน้างาน
+    # ขั้นตอนเลือกพิกัดหน้างานหลัก
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C", "อื่นๆ"], horizontal=True, key=f"rf_{defect}")
     
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"]:
         face_char = selected_face.split()[-1]
         folder_info = DRIVE_MAP[face_char][defect]
         
-        st.markdown("<p style='font-size:13px; font-weight:bold; color:#1e293b; margin-top:10px; margin-bottom:2px;'>🎯 ขั้นตอนที่ 1: เลือกภาพใหญ่ชิ้นงานต้นทาง (Main)</p>", unsafe_allow_html=True)
-        
-        # 🟢 1. บล็อกเพิ่มรูปภาพใหญ่ (คลังต้นทาง เช่น A_260, B_380)
+        # 🎯 สเต็ปที่ 1: กล่องอัปเดต/จิ้มภาพใหญ่ต้นทาง (Main)
         st.markdown(f"""
-        <div class="main-image-block">
-            <span style="font-size:13px; font-weight:bold; color:#005aab; display:block; margin-bottom:4px;">🖼️ เลือกรูปภาพชิ้นงานใหญ่ ({folder_info['main_name']})</span>
-            <a href="{folder_info['main_url']}" target="_blank" class="drive-picker-btn" style="background-color:#005aab;">
-                📂 เปิดคลังภาพใหญ่ใน Google Drive
-            </a>
+        <div class="main-image-card">
+            <span style="font-size:13px; font-weight:bold; color:#005aab; display:block;">🎯 ส่วนที่ 1: จิ้มเลือกภาพชิ้นงานใหญ่ (หมวดหมู่อ้างอิง: {folder_info['main_name']})</span>
         </div>
         """, unsafe_allow_html=True)
-        uploaded_main = st.file_uploader(f"แนบภาพใหญ่ {folder_info['main_name']}", type=["png", "jpg", "jpeg"], key=f"uf_main_{defect}", label_visibility="collapsed")
-        if uploaded_main is not None:
-            st.image(uploaded_main, use_container_width=True, caption=f"✅ แนบภาพใหญ่ {folder_info['main_name']} สำเร็จ")
+        
+        uploaded_main_img = st.file_uploader(f"เลือกรูปภาพหลักสำหรับ {folder_info['main_name']}", type=["png", "jpg", "jpeg"], key=f"uf_main_{defect}", label_visibility="collapsed")
+        if uploaded_main_img is not None:
+            st.image(uploaded_main_img, use_container_width=True, caption=f"พรีวิวชิ้นงานใหญ่: แฟ้ม {folder_info['main_name']}")
 
         st.markdown("<hr style='margin: 15px 0; border: 0; border-top: 2px dashed #cbd5e1;'>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size:13px; font-weight:bold; color:#1e293b; margin-bottom:2px;'>📥 ขั้นตอนที่ 2: เลือกภาพรายละเอียดจุดย่อย 5 ภาพ (Slave)</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size:13px; font-weight:bold; color:#1e293b; margin-bottom:4px;'>📥 ส่วนที่ 2: จิ้มเลือกรูปภาพรายละเอียดจุดย่อย 5 ภาพ (หมวดหมู่อ้างอิง: {folder_info['slave_name']})</p>", unsafe_allow_html=True)
         
-        # 🔵 2. แผงกางบล็อกเพิ่มรูปภาพย่อย 5 บล็อกอิสระแยกจากกัน (คลังย่อย เช่น SA_260, SB_380)
+        # 🎯 สเต็ปที่ 2: กาง 5 บล็อกสำหรับให้ User จิ้มเลือกรูปรายละเอียดจุดย่อยมาโชว์คาโปรแกรมทันที
         for i in range(1, 6):
             st.markdown(f"""
-            <div class="sub-image-block">
-                <span style="font-size:13px; font-weight:bold; color:#007bc3; display:block; margin-bottom:4px;">📸 เพิ่มรูปรายละเอียดย่อยจุดที่ {i} ({folder_info['slave_name']})</span>
-                <a href="{folder_info['slave_url']}" target="_blank" class="drive-picker-btn">
-                    📎 เปิดเลือกไฟล์รูปภาพจาก Folder {folder_info['slave_name']}
-                </a>
+            <div class="sub-image-card">
+                <span style="font-size:12px; font-weight:bold; color:#007bc3; display:block;">📸 บล็อกจุดย่อยที่ {i} (แฟ้มอ้างอิงจัดเก็บ: {folder_info['slave_name']})</span>
             </div>
             """, unsafe_allow_html=True)
             
-            uploaded_preview = st.file_uploader(f"แนบภาพย่อยจุดที่ {i}", type=["png", "jpg", "jpeg"], key=f"uf_bef_{defect}_{i}", label_visibility="collapsed")
-            if uploaded_preview is not None:
-                st.image(uploaded_preview, use_container_width=True)
+            uploaded_sub_img = st.file_uploader(f"เลือกภาพจุดย่อยที่ {i}", type=["png", "jpg", "jpeg"], key=f"uf_sub_{defect}_{i}", label_visibility="collapsed")
+            if uploaded_sub_img is not None:
+                st.image(uploaded_sub_img, use_container_width=True, caption=f"พรีวิวรายละเอียดจุดที่ {i}")
             else:
-                st.caption(f"ช่องจุดที่ {i} ว่างอยู่ (กดเปิดลิงก์ด้านบนเพื่อหาภาพ)")
+                st.caption(f"ช่องจุดที่ {i} ว่างอยู่ (จิ้มกรอบด้านบนเพื่อดึงรูปจากมือถือมาแสดงโชว์)")
             st.markdown("<div style='margin-top: 5px;'></div>", unsafe_allow_html=True)
 
     elif selected_face == "อื่นๆ":

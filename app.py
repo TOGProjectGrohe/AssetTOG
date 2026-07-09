@@ -75,7 +75,7 @@ def load_real_defect_data():
         st.error(f"ไม่สามารถเชื่อมต่อข้อมูลจากชีตหลักได้: {e}")
         return pd.DataFrame()
 
-# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม
+# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม (แก้ไข Syntax Error จุด "main_url" ของ C_261 แล้ว)
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -89,7 +89,7 @@ FOLDER_LINK_MAP = {
     },
     "C": {
         260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
-        261: {"https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
+        261: {"main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
         380: {"main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_title": "SC_380"}
     }
 }
@@ -164,28 +164,34 @@ elif current_page == "defect_view":
     st.markdown("<p style='font-size:12px; color:#64748b; text-align:center; margin-top:-2px; margin-bottom:10px;'>💡 จิ้มเลือกแท่งกราฟด้านล่างเพื่อเปลี่ยนชิ้นงานได้ทันที</p>", unsafe_allow_html=True)
     
     if not chart_data.empty:
-        # 🎨 ชุดสี Pastel มาตรฐานที่จะแชร์ร่วมกันทั้ง Pie และ Bar Chart
-        pastel_colors = px.colors.qualitative.Pastel
+        # 🎨 กำหนดเฉดสีพาสเทลมาตรฐาน
+        pastel_palette = px.colors.qualitative.Pastel
+        list_of_materials = chart_data['Material'].tolist()
         
-        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - ล็อกสีแยกตามชื่อชิ้นงาน
+        # 🔑 ✨ สร้างคลัง Map สีผูกเข้ากับชื่อคีย์ชิ้นงานโดยตรง เพื่อป้องกันสีสลับกัน!
+        color_map = {}
+        for idx, mat in enumerate(list_of_materials):
+            color_map[mat] = pastel_palette[idx % len(pastel_palette)]
+
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - ใช้ color_discrete_map
         fig_pie = px.pie(
             chart_data, 
             names="Material", 
             values=qty_col, 
             color="Material",
-            color_discrete_sequence=pastel_colors
+            color_discrete_map=color_map
         )
         fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=False)
         st.plotly_chart(fig_pie, use_container_width=True)
         
-        # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - ✨ ซิงค์การระบายสีให้ตรงกับชื่อชิ้นงานบนคลัง Pie เป๊ะๆ
+        # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - บังคับระบายสีด้วยชุด Map เดียวกัน สีตรงกับวงกลม 100%
         fig_bar = px.bar(
             chart_data, 
             x="Material", 
             y=qty_col, 
             orientation='v', 
-            color="Material", # บังคับแบ่งสีตามชิ้นงานเพื่อให้จับคู่ตรงกับ Pie Chart
-            color_discrete_sequence=pastel_colors
+            color="Material",
+            color_discrete_map=color_map
         )
         fig_bar.update_layout(
             margin=dict(l=10, r=10, t=10, b=10), height=250, showlegend=False,
@@ -194,10 +200,7 @@ elif current_page == "defect_view":
             clickmode='event+select'
         )
         
-        # ใช้ฟีเจอร์ on_select="rerun" เพื่อดักฟังค่าเมื่อพนักงานจิ้มแท่งกราฟ
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
-        
-        list_of_materials = chart_data['Material'].tolist()
         state_key = f"sel_mat_{defect}"
         
         # 🎯 ตรวจสอบความเปลี่ยนแปลงจากการคลิกกราฟแท่ง

@@ -3,12 +3,11 @@ import pandas as pd
 import requests
 import plotly.express as px
 import plotly.graph_objects as go
-import numpy as np
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลตัดกับกราฟไซไฟ
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลสะอาดตา
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -27,9 +26,9 @@ st.markdown("""
     .login-card {
         background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
     }
-    /* การ์ดพิเศษสำหรับแสดงกราฟธีม Dark โลกอนาคต */
+    /* ❌ ลบพื้นหลังสีดำออก ให้ใสโปร่งแสงคลีน ๆ */
     .future-graph-card {
-        background-color: #0d1117 !important; border: 2px solid #30363d !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important; margin-bottom: 15px !important; width: 100% !important;
+        background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
     }
     .custom-top-navbar {
         position: absolute !important; top: 20px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
@@ -158,29 +157,24 @@ elif current_page == "defect_view":
         })
         qty_col = "rework quantity"
 
-    # 📊 แผงกราฟสถิติด้านบน (กล่องดำไซไฟ 3D)
+    # 📊 แผงกราฟสถิติด้านบน (ถอดพื้นหลังสีดำออก เป็นสีใสโปร่งแสง)
     st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#00ffcc; font-size:15px; display:block; text-align:center; letter-spacing: 1px;'>🛸 FUTURE METAVERSE 3D REPORT</b>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:11px; color:#8b949e; text-align:center; margin-top:-2px; margin-bottom:15px;'>💡 คลิกเลือกแท่งโมเดล 3D ด้านล่างเพื่อเปลี่ยนชิ้นงาน</p>", unsafe_allow_html=True)
+    st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 STATS REPORT (TOP 10 MATERIAL)</b>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:12px; color:#475569; text-align:center; margin-top:-2px; margin-bottom:15px;'>💡 คลิกเลือกแท่งโมเดล 3D ด้านล่างเพื่อเปลี่ยนคลังภาพ</p>", unsafe_allow_html=True)
     
     if not chart_data.empty:
-        # 🔑 เฉดสีดั้งเดิมยอดฮิต (เทอร์ควอยซ์, ส้ม, ชมพู, ม่วง, ฟ้า, เขียวพาสเทล)
+        # เฉดสีพาสเทลดั้งเดิมยอดนิยมที่สลับสวยงาม
         neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
         list_of_materials = chart_data['Material'].tolist()
         color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
 
-        # 🍕 1. 🛠️ แผนภูมิวงกลมมิตินูนแก้วฉาบเงา 3D (3D Glossy Donut Chart)
-        # ใช้การดึงแผ่นโดนัทให้แยกจากกัน (Pull) เสมือนชิ้นส่วนกระจกประกอบลอยตัว
-        pull_values = [0.03 if idx < 3 else 0 for idx in range(len(chart_data))]
-        
+        # 🍕 1. แผนภูมิวงกลมแบบมีมิตินูนลอย (3D-like Donut Chart) - ตัวอักษรสีดำเด่นชัด
         fig_pie = go.Figure(data=[go.Pie(
             labels=chart_data["Material"],
             values=chart_data[qty_col],
             hole=0.45,
-            pull=pull_values, # ดึงชิ้นส่วนให้ออกจากกันเพื่อความหนาเป็นมิติ
             marker=dict(
                 colors=[color_map[m] for m in chart_data["Material"]],
-                # ใช้เส้นขอบหนาสามชั้นสะท้อนเงา (Specular Highlight simulation)
                 line=dict(color='#ffffff', width=2.5)
             ),
             textinfo='percent',
@@ -196,25 +190,21 @@ elif current_page == "defect_view":
         )
         st.plotly_chart(fig_pie, use_container_width=True)
         
-        # 📊 2. 🛠️ แผนภูมิแท่งนูนหนาทรงกระบอก 3D (3D Cylindrical Volume Bar Chart)
-        # ใช้หลักการ Isometric Projection โดยซ้อนเลเยอร์เงาขอบมืด (Drop Shadow) และเส้นขอบเรืองแสงคู่ขนาน
+        # 📊 2. แผนภูมิแท่งแนวตั้งนูนหนา (3D Bevel Bar Chart) - ปรับเป็นสีเฉดเดียวเรียบหรู ไม่เป็นจุดไข่ปลาแล้ว
         bars_list = []
         for mat in list_of_materials:
             mat_data = chart_data[chart_data['Material'] == mat]
             val = mat_data[qty_col].values[0]
             base_color = color_map[mat]
             
-            # วาดแท่งโมเดล 3D ซ้อนมิติขอบกระจกหนาพิเศษ
             bars_list.append(go.Bar(
                 x=[mat],
                 y=[val],
                 name=mat,
                 marker=dict(
                     color=base_color,
-                    # เส้นขอบแบบ Glossy 3D Highlight หนา 4px ช่วยยกตัวแท่งให้นูนขึ้นจากจอเหมือนแท่งแก้วคริสตัล
-                    line=dict(color='#ffffff', width=4),
-                    # ใช้ Pattern กรีดลายแนวนอนตัดแสง สะท้อนเงาเหมือนโมเดลกระบอก 3D ในห้องแล็บ
-                    pattern=dict(shape=".", solidity=0.3, fillmode="overlay")
+                    line=dict(color='#ffffff', width=3), # ขอบหนาขาวช่วยดึงความนูน 3D ลอยตัว
+                    pattern=None # ❌ ถอดลวดลายจุดประ/ลายเฉลียงออกตามบรีฟ ให้สีเนื้อสีเต็มแน่นเรียบเนียน
                 ),
                 hovertemplate=f"Material: {mat}<br>จำนวน: {val} ครั้ง<extra></extra>"
             ))
@@ -225,18 +215,18 @@ elif current_page == "defect_view":
             height=250, 
             showlegend=False,
             barmode='group',
-            paper_bgcolor='rgba(0,0,0,0)', 
-            plot_bgcolor='#0d1117',        
+            paper_bgcolor='rgba(0,0,0,0)', # พื้นหลังใสโปร่งแสงทะลุกลืนเข้าแอปพาสเทล
+            plot_bgcolor='rgba(0,0,0,0)',  # พื้นหลังด้านในกราฟใส
             xaxis=dict(
                 type='category', 
                 tickangle=45, 
-                tickfont=dict(color='#8b949e', size=10),
-                gridcolor='#21262d'
+                tickfont=dict(color='#000000', size=10, weight='bold'), # ✍️ ตัวอักษรสีดำเข้ม
+                gridcolor='rgba(0,0,0,0.05)' # เส้นตารางสีจาง ๆ สะอาดตา
             ),
             yaxis=dict(
-                tickfont=dict(color='#8b949e', size=10),
-                gridcolor='#21262d',
-                zerolinecolor='#30363d'
+                tickfont=dict(color='#000000', size=10, weight='bold'), # ✍️ ตัวอักษรตัวเลขแกนตั้งสีดำเข้ม
+                gridcolor='rgba(0,0,0,0.05)',
+                zerolinecolor='rgba(0,0,0,0.1)'
             ),
             clickmode='event+select'
         )
@@ -253,8 +243,8 @@ elif current_page == "defect_view":
             
         selected_material = st.session_state[state_key]
         
-        st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #30363d;'>", unsafe_allow_html=True)
-        st.markdown(f'<div style="background-color: #041917; border: 1px solid #00ffcc; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#00ffcc; box-shadow: 0 0 15px rgba(0, 255, 204, 0.35);"><b>🛸 TARGET MATERIAL:</b> <span style="font-size:16px; font-weight:bold; color:#ffffff; text-shadow: 0 0 5px #00ffcc;">{selected_material}</span></div>', unsafe_allow_html=True)
+        st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #cbd5e1;'>", unsafe_allow_html=True)
+        st.markdown(f'<div style="background-color: #f0fdf4; border: 2px solid #16a34a; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
     else:
         st.info("ไม่พบข้อมูลสถิติในระบบ")
         selected_material = "ไม่มีข้อมูล"

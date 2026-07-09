@@ -398,40 +398,42 @@ elif current_page == "defect_view":
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-   # 💾 ปุ่มบันทึกข้อมูล (ปรับแต่งดึงค่าเนียนๆ ตามเงื่อนไขใหม่)
-    if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
-        if not after_text.strip():
-            st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
-        else:
-            save_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            emp_id = st.session_state.user_info.get('id', '-') if st.session_state.user_info else '-'
-            emp_name = st.session_state.user_info.get('name', '-') if st.session_state.user_info else '-'
-            emp_position = st.session_state.user_info.get('position', '-') if st.session_state.user_info else '-'
-            
-            # 2.6 ตัดคำออกให้เหลือเฉพาะตัวเลข Defect เท่านั้น (มั่นใจว่าเป็น string ตัวเลขล้วน)
-            clean_defect = str(defect).replace("Defect", "").strip()
-            
-            # 2.7 ถอดเอาเฉพาะคำว่า A, B หรือ C (ตัดคำว่า "หน้า " หรือช่องว่างออก)
-            clean_face = str(selected_face).replace("หน้า", "").strip()
+  # 💾 ปุ่มบันทึกข้อมูล (ปรับแต่งใหม่ให้ลงล็อกตารางจริงครบถ้วน)
+if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
+    if not after_text.strip():
+        st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
+    else:
+        save_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        emp_id = st.session_state.user_info.get('id', '-') if st.session_state.user_info else '-'
+        emp_name = st.session_state.user_info.get('name', '-') if st.session_state.user_info else '-'
+        emp_position = st.session_state.user_info.get('position', '-') if st.session_state.user_info else '-'
+        
+        # 2.6 ดึงเฉพาะตัวเลข Defect (เช่น จาก "Defect 261" ดึงเหลือแค่ "261")
+        clean_defect = "".join(filter(str.isdigit, str(defect)))
+        if not clean_defect:
+            clean_defect = str(defect)
+        
+        # 2.7 ถอดเอาเฉพาะตัวอักษรกลุ่ม A, B, C (ตัดคำว่า "หน้า" และช่องว่างออก)
+        clean_face = str(selected_face).replace("หน้า", "").strip()
 
-            # จัดเตรียม Payload ส่งข้อมูลด้วยโครงสร้างคีย์ใหม่ที่เนียนและตรงล็อก
-            payload = {
-                "timestamp": save_timestamp,          # 2.1 Timestamp
-                "employee_id": emp_id,                # 2.2 Employee ID
-                "employee_name": emp_name,            # 2.3 Name
-                "position": emp_position,              # 2.4 Position
-                "material": str(selected_material),   # 2.5 Material
-                "errortype": clean_defect,            # 2.6 errortype (เหลือแค่ตัวเลขล้วน เช่น 260)
-                "improvement_type": clean_face,       # 2.7 Improvement type(A,B,C) (เหลือแค่ A, B, C)
-                "improvement_details": str(after_text) # 2.8 Improvement details
-            }
-            
-            try:
-                response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
-                if response.status_code == 200:
-                    st.success(f"🎉 บันทึกข้อมูลของ Material {selected_material} ลงระบบสำเร็จเรียบร้อยแล้ว!")
-                else:
-                    st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) โปรดตรวจสอบสิทธิ์เว็บแอป Apps Script ของคุณ")
-            except Exception as ex:
-                st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
+        # จัดเตรียมคีย์รับส่งให้ตรงและเข้าใจง่าย
+        payload = {
+            "timestamp": save_timestamp,
+            "employee_id": emp_id,
+            "employee_name": emp_name,
+            "position": emp_position,
+            "material": str(selected_material),
+            "errortype": clean_defect,
+            "improvement_type": clean_face,
+            "improvement_details": str(after_text)
+        }
+        
+        try:
+            response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
+            if response.status_code == 200:
+                st.success(f"🎉 บันทึกข้อมูลของ Material {selected_material} ลงแท็บ 'Recording' ครบถ้วนเรียบร้อยแล้ว!")
+            else:
+                st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) โปรดตรวจสอบการ Deploy Web App อีกครั้ง")
+        except Exception as ex:
+            st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
     st.markdown('</div>', unsafe_allow_html=True)

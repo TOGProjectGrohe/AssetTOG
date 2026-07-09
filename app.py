@@ -6,8 +6,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 
-# ⚠️ ฝังลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์ลงในระบบเรียบร้อยครับ
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
+# ⚠️ อัปเดตฝังลิงก์ Google Apps Script ตัวล่าสุดของคุณวีรพันธ์เรียบร้อยครับ
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
@@ -128,6 +128,7 @@ st.markdown("""
         transform: translateY(1px) !important;
     }
     
+    /* 💾 ตกแต่งปุ่ม Save สีเขียวเด่นชัด */
     div.stButton > button[key^="save_btn_"] {
         background-color: #10b981 !important;
         color: white !important;
@@ -384,7 +385,7 @@ elif current_page == "defect_view":
     
     st.markdown("<p style='font-size:13px; font-weight:bold; color:#2c3e50; margin-bottom:2px;'>📸 แนบรูปหลักฐานผลงาน After ชิ้นงานจริง (เลือกทำอย่างใดอย่างหนึ่งหรือทั้งสองอย่าง):</p>", unsafe_allow_html=True)
     
-    # 🛠️ 📸 ปรับปรุงส่วนนี้: สั่งให้ระบุเปิดการรับไฟล์แบบหลายไฟล์พร้อมกันและคุมสิทธิ์สูงสุดไว้ไม่เกิน 5 รูปภาพ
+    # ส่วนรับไฟล์รูปภาพ After แบบหลายไฟล์พร้อมกัน สูงสุดไม่เกิน 5 รูปภาพ
     uploaded_after_files = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ (แนบได้สูงสุด 5 ภาพ):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_af_file_{defect}")
     if uploaded_after_files:
         allowed_files = uploaded_after_files[:5] # ตัดสิทธิ์แสดงผลไม่เกิน 5 รูป

@@ -8,7 +8,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งองค์ประกอบหน้าเลือก Defect ให้สวยงามเท่ากัน
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งองค์ประกอบให้สวยหรู เท่ากันเป๊ะ
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -99,7 +99,7 @@ st.markdown("""
         text-align: center !important;
     }
 
-    /* 🎯 หัวข้อที่ 1: กล่องข้อความสีน้ำเงินอ่อนพาสเทล ตัวอักษรสีดำ */
+    /* กล่องหัวข้อหลักสีน้ำเงินอ่อน ตัวอักษรดำ */
     .defect-title-box {
         background-color: #dbeafe !important;
         border: 1px solid #bfdbfe !important;
@@ -113,7 +113,7 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02) !important;
     }
 
-    /* 📊 3D Bevel Buttons: บังคับปุ่มเลือก Defect ให้กว้างเท่ากัน (100%) สีฟ้าอ่อนพาสเทล ตัวอักษรสีดำ */
+    /* 📊 ตกแต่งกรอบปุ่มให้ยาวเท่ากันเป๊ะแบบ 100% พื้นหลังสีฟ้าอ่อน ตัวอักษรสีดำ พร้อมมิติมินิมอล */
     div.stButton > button {
         background-color: #bae6fd !important;
         color: #000000 !important;
@@ -121,11 +121,11 @@ st.markdown("""
         font-size: 14px !important;
         border: 2px solid #ffffff !important;
         border-radius: 16px !important;
-        width: 100% !important; /* ยาวเท่ากันเป๊ะทั้งสามกรอบ */
+        width: 100% !important; /* จัดให้ยาวกว้างขนานเท่ากันทุกกล่อง */
         padding: 12px 20px !important;
         margin-bottom: 12px !important;
         display: block !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05), inset 0 -3px 0 rgba(0,0,0,0.1) !important; /* เงาด้านล่างเพิ่มความนูน */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05), inset 0 -3px 0 rgba(0,0,0,0.1) !important;
         transition: all 0.2s ease !important;
     }
     div.stButton > button:hover {
@@ -238,17 +238,17 @@ if current_page == "login":
             
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสอง: คัดเลือก Defect (ปรับปรุงตามบรีฟใหม่) ----------------
+# ---------------- หน้าสอง: คัดเลือก Defect (อัปเดตสั้นกระชับ-กรอบขนานเท่ากัน) ----------------
 elif current_page == "select_defect":
-    # หัวข้อที่ 1: ใช้คลาสดีไซน์กล่องสีน้ำเงินอ่อน ตัวอักษรสีดำ
+    # หัวข้อกล่องสีน้ำเงินอ่อน ตัวอักษรสีดำ
     st.markdown('<div class="defect-title-box">🎯 โปรดเลือกประเภท Defect ที่ต้องการปรับปรุง</div>', unsafe_allow_html=True)
     
-    # หัวข้อที่ 2 3 4: บรรจุเข้าตระกูลปุ่มที่ผ่านการฟอร์แมต CSS ให้กรอบยาวเท่ากัน มีมิตินูน และสีฟ้าอ่อนเรียบร้อย
-    if st.button("🟠 ดูข้อมูล Defect 260 (Rough Lines)"):
+    # กรอบปุ่มทั้ง 3 ยืดกว้างเท่ากันเป๊ะ และเอาคำว่า "ดูข้อมูล" ออกตามบรีฟ
+    if st.button("🟠 Defect 260 (Rough Lines)"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
-    if st.button("🔵 ดูข้อมูล Defect 261 (Grinding Structure)"):
+    if st.button("🔵 Defect 261 (Grinding Structure)"):
         st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
-    if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
+    if st.button("⚫ Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
 # ---------------- หน้าสาม: บอร์ดสถิติอิง Material จริง ----------------
@@ -366,14 +366,12 @@ elif current_page == "defect_view":
         selected_material = "ไม่มีข้อมูล"
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # 🔘 ส่วนฟิลเตอร์เลือกพิกัดหน้างาน
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
     
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"]:
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
         
-        # 📂 ส่วนที่ 1: คลังภาพหลักชิ้นงาน
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
@@ -384,7 +382,6 @@ elif current_page == "defect_view":
             st.image(uploaded_main, caption=f"✅ รูปภาพหลัก {selected_material} ที่คุณเลือก", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 📂 ส่วนที่ 2: คลังรูปรายละเอียดจุดย่อย
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
@@ -399,7 +396,6 @@ elif current_page == "defect_view":
                 st.image(img_file, caption=f"รูปภาพย่อยที่ {idx+1}: {img_file.name}", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")

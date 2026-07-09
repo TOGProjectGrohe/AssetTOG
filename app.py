@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
 import requests
-import plotly.express as px  # เพิ่มไลบรารีทำกราฟวงกลมและกราฟแท่งแบบพาสเทลสวยงาม
+import plotly.express as px  # เรียกใช้ Plotly ทำกราฟสถิติสไตล์พาสเทล
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลและกล่องแสดงผล
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลและกล่องแสดงผลให้คลีนสวยงาม
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -35,14 +35,19 @@ st.markdown("""
         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
     }
     
-    .preview-shop-card {
-        border: 2px solid #e2e8f0; border-radius: 16px; padding: 12px; text-align: center;
-        background-color: #ffffff; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    /* 🎯 ปุ่มลิงก์สีเขียวเปิดคลังภาพ Google Drive บังคับ Grid View */
+    .drive-link-button {
+        display: block !important; text-align: center !important; background-color: #10b981 !important; color: white !important;
+        font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
+        margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
+    }
+    .drive-link-button:hover {
+        background-color: #059669 !important; color: white !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 🌐 ฟังก์ชันดึงข้อมูลพนักงานจาก Google Sheet
+# 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานจาก Google Sheet ลิงก์หลักของคุณวีรพันธ์
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
@@ -59,21 +64,22 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 🌐 ฟังก์ชันดึงรูปภาพลง Memory เพื่อทำปุ่มดาวน์โหลด
-@st.cache_data(show_spinner=False)
-def fetch_image_bytes(url):
-    try:
-        return requests.get(url, timeout=10).content
-    except:
-        return b""
-
-# 🔗 ฐานข้อมูลรูปภาพ
-IMAGE_DATA_MAP = {
+# 🔗 คลังรายชื่อลิงก์ Google Drive จริงทั้ง 18 แฟ้ม (แก้ปัญหาลิงก์ SA_260 แยกจากกันถูกต้องครับ)
+FOLDER_LINK_MAP = {
     "A": {
-        260: [
-            {"name": "ชิ้นงานต้นทาง_A1.jpg", "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=500"},
-            {"name": "ชิ้นงานต้นทาง_A2.jpg", "url": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=500"}
-        ]
+        260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
+        261: {"main_url": "https://drive.google.com/drive/folders/1phKW7eXcijB4U6P95JHnJm6BgG2bcKyQ", "main_title": "A_261", "slave_url": "https://drive.google.com/drive/folders/1n5KGFnub6z3urE09taiJh4TaUJXqElCF", "slave_title": "SA_261"},
+        380: {"main_url": "https://drive.google.com/drive/folders/1-77ViPZrWhRXiYMvpa2gTp63CDjxIcHu", "main_title": "A_380", "slave_url": "https://drive.google.com/drive/folders/1DlKAZot6QPHXdvuVu8ro_TIk26NsznDz", "slave_title": "SA_380"}
+    },
+    "B": {
+        260: {"main_url": "https://drive.google.com/drive/folders/1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "main_title": "B_260", "slave_url": "https://drive.google.com/drive/folders/1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_title": "SB_260"},
+        261: {"main_url": "https://drive.google.com/drive/folders/1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "main_title": "B_261", "slave_url": "https://drive.google.com/drive/folders/1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_title": "SB_261"},
+        380: {"main_url": "https://drive.google.com/drive/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "main_title": "B_380", "slave_url": "https://drive.google.com/drive/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "SB_380"}
+    },
+    "C": {
+        260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
+        261: {"main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
+        380: {"main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_title": "SC_380"}
     }
 }
 
@@ -114,7 +120,7 @@ elif current_page == "select_defect":
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
-# ---------------- หน้าสาม: แผงเลือกรูปพรีวิว + ดาวน์โหลด + กราฟสถิติ 1-10 อันดับ ----------------
+# ---------------- หน้าสาม: แผงควบคุมสถิติ กราฟวงกลมบน/แท่งล่าง + ลิงก์ตรงคลังภาพและอัปโหลด 5 รูป ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -122,35 +128,35 @@ elif current_page == "defect_view":
     if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"):
         st.session_state.page = "select_defect"; st.rerun()
         
-    st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงคัดเลือกรูปงานจริงและสถิติของ {defect_title}</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงวิเคราะห์และเลือกรูปงานจริงของ {defect_title}</b></div>', unsafe_allow_html=True)
     
-    # 📊 ----------------- ส่วนแผงกราฟสถิติด้านบน (Dashboard 1-10 อันดับแรก) -----------------
+    # 📊 ----------------- 🛠️ แก้ไขส่วนจุดบั๊กสถิติกราฟพาสเทล 1-10 อันดับแรก -----------------
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<b style='color:#1e293b; font-size:14px; display:block; text-align:center;'>📈 สถิติอัตราส่วน Defect 1-10 อันดับแรก</b>", unsafe_allow_html=True)
     
-    # เตรียมข้อมูลจำลอง 10 อันดับแรก
+    # ดึงข้อมูลจำลอง 10 รายการแรกมาคำนวณทำกราฟ
     chart_data = pd.DataFrame({
         "รายการชิ้นงาน": [f"ชิ้นงานที่ {i}" for i in range(1, 11)],
         "จำนวนที่พบ (ครั้ง)": [45, 38, 32, 28, 25, 21, 18, 15, 12, 10]
     })
     
-    # 🍕 1. แผนภูมิวงกลม (Pie Chart) อยู่ด้านบน
+    # 🍕 1. แผนภูมิวงกลม (Pie Chart) - แก้ไขพาธจานสีอ้างอิงของ Plotly เป็นแบบสมบูรณ์ชัวร์ผ่าน 100%
     fig_pie = px.pie(
         chart_data, 
         names="รายการชิ้นงาน", 
         values="จำนวนที่พบ (ครั้ง)", 
-        color_discrete_sequence=px.colors.pastel.Pastel
+        color_discrete_sequence=px.colors.qualitative.Pastel
     )
     fig_pie.update_layout(
         margin=dict(l=10, r=10, t=10, b=10),
         height=220,
-        showlegend=False  # ปิดแถบชื่อยาว ๆ ด้านข้างเพื่อประหยัดพื้นที่จอมือถือ
+        showlegend=False
     )
     st.plotly_chart(fig_pie, use_container_width=True)
     
-    # 📊 2. แผนภูมิแท่ง (Bar Chart) อยู่ด้านล่าง กราฟแท่งแนวนอนสวย ๆ สไตล์มือถือ
+    # 📊 2. แผนภูมิแท่ง (Bar Chart) อยู่ด้านล่างสลับตำแหน่งสไตล์ Dashboard คลีน ๆ
     fig_bar = px.bar(
-        chart_data.iloc[::-1], # กลับด้านให้ชิ้นงานที่เยอะที่สุดอยู่ด้านบน
+        chart_data.iloc[::-1],
         x="จำนวนที่พบ (ครั้ง)", 
         y="รายการชิ้นงาน", 
         orientation='h',
@@ -165,48 +171,27 @@ elif current_page == "defect_view":
     st.plotly_chart(fig_bar, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # 🔘 ส่วนเลือกพิกัดหน้างาน
+    # 🔘 ส่วนจัดการฟิลเตอร์พิกัดหน้างานพนักงาน
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
     
-    if selected_face == "หน้า A" and defect == 260:
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown("<b style='color:#005aab; font-size:14px; display:block; margin-bottom:10px;'>🖼️ รูปภาพของจริงในคลัง (จิ้มปุ่มเพื่อเซฟรูปได้ทันที)</b>", unsafe_allow_html=True)
+    if selected_face in ["หน้า A", "หน้า B", "หน้า C"]:
+        face_char = selected_face.split()[-1]
+        folder_info = FOLDER_LINK_MAP[face_char][defect]
         
-        photo_items = IMAGE_DATA_MAP["A"][260]
-        for item in photo_items:
-            st.markdown(f"""
-            <div class="preview-shop-card">
-                <img src="{item['url']}" style="width:100%; max-height:180px; object-fit:contain; border-radius:10px;">
-                <div style="font-size:13px; font-weight:bold; margin-top:8px; color:#1e293b;">{item['name']}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            img_bytes = fetch_image_bytes(item['url'])
-            st.download_button(
-                label=f"💾 กดดาวน์โหลดรูป: {item['name']}",
-                data=img_bytes,
-                file_name=item['name'],
-                mime="image/jpeg",
-                key=f"dl_{item['name']}",
-                use_container_width=True
-            )
-            st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        # 📂 แผงควบคุมที่ 1: จัดการอัปโหลดรูปภาพหลักชิ้นงาน
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']})</b>", unsafe_allow_html=True)
+        st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown("<b style='font-size:13px; color:#475569;'>📥 แนบรูปภาพที่ดาวน์โหลดมาเข้าสู่ระบบงาน:</b>", unsafe_allow_html=True)
-        uploaded_file = st.file_uploader("กดจิ้มที่กล่องนี้เพื่อเลือกรูปภาพจากอัลบั้มมาแปะคาแอปเพื่อส่งงาน:", type=["jpg", "png", "jpeg"], key="manual_up")
-        if uploaded_file:
-            st.image(uploaded_file, caption="✅ รูปภาพที่คุณเลือกแนบสำเร็จ!", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.info("📂 ส่วนจัดเก็บภาพจริงของแผนกอื่น ๆ กำลังรอคุณวีรพันธ์นำลิงก์รูปภาพมาแปะเชื่อมต่อหลังบ้านครับ")
+        uploaded_main = st.file_uploader("เมื่อเลือกรูปภาพหลักที่ต้องการได้แล้ว นำไฟล์มาใส่ที่นี่:", type=["png", "jpg", "jpeg"], key=f"up_m_{defect}")
+        if uploaded_main:
+            st.image(uploaded_main, caption="✅ รูปภาพหลักที่คุณเลือก", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
-    st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
-    st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")
-    st.camera_input("ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final")
-    st.markdown('</div>', unsafe_allow_html=True)
+        # 📂 แผงควบคุมที่ 2: จัดการอัปโหลดรูปภาพรายละเอียดจุดย่อย (เซ็ตอัปโหลดได้สูงสุด 5 รูป)
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
+        st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
+        
+        uploaded_slaves = st.file_uploader(
+            "เมื่อ

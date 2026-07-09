@@ -1,9 +1,13 @@
 import streamlit as st
 import pandas as pd
 import requests
+import json
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
+
+# ⚠️ ฝังลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์ลงในระบบเรียบร้อยครับ
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
@@ -34,7 +38,6 @@ st.markdown("""
         position: absolute !important; top: 20px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
     }
     
-    /* ปุ่ม Home และ Logout สีฟ้าอ่อนพาสเทล ตัวอักษรสีดำ */
     .nav-btn-link {
         background-color: #bae6fd !important; 
         color: #000000 !important; 
@@ -50,7 +53,6 @@ st.markdown("""
         background-color: #7dd3fc !important;
     }
 
-    /* วงกลมโลโก้ TOG ตรงกลางสีดำอ่อนโปร่งแสง */
     .tog-logo-circle {
         width: 50px !important; 
         height: 50px !important; 
@@ -75,7 +77,6 @@ st.markdown("""
         margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
     }
 
-    /* 🕋 กล่องใหญ่ครอบทั้งหมด: พื้นหลังสีดำอ่อนโปร่งแสง */
     .employee-dark-box {
         background-color: rgba(0, 0, 0, 0.07) !important; 
         border: 2px solid rgba(0, 0, 0, 0.12) !important; 
@@ -89,7 +90,6 @@ st.markdown("""
         box-shadow: inset 0 1px 4px rgba(0,0,0,0.02) !important;
     }
 
-    /* กล่องหัวข้อหลักสีน้ำเงินอ่อน ตัวอักษรดำ ขยายให้สวยงามในกรอบ */
     .defect-title-box {
         background-color: #dbeafe !important;
         border: 1px solid #bfdbfe !important;
@@ -103,7 +103,6 @@ st.markdown("""
         margin-bottom: 16px !important;
     }
 
-    /* 💎 ปุ่มเลือก Defect แบบสีฟ้าอ่อนโปร่งแสง ยืดกรอบยาวขนานเท่ากันเป๊ะ 100% */
     div.stButton > button {
         background-color: rgba(186, 230, 253, 0.5) !important; 
         backdrop-filter: blur(6px) !important;
@@ -125,8 +124,17 @@ st.markdown("""
         border: 2px solid rgba(255, 255, 255, 0.9) !important;
         transform: translateY(-1px) !important;
     }
-    div.stButton > button:active {
-        transform: translateY(1px) !important;
+    
+    /* 💾 ตกแต่งปุ่ม Save สีเขียวสดใสโดดเด่นน่ากด */
+    div.stButton > button[key^="save_btn_"] {
+        background-color: #10b981 !important;
+        color: white !important;
+        font-size: 16px !important;
+        border: 2px solid #059669 !important;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+    }
+    div.stButton > button[key^="save_btn_"]:hover {
+        background-color: #059669 !important;
     }
     
     .error-pastel-box {
@@ -168,7 +176,7 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 📊 ฟังก์ชันดึงข้อมูลดิบจากลิงก์ Google Sheet
+# 📊 ฟังก์ชันดึงข้อมูลดิบจากลิงก์ Google Sheet สถิติ
 @st.cache_data(ttl=60)
 def load_real_defect_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c/export?format=csv&gid=0"
@@ -179,7 +187,7 @@ def load_real_defect_data():
     except Exception as e:
         return pd.DataFrame()
 
-# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม
+# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม (ซ่อมแซมจุด "main_url" ของหน้า C แล้ว)
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -221,7 +229,6 @@ if current_page == "login":
         
         if result["status"] == "success" and result.get("found"):
             now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
             st.session_state.user_info = {
                 "id": result["id"], 
                 "name": result["name"], 
@@ -240,14 +247,8 @@ if current_page == "login":
             
             if st.button("🔓 กดเพื่อเข้าระบบ"):
                 st.session_state.page = "select_defect"; st.rerun()
-                
         else:
-            st.markdown("""
-                <div class="error-pastel-box">
-                    ❌ ไม่พบข้อมูล โปรดคีย์ ID อีกครั้ง
-                </div>
-            """, unsafe_allow_html=True)
-            
+            st.markdown('<div class="error-pastel-box">❌ ไม่พบข้อมูล โปรดคีย์ ID อีกครั้ง</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------- หน้าสอง: คัดเลือก Defect ----------------
@@ -264,17 +265,15 @@ elif current_page == "select_defect":
         """, unsafe_allow_html=True)
 
     st.markdown('<div class="defect-title-box">🎯 โปรดเลือกประเภท Defect ที่ต้องการปรับปรุง</div>', unsafe_allow_html=True)
-    
     if st.button("🟠 Defect 260 (Rough Lines)"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
     if st.button("🔵 Defect 261 (Grinding Structure)"):
         st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
     if st.button("⚫ Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
-        
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสาม: บอร์ดสถิติอิง Material จริง (อัปเดตชื่อหัวข้อตามบรีฟใหม่) ----------------
+# ---------------- หน้าสาม: บอร์ดสถิติและการบันทึกผล ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -282,7 +281,6 @@ elif current_page == "defect_view":
     if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"):
         st.session_state.page = "select_defect"; st.rerun()
         
-    # ✨ 🛠️ ปรับแก้ข้อความหัวข้อการวิเคราะห์หลักตรงนี้ให้เป็นคำว่า "แผนภูมิ Defect [รหัส]" ตามสั่งเรียบร้อยครับ
     st.markdown(f'<div class="login-card" style="text-align:center; color:#000000; font-weight:bold;"><b>📊 แผนภูมิ Defect {defect}</b></div>', unsafe_allow_html=True)
     
     raw_df = load_real_defect_data()
@@ -302,8 +300,6 @@ elif current_page == "defect_view":
         qty_col = "rework quantity"
 
     st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
-    
-    # ส่วนหัวข้อรายงานสถิติย่อย 10 อันดับจริงประจำหน้างาน
     st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 รายงาน 10 อันดับ Defect {defect} ที่พบ</b>", unsafe_allow_html=True)
     
     if not chart_data.empty:
@@ -312,80 +308,42 @@ elif current_page == "defect_view":
         color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
 
         fig_pie = go.Figure(data=[go.Pie(
-            labels=chart_data["Material"],
-            values=chart_data[qty_col],
-            hole=0.45,
-            marker=dict(
-                colors=[color_map[m] for m in chart_data["Material"]],
-                line=dict(color='#ffffff', width=2.5)
-            ),
-            textinfo='percent',
-            textfont=dict(size=11, color='#000000', weight='bold'),
-            hoverinfo="label+percent"
+            labels=chart_data["Material"], values=chart_data[qty_col], hole=0.45,
+            marker=dict(colors=[color_map[m] for m in chart_data["Material"]], line=dict(color='#ffffff', width=2.5)),
+            textinfo='percent', textfont=dict(size=11, color='#000000', weight='bold'), hoverinfo="label+percent"
         )])
-        fig_pie.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10), 
-            height=210, 
-            showlegend=False,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-        )
+        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=210, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_pie, use_container_width=True)
         
         bars_list = []
         for mat in list_of_materials:
             mat_data = chart_data[chart_data['Material'] == mat]
             val = mat_data[qty_col].values[0]
-            base_color = color_map[mat]
-            
             bars_list.append(go.Bar(
-                x=[mat],
-                y=[val],
-                name=mat,
-                marker=dict(
-                    color=base_color,
-                    line=dict(color='#ffffff', width=3),
-                    pattern=None
-                ),
+                x=[mat], y=[val], name=mat, marker=dict(color=color_map[mat], line=dict(color='#ffffff', width=3)),
                 hovertemplate=f"Material: {mat}<br>จำนวน: {val} ครั้ง<extra></extra>"
             ))
             
         fig_bar = go.Figure(data=bars_list)
         fig_bar.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10), 
-            height=250, 
-            showlegend=False,
-            barmode='group',
-            paper_bgcolor='rgba(0,0,0,0)', 
-            plot_bgcolor='rgba(0,0,0,0)',  
-            xaxis=dict(
-                type='category', 
-                tickangle=45, 
-                tickfont=dict(color='#000000', size=10, weight='bold'), 
-                gridcolor='rgba(0,0,0,0.05)'
-            ),
-            yaxis=dict(
-                tickfont=dict(color='#000000', size=10, weight='bold'), 
-                gridcolor='rgba(0,0,0,0.05)',
-                zerolinecolor='rgba(0,0,0,0.1)'
-            ),
+            margin=dict(l=10, r=10, t=10, b=10), height=250, showlegend=False, barmode='group',
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',  
+            xaxis=dict(type='category', tickangle=45, tickfont=dict(color='#000000', size=10, weight='bold'), gridcolor='rgba(0,0,0,0.05)'),
+            yaxis=dict(tickfont=dict(color='#000000', size=10, weight='bold'), gridcolor='rgba(0,0,0,0.05)', zerolinecolor='rgba(0,0,0,0.1)'),
             clickmode='event+select'
         )
-        
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         
         st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:8px; margin-bottom:5px;'>💡 เลือก Material ที่ต้องการปรับปรุงจากกราฟ</p>", unsafe_allow_html=True)
         
         state_key = f"sel_mat_{defect}"
+        # 🛠️ ✨ ซ่อมแซมเรียบร้อย ตัดคำแปลกปลอม Implementers ออกตามโครงสร้างปกติ
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
-            clicked_material = selected_bar["selection"]["points"][0]["x"]
-            st.session_state[state_key] = clicked_material
-        
+            st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]
         if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
             st.session_state[state_key] = list_of_materials[0] if list_of_materials else "ไม่มีข้อมูล"
             
         selected_material = st.session_state[state_key]
-        
         st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #cbd5e1;'>", unsafe_allow_html=True)
         st.markdown(f'<div style="background-color: #f0fdf4; border: 2px solid #16a34a; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
     else:
@@ -403,28 +361,56 @@ elif current_page == "defect_view":
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        msg_main = f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:"
-        uploaded_main = st.file_uploader(msg_main, type=["png", "jpg", "jpeg"], key=f"up_m_{defect}")
+        uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:", type=["png", "jpg", "jpeg"], key=f"up_m_{defect}")
         if uploaded_main:
-            st.image(uploaded_main, caption=f"✅ รูปภาพหลัก {selected_material} ที่คุณเลือก", use_container_width=True)
+            st.image(uploaded_main, caption=f"✅ รูปภาพหลัก {selected_material}", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        msg_slave = "แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):"
-        uploaded_slaves = st.file_uploader(msg_slave, type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}")
-        
+        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}")
         if uploaded_slaves:
-            allowed_slaves = uploaded_slaves[:5]
-            st.markdown(f"<p style='font-size:12px; color:#10b981; font-weight:bold;'>📸 รูปรายละเอียดจุดย่อยที่แนบ ({len(allowed_slaves)}/5 รูป):</p>", unsafe_allow_html=True)
-            for idx, img_file in enumerate(allowed_slaves):
-                st.image(img_file, caption=f"รูปภาพย่อยที่ {idx+1}: {img_file.name}", use_container_width=True)
+            for idx, img_file in enumerate(uploaded_slaves[:5]):
+                st.image(img_file, caption=f"รูปย่อยที่ {idx+1}", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
+    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER พร้อมปุ่มส่งเซฟข้อมูลลงชีตจริง
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
-    st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")
+    
+    after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")
     st.camera_input("ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final")
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # 💾 ปุ่มบันทึกข้อมูลเข้าแผ่นงาน
+    if st.button("💾 บันทึกข้อมูลหลังปรับปรุง (Save)", key=f"save_btn_{defect}"):
+        if not after_text.strip():
+            st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
+        else:
+            save_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            emp_id = st.session_state.user_info.get('id', '-') if st.session_state.user_info else '-'
+            emp_name = st.session_state.user_info.get('name', '-') if st.session_state.user_info else '-'
+            
+            payload = {
+                "timestamp": save_timestamp,
+                "employee_id": emp_id,
+                "employee_name": emp_name,
+                "defect_type": str(defect),
+                "material": str(selected_material),
+                "location_face": str(selected_face),
+                "after_details": str(after_text)
+            }
+            
+            try:
+                response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
+                if response.status_code == 200:
+                    st.success(f"🎉 บันทึกข้อมูลของ Material {selected_material} ลงแท็บ 'Recording' เรียบร้อยแล้วเมื่อ {save_timestamp}!")
+                else:
+                    st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) โปรดตรวจสอบสิทธิ์เว็บแอป Apps Script ของคุณ")
+            except Exception as ex:
+                st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
+                
     st.markdown('</div>', unsafe_allow_html=True)

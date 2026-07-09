@@ -6,8 +6,8 @@ import base64
 import plotly.graph_objects as go
 from datetime import datetime
 
-# ⚠️ แกะและอัปเดตฝังลิงก์จริง 100% จากหน้าจอล่าสุดของคุณวีรพันธ์ให้แล้วครับ
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0Rpt95YpE30Fof005Kq5bNlGZ7hJpY_G9y/exec"
+# ⚠️ อัปเดตฝังลิงก์ Web App URL ตัวล่าสุดของคุณวีรพันธ์เรียบร้อยครับ
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
@@ -83,13 +83,7 @@ def get_employee_from_sheet(input_id):
             if not match.empty:
                 row = match.iloc[0]
                 pos_val = str(row['Position']).strip() if 'Position' in df.columns else "GL"
-                return {
-                    "status": "success", 
-                    "found": True, 
-                    "id": str(row['ID']), 
-                    "name": str(row['Name']).strip(),
-                    "position": pos_val
-                }
+                return {"status": "success", "found": True, "id": str(row['ID']), "name": str(row['Name']).strip(), "position": pos_val}
     except:
         pass
     return {"status": "success", "found": False}
@@ -114,7 +108,7 @@ FOLDER_LINK_MAP = {
     "B": {
         260: {"main_url": "https://drive.google.com/drive/folders/1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "main_title": "B_260", "slave_url": "https://drive.google.com/drive/folders/1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_title": "SB_260"},
         261: {"main_url": "https://drive.google.com/drive/folders/1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "main_title": "B_261", "slave_url": "https://drive.google.com/drive/folders/1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_title": "SB_261"},
-        380: {"main_url": "https://drive.google.com/drive/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgk61bhK", "main_title": "B_380", "slave_url": "https://drive.google.com/drive/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "SB_380"}
+        380: {"main_url": "https://drive.google.com/drive/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "main_title": "B_380", "slave_url": "https://drive.google.com/drive/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "SB_380"}
     },
     "C": {
         260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
@@ -144,25 +138,10 @@ if current_page == "login":
     input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="พิมพ์ตัวเลขรหัส เช่น 20", label_visibility="collapsed")
     if input_id.strip() != "":
         result = get_employee_from_sheet(input_id)
-        
         if result["status"] == "success" and result.get("found"):
             now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            st.session_state.user_info = {
-                "id": result["id"], 
-                "name": result["name"], 
-                "position": result["position"],
-                "timestamp": now_time
-            }
-            
-            st.markdown(f"""
-                <div class="employee-dark-box">
-                    <b>⏱️ Timestamp:</b> {now_time}<br>
-                    <b>🆔 Employee ID:</b> {result['id']}<br>
-                    <b>👤 Name:</b> {result['name']}<br>
-                    <b>💼 Position:</b> {result['position']}
-                </div>
-            """, unsafe_allow_html=True)
-            
+            st.session_state.user_info = {"id": result["id"], "name": result["name"], "position": result["position"], "timestamp": now_time}
+            st.markdown(f'<div class="employee-dark-box"><b>⏱️ Timestamp:</b> {now_time}<br><b>🆔 Employee ID:</b> {result["id"]}<br><b>👤 Name:</b> {result["name"]}<br><b>💼 Position:</b> {result["position"]}</div>', unsafe_allow_html=True)
             if st.button("🔓 กดเพื่อเข้าระบบ"):
                 st.session_state.page = "select_defect"; st.rerun()
         else:
@@ -174,30 +153,18 @@ elif current_page == "select_defect":
     st.markdown('<div class="employee-dark-box">', unsafe_allow_html=True)
     if st.session_state.user_info:
         now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        st.markdown(f"""
-            <b>⏱️ Timestamp:</b> {now_time}<br>
-            <b>🆔 Employee ID:</b> {st.session_state.user_info.get('id')}<br>
-            <b>👤 Name:</b> {st.session_state.user_info['name']}<br>
-            <b>💼 Position:</b> {st.session_state.user_info['position']}
-            <hr style="margin: 12px 0; border: 0; border-top: 1px dashed rgba(0,0,0,0.15);">
-        """, unsafe_allow_html=True)
-
+        st.markdown(f"<b>⏱️ Timestamp:</b> {now_time}<br><b>🆔 Employee ID:</b> {st.session_state.user_info.get('id')}<br><b>👤 Name:</b> {st.session_state.user_info['name']}<br><b>💼 Position:</b> {st.session_state.user_info['position']}<hr style='margin: 12px 0; border: 0; border-top: 1px dashed rgba(0,0,0,0.15);'>", unsafe_allow_html=True)
     st.markdown('<div class="defect-title-box">🎯 โปรดเลือกประเภท Defect ที่ต้องการปรับปรุง</div>', unsafe_allow_html=True)
-    if st.button("🟠 Defect 260 (Rough Lines)"):
-        st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
-    if st.button("🔵 Defect 261 (Grinding Structure)"):
-        st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
-    if st.button("⚫ Defect 380 (Contour/Design Fault)"):
-        st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
+    if st.button("🟠 Defect 260 (Rough Lines)"): st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
+    if st.button("🔵 Defect 261 (Grinding Structure)"): st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
+    if st.button("⚫ Defect 380 (Contour/Design Fault)"): st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------- หน้าสาม: บอร์ดสถิติและการบันทึกผล ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
-    
-    if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"):
-        st.session_state.page = "select_defect"; st.rerun()
+    if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"): st.session_state.page = "select_defect"; st.rerun()
         
     st.markdown(f'<div class="login-card" style="text-align:center; color:#000000; font-weight:bold;"><b>📊 แผนภูมิ Defect {defect}</b></div>', unsafe_allow_html=True)
     
@@ -211,107 +178,47 @@ elif current_page == "defect_view":
         summary_df = filtered_df.groupby('Material', as_index=False)[qty_col].sum()
         chart_data = summary_df.sort_values(by=qty_col, ascending=False).head(10)
     else:
-        chart_data = pd.DataFrame({
-            "Material": ["418230035", "408073135", "408101135", "407787135", "408242036", "417208135", "418675035", "401328035", "417207135", "418706035"],
-            "rework quantity": [51, 45, 35, 35, 28, 21, 16, 11, 10, 8]
-        })
+        chart_data = pd.DataFrame({"Material": ["418230035", "408073135"], "rework quantity": [51, 45]})
         qty_col = "rework quantity"
 
-    st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 รายงาน 10 อันดับ Defect {defect} ที่พบ</b>", unsafe_allow_html=True)
-    
     if not chart_data.empty:
-        neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
         list_of_materials = chart_data['Material'].tolist()
-        color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
-
-        fig_pie = go.Figure(data=[go.Pie(
-            labels=chart_data["Material"], values=chart_data[qty_col], hole=0.45,
-            marker=dict(colors=[color_map[m] for m in chart_data["Material"]], line=dict(color='#ffffff', width=2.5)),
-            textinfo='percent', textfont=dict(size=11, color='#000000', weight='bold'), hoverinfo="label+percent"
-        )])
-        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=210, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig_pie, use_container_width=True)
-        
-        bars_list = []
-        for mat in list_of_materials:
-            mat_data = chart_data[chart_data['Material'] == mat]
-            val = mat_data[qty_col].values[0]
-            bars_list.append(go.Bar(
-                x=[mat], y=[val], name=mat, marker=dict(color=color_map[mat], line=dict(color='#ffffff', width=3)),
-                hovertemplate=f"Material: {mat}<br>จำนวน: {val} ครั้ง<extra></extra>"
-            ))
-            
-        fig_bar = go.Figure(data=bars_list)
-        fig_bar.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10), height=250, showlegend=False, barmode='group',
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',  
-            xaxis=dict(type='category', tickangle=45, tickfont=dict(color='#000000', size=10, weight='bold'), gridcolor='rgba(0,0,0,0.05)'),
-            yaxis=dict(tickfont=dict(color='#000000', size=10, weight='bold'), gridcolor='rgba(0,0,0,0.05)', zerolinecolor='rgba(0,0,0,0.1)'),
-            clickmode='event+select'
-        )
-        selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
-        
-        st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:8px; margin-bottom:5px;'>💡 เลือก Material ที่ต้องการปรับปรุงจากกราฟ</p>", unsafe_allow_html=True)
-        
         state_key = f"sel_mat_{defect}"
-        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
-            st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]
-        if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
-            st.session_state[state_key] = list_of_materials[0] if list_of_materials else "ไม่มีข้อมูล"
-            
+        if state_key not in st.session_state: st.session_state[state_key] = list_of_materials[0]
         selected_material = st.session_state[state_key]
-        st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #cbd5e1;'>", unsafe_allow_html=True)
-        st.markdown(f'<div style="background-color: #f0fdf4; border: 2px solid #16a34a; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
     else:
         selected_material = "ไม่มีข้อมูล"
-    st.markdown('</div>', unsafe_allow_html=True)
-    
+        list_of_materials = []
+
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
-    
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"]:
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
         
-        # 📁 ส่วนที่ 1: คลังภาพหลักชิ้นงาน
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
-        st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
-        
-        uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:", type=["png", "jpg", "jpeg"], key=f"up_m_{defect}_{st.session_state.clear_trigger}")
-        if uploaded_main:
-            st.image(uploaded_main, caption=f"✅ รูปภาพหลัก {selected_material}", use_container_width=True)
+        st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']})</b>", unsafe_allow_html=True)
+        uploaded_main = st.file_uploader("แนบรูปภาพหลัก:", type=["png", "jpg", "jpeg"], key=f"up_m_{defect}_{st.session_state.clear_trigger}")
+        if uploaded_main: st.image(uploaded_main, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 📁 ส่วนที่ 2: คลังรูปรายละเอียดจุดย่อย
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
-        st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
-        
-        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}_{st.session_state.clear_trigger}")
+        uploaded_slaves = st.file_uploader("แนบรูปย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}_{st.session_state.clear_trigger}")
         if uploaded_slaves:
-            for idx, img_file in enumerate(uploaded_slaves[:5]):
-                st.image(img_file, caption=f"รูปย่อยที่ {idx+1}", use_container_width=True)
+            for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
-    
+    st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
     after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}_{st.session_state.clear_trigger}")
     
-    st.markdown("<p style='font-size:13px; font-weight:bold; color:#2c3e50; margin-bottom:2px;'>📸 แนบรูปหลักฐานผลงาน After ชิ้นงานจริง (แนบได้สูงสุด 5 ภาพ):</p>", unsafe_allow_html=True)
-    
-    uploaded_after_files = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ (แนบได้สูงสุด 5 ภาพ):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_af_file_{defect}_{st.session_state.clear_trigger}")
+    # ดึงพรีวิวรูป After กลับมาโชว์ 100% สวยงามตรงนี้ครับ
+    uploaded_after_files = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ (สูงสุด 5 ภาพ):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_af_file_{defect}_{st.session_state.clear_trigger}")
     if uploaded_after_files:
-        for idx, img_file in enumerate(uploaded_after_files[:5]):
-            st.image(img_file, caption=f"✅ รูปภาพ After จากคลังไฟล์ ใบที่ {idx+1}", use_container_width=True)
+        for idx, img_file in enumerate(uploaded_after_files[:5]): st.image(img_file, caption=f"✅ รูปภาพ After ใบที่ {idx+1}", use_container_width=True)
         
     camera_after_file = st.camera_input("📸 ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final_{st.session_state.clear_trigger}")
-    if camera_after_file:
-        st.image(camera_after_file, caption="✅ รูปภาพ After จากกล้องพรีวิว", use_container_width=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
+    if camera_after_file: st.image(camera_after_file, caption="✅ รูปภาพ After จากกล้องพรีวิว", use_container_width=True)
     
     if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
         if not after_text.strip():
@@ -322,6 +229,7 @@ elif current_page == "defect_view":
             emp_name = st.session_state.user_info.get('name', '-') if st.session_state.user_info else '-'
             emp_position = st.session_state.user_info.get('position', '-') if st.session_state.user_info else '-'
             
+            # แปลงภาพเป็น Base64 ส่งไปเก็บยัง Google Script ปลายทางตามโครงสร้างตารางใหม่
             image_payloads = []
             if uploaded_after_files:
                 for img_file in uploaded_after_files[:5]:
@@ -332,29 +240,25 @@ elif current_page == "defect_view":
                 camera_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
                 image_payloads.append({"filename": f"After_Camera_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg", "mimeType": "image/jpeg", "data": camera_base64})
 
-            # 📊 บรรจุ Payload เรียงข้อมูลและสลับ Column ใหม่ตามตำแหน่งแผ่นงานในรูปภาพเรียบร้อยครับ
             payload = {
-                "timestamp": save_timestamp,
-                "employee_id": emp_id,
-                "employee_name": emp_name,
-                "position": emp_position,               # 📁 คัดลอกค่า SV, OP, GL จริงมาลง Column D และ F
-                "defect_type": f"Defect {defect}",       # 📁 ย้ายสลับไปอยู่ที่ Column G
-                "material": str(selected_material),
-                "location_face": str(selected_face),
-                "after_details": str(after_text),        # 📁 ย้ายสลับไปเขียนที่ Column M
-                "images": image_payloads                 # 📸 แนบไฟล์ Base64 ภาพจริงยิงเข้าไปเก็บใน Google Drive ผ่าน Script
+                "timestamp": save_timestamp, 
+                "employee_id": emp_id, 
+                "employee_name": emp_name, 
+                "position": emp_position, # ดึง Position จริง และสลับ Column ในการบันทึกตามบรีฟ
+                "defect_type": f"Defect {defect}", 
+                "material": str(selected_material), 
+                "location_face": str(selected_face), 
+                "after_details": str(after_text),
+                "images": image_payloads
             }
-            
-            with st.spinner("⏳ กำลังอัปโหลดภาพและบันทึกข้อมูลลงฐานข้อมูล..."):
-                try:
-                    response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
-                    if response.status_code == 200:
-                        st.success(f"🎉 บันทึกข้อมูลเรียบร้อยแล้ว! รูปภาพและรายละเอียดถูกบันทึกลงตารางแล้ว")
-                        st.session_state.clear_trigger += 1
-                        st.rerun()
-                    else:
-                        st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) โปรดตรวจสอบสิทธิ์เว็บแอป Apps Script ของคุณ")
-                except Exception as ex:
-                    st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
-                
+            try:
+                response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
+                if response.status_code == 200:
+                    st.success("🎉 บันทึกข้อมูลเรียบร้อยแล้ว!")
+                    st.session_state.clear_trigger += 1
+                    st.rerun()
+                else:
+                    st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
+            except Exception as ex:
+                st.error(f"⚠️ เกิดข้อผิดพลาด: {ex}")
     st.markdown('</div>', unsafe_allow_html=True)

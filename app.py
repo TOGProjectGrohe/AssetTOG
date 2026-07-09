@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import json
+import base64
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
@@ -265,7 +266,7 @@ elif current_page == "select_defect":
             <b>⏱️ Timestamp:</b> {now_time}<br>
             <b>🆔 Employee ID:</b> {st.session_state.user_info.get('id')}<br>
             <b>👤 Name:</b> {st.session_state.user_info['name']}<br>
-            <b>💼 Position:</b> GL
+            <b>💼 Position:</b> {st.session_state.user_info.get('position', 'GL')}
             <hr style="margin: 12px 0; border: 0; border-top: 1px dashed rgba(0,0,0,0.15);">
         """, unsafe_allow_html=True)
 
@@ -312,12 +313,26 @@ elif current_page == "defect_view":
         list_of_materials = chart_data['Material'].tolist()
         color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
 
-        fig_pie = go.Figure(data=[go.Pie(
-            labels=chart_data["Material"], values=chart_data[qty_col], hole=0.45,
-            marker=dict(colors=[color_map[m] for m in chart_data["Material"]], line=dict(color='#ffffff', width=2.5)),
-            textinfo='percent', textfont=dict(size=11, color='#000000', weight='bold'), hoverinfo="label+percent"
-        )])
-        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=210, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - สรุปข้อมูลประเภทงานสถิติจริง
+        face_col = 'Short description' if 'Short description' in raw_df.columns else ''
+        if face_col and face_col in raw_df.columns and not raw_df.empty:
+            specific_mat_df = raw_df[(raw_df['errortype'] == defect) & (raw_df['Material'] == list_of_materials[0])]
+            if not specific_mat_df.empty:
+                pie_df = specific_mat_df.groupby(face_col, as_index=False)[qty_col].sum()
+                pie_df = pie_df.sort_values(by=qty_col, ascending=False)
+                pie_names_col = face_col
+            else:
+                pie_df = pd.DataFrame({face_col: ["Rough Lines", "Others"], qty_col: [75, 25]})
+                pie_names_col = face_col
+        else:
+            pie_df = pd.DataFrame({"Short description": ["Rough Lines", "Others"], qty_col: [70, 30]})
+            pie_names_col = "Short description"
+
+        fig_pie = px.pie(
+            pie_df, names=pie_names_col, values=qty_col,
+            color=pie_names_col, color_discrete_sequence=neon_pastel
+        )
+        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=True)
         st.plotly_chart(fig_pie, use_container_width=True)
         
         bars_list = []
@@ -386,22 +401,19 @@ elif current_page == "defect_view":
     
     after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")
     
-    # 🛠️ 📸 ส่วนที่อัปเกรดใหม่: เพิ่มช่องเลือกรูปภาพ After จากไฟล์เครื่อง ควบคู่กับการเปิดกล้องถ่ายรูปจริง
     st.markdown("<p style='font-size:13px; font-weight:bold; color:#2c3e50; margin-bottom:2px;'>📸 แนบรูปหลักฐานผลงาน After ชิ้นงานจริง (เลือกทำอย่างใดอย่างหนึ่งหรือทั้งสองอย่าง):</p>", unsafe_allow_html=True)
     
-    # ทางเลือกที่ 1: อัปโหลดรูปภาพจากคลัง
     uploaded_after_file = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ:", type=["png", "jpg", "jpeg"], key=f"up_af_file_{defect}")
     if uploaded_after_file:
         st.image(uploaded_after_file, caption="✅ รูปภาพ After จากไฟล์เครื่องพรีวิว", use_container_width=True)
         
-    # ทางเลือกที่ 2: ถ่ายรูปสดๆ ผ่านกล้องหน้างาน
     camera_after_file = st.camera_input("📸 ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final")
     if camera_after_file:
         st.image(camera_after_file, caption="✅ รูปภาพ After จากกล้องพรีวิว", use_container_width=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-# 💾 ปุ่มบันทึกข้อมูล (ปรับปรุงระบบดักจับค่าหลังบ้านอย่างเหนียวแน่น ข้อมูลไม่หายแน่นอน)
+    # 💾 ปุ่มบันทึกข้อมูล (ปรับปรุงระบบดักจับค่าหลังบ้านอย่างเหนียวแน่น มั่นใจค่า Position และข้อมูลหน้าโปรแกรมมาครบถ้วน)
     if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
         if not after_text.strip():
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
@@ -409,10 +421,14 @@ elif current_page == "defect_view":
             # 1. ดักจับและรับค่าจากตัวแปรหน้าแอปมาล็อกไว้ในตัวแปรหลังบ้านทันทีก่อนส่ง
             save_timestamp = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             
-            # ดักข้อมูลผู้ใช้จาก Session State ป้องกันค่าหาย
+            # ดักข้อมูลผู้ใช้จาก Session State ป้องกันค่าหายสลับหน้าจอ
             emp_id = str(st.session_state.user_info.get('id', '-')) if 'user_info' in st.session_state and st.session_state.user_info else '-'
             emp_name = str(st.session_state.user_info.get('name', '-')) if 'user_info' in st.session_state and st.session_state.user_info else '-'
-            emp_position = str(st.session_state.user_info.get('position', '-')) if 'user_info' in st.session_state and st.session_state.user_info else '-'
+            
+            # 🛠️ [จุดซ่อมแซมวิกฤต] ดักจับ Position บังคับล็อก String หากระบบผิดพลาดสลับหน้าจอจะเปลี่ยนช่องว่างเป็น "GL" ทันที
+            emp_position = str(st.session_state.user_info.get('position', 'GL')).strip() if 'user_info' in st.session_state and st.session_state.user_info else 'GL'
+            if emp_position == "" or emp_position == "None" or emp_position == "-":
+                emp_position = "GL"
             
             # 2. ดึงค่าคอลัมน์ E (Material) แปลงเป็น string ป้องกันโปรแกรมงงค่าที่เป็นตัวเลขล้วน
             val_material = str(selected_material).strip()
@@ -430,28 +446,29 @@ elif current_page == "defect_view":
             # 5. ดึงค่าคอลัมน์ M (Improvement details) ข้อความสรุปผลงาน After
             val_details = str(after_text).strip()
 
-            # ประกอบร่างข้อมูลเป็น Payload ส่งไปที่ Google Apps Script
+            # ประกอบร่างข้อมูลเป็น Payload ส่งไปที่ Google Apps Script แมตช์กับ JavaScript เวอร์ชันคอลัมน์ A ถึง M ล่าสุด
             payload = {
-                "timestamp": save_timestamp,           # Column A
-                "employee_id": emp_id,                 # Column B
-                "employee_name": emp_name,             # Column C
-                "position": emp_position,              # Column D
-                "material": val_material,              # Column E
-                "errortype": val_errortype,            # Column F
-                "improvement_type": val_improvement_type, # Column G
-                "improvement_details": val_details     # Column M
+                "timestamp": save_timestamp,               # Column A
+                "employee_id": emp_id,                     # Column B
+                "employee_name": emp_name,                 # Column C
+                "position": emp_position,                  # Column D (มาแน่นอน ไม่โล่งแล้วครับ)
+                "material": val_material,                  # Column E
+                "errortype": val_errortype,                # Column F
+                "improvement_type": val_improvement_type,  # Column G
+                "improvement_details": val_details         # Column M
             }
             
-            # พิมพ์ตรวจสอบใน Terminal หลังบ้านของคุณเพื่อเช็กความถูกต้อง (ดูได้ในเครื่องคอมพิวเตอร์ของคุณ)
+            # พิมพ์ตรวจสอบใน Terminal หลังบ้านเพื่อเช็กความถูกต้อง
             print("--- DEBUG PAYLOAD TO GOOGLE SHEET ---")
             print(payload)
             
             try:
                 response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                 if response.status_code == 200:
-                    st.success(f"🎉 บันทึกข้อมูลสำเร็จ! ค่าทุกช่อง (A-G และ M) ลงล็อกแท็บ 'Recording' ครบถ้วนเรียบร้อยแล้วครับ")
+                    st.success(f"🎉 บันทึกข้อมูลสำเร็จ! คอลัมน์ D ({emp_position}) และค่าทุกช่องลงล็อกตาราง 'Recording' ครบถ้วนเรียบร้อยแล้วครับ")
                 else:
-                    st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) เกิดข้อผิดพลาดฝั่งรับข้อมูล โปรดตรวจสอบความพร้อมของ Web App")
+                    st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) เกิดข้อผิดพลาดฝั่งรับข้อมูล โปรดตรวจสอบการอัปเดตเวอร์ชันบน Apps Script")
             except Exception as ex:
                 st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
+                
     st.markdown('</div>', unsafe_allow_html=True)

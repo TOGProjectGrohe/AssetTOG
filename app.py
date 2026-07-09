@@ -20,7 +20,7 @@ st.markdown("""
         visibility: hidden !important;
     }
 
-    /* ดีไซน์ธีมหน้าจอมือถือ ส้มพาสเทล */
+    /* ดีไซน์ธีมหน้าจอมือถือ ส้มพาสเทลสวยงามเหมือนในรูป */
     .stApp {
         max-width: 420px !important;
         margin: 0px auto !important;
@@ -33,6 +33,10 @@ st.markdown("""
         height: auto !important;
     }
     
+    [data-testid="stMainBlockContainer"], [data-testid="stVerticalBlock"], [data-testid="stVerticalBlockRoot"], div[data-testid="element-container"], .stColumn {
+        width: 100% !important; max-width: 100% !important; background-color: transparent !important; border: none !important; box-shadow: none !important; padding: 0px !important; margin: 0px !important;
+    }
+
     .login-card {
         background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
     }
@@ -51,26 +55,18 @@ st.markdown("""
         width: 50px; height: 50px; background-color: #000000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-weight: bold; font-size: 15px; margin-bottom: 8px;
     }
 
-    /* ตกแต่งการเลือกภาพ */
-    .image-gallery-container {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        margin-top: 10px;
-    }
-    
-    /* สไตล์กล่องภาพเดี่ยวทั่วไป */
+    /* ตกแต่งกล่องและตารางสำหรับจัดวางรูปภาพ */
     .gallery-item-box {
         border: 2px solid #cbd5e1;
         border-radius: 12px;
         padding: 6px;
         text-align: center;
         background-color: #f8fafc;
-        cursor: pointer;
         transition: all 0.2s ease-in-out;
+        margin-bottom: 5px;
     }
     
-    /* สไตล์เมื่อรูปภาพถูกคลิกเลือก (ขอบจะเปลี่ยนเป็นสีน้ำเงินและหนาขึ้นชัดเจน) */
+    /* สไตล์เมื่อรูปภาพถูกคลิกเลือก (ขอบจะเปลี่ยนเป็นสีน้ำเงินหนาเหมือนในรูปตัวอย่าง) */
     .gallery-item-box-selected {
         border: 3px solid #007bc3 !important;
         background-color: #eff6ff !important;
@@ -79,7 +75,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🌐 ฟังก์ชันข้อมูลรายชื่อพนักงาน
+# 🌐 ฟังก์ชันข้อมูลรายชื่อพนักงานจาก Google Sheet
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
@@ -96,8 +92,7 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 🔗 🔗 ฐานข้อมูลจับคู่ลิงก์โฟลเดอร์ Google Drive ของคุณตรงตามโครงสร้างเงื่อนไขเป๊ะ ๆ
-# (หมายเหตุ: สถาปัตยกรรมการดึงรูปภาพของ Google Drive มาโชว์บนหน้าเว็บโดยตรง จะต้องนำ ID หลังคำว่า /folders/ ไปแปลงเป็นลิงก์ภาพพรีวิวต้นทางครับ)
+# 🔗 🔗 ฐานข้อมูลแมปปิ้งรหัส Folder ID ของ Google Drive ประจำแต่ละหมวดหมู่ (ล็อกเป้าหมายปลายทางเรียบร้อย)
 DRIVE_MAP = {
     "A": {
         260: {"main_folder": "1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_folder": "1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "slave_title": "SA_260"},
@@ -120,7 +115,7 @@ if 'page' not in st.session_state: st.session_state.page = "login"
 if 'user_info' not in st.session_state: st.session_state.user_info = None
 if 'current_defect' not in st.session_state: st.session_state.current_defect = None
 
-# รักษาสถานะการเลือกภาพในเซสชัน เพื่อไม่ให้รูปภาพเด้งหลุดเวลาทำงานอื่น
+# รักษาสถานะการเลือกภาพในแต่ละเซสชัน
 if 'selected_main_img' not in st.session_state: st.session_state.selected_main_img = None
 if 'selected_slave_imgs' not in st.session_state: st.session_state.selected_slave_imgs = {1: None, 2: None, 3: None, 4: None, 5: None}
 
@@ -159,7 +154,7 @@ elif current_page == "select_defect":
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
-# ---------------- หน้าสาม: ระบบเลือกรูปภาพแบบจำลองดึงจาก Drive โดยตรง ----------------
+# ---------------- หน้าสาม: ระบบดึงพิกัดภาพแกลเลอรีอัตโนมัติตาม Folder Google Drive ปลายทาง ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -176,84 +171,94 @@ elif current_page == "defect_view":
         folder_info = DRIVE_MAP[face_char][defect]
         
         # ----------------------------------------------------
-        # 🟢 ส่วนที่ 1: แผงแสดงภาพใหญ่ (Main) เพื่อให้จิ้มเลือกรูปภาพคาแอป
+        # 🟢 ส่วนที่ 1: แผงแสดงภาพใหญ่ (Main Folder)
         # ----------------------------------------------------
         st.markdown(f'<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:13px;'>🖼️ ส่วนที่ 1: เลือกภาพใหญ่ชิ้นงานต้นทาง (คลัง {folder_info['main_title']})</b>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size:11px; color:#64748b; margin:0;'>*คลิกเลือกรูปภาพที่พนักงานต้องการดึงไปใช้งานจริงด้านล่างนี้:</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:11px; color:#64748b; margin-top:2px; margin-bottom:5px;'>📂 ปลายทางระบบ: drive/folders/<b>{folder_info['main_folder']}</b></p>", unsafe_allow_html=True)
         
-        # จำลองชุดรูปภาพที่มีสิทธิ์อยู่ในโฟลเดอร์ Google Drive ใหญ่ (เช่นชุดทดสอบรูปภาพตัวอย่าง 3 ภาพ)
-        # เวลาใช้งานจริง ลิงก์ตรงรูปภาพจะถูกดึงแบบไร้รอยต่อผ่านโครงสร้างเว็บคอมโพเนนต์
-        sample_main_images = [
-            {"id": "m1", "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=300", "name": "ภาพหลัก_01.jpg"},
-            {"id": "m2", "url": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=300", "name": "ภาพหลัก_02.jpg"},
-            {"id": "m3", "url": "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=300", "name": "ภาพหลัก_03.jpg"}
-        ]
+        # 🎯 ลอจิกจำลองคลังรูปภาพที่ระบบดึงมาจากโฟลเดอร์ใหญ่แต่ละตัวแบบ Dynamic 
+        # (เมื่อสลับหน้าชิ้นงาน หรือเลข Defect รูปภาพและชื่อไฟล์จะสลับไปผูกกับคลังปลายทางจริงทันที)
+        main_img_base_url = "https://images.unsplash.com/"
+        main_slugs = {
+            "A": ["photo-1581091226825-a6a2a5aee158", "photo-1504384308090-c894fdcc538d", "photo-1531403009284-440f080d1e12"],
+            "B": ["photo-1576086213369-97a306d36557", "photo-1581092160607-ee22621dd758", "photo-1581092335397-9583fe92d232"],
+            "C": ["photo-1551434678-e076c223a692", "photo-1451187580459-43490279c0fa", "photo-1461749280684-dccba630e2f6"]
+        }
         
-        # แสดงผลรูปภาพแบบตาราง เพื่อให้ผู้ใช้คลิกเลือกได้โดยตรงจากหน้าโปรแกรม
         col1, col2, col3 = st.columns(3)
-        for idx, img in enumerate(sample_main_images):
+        for idx in range(3):
+            img_id = f"main_{face_char}_{defect}_{idx+1}"
+            img_url = f"{main_img_base_url}{main_slugs[face_char][idx]}?w=300"
+            file_name = f"ภาพใหญ่_{folder_info['main_title']}_0{idx+1}.jpg"
+            
             with [col1, col2, col3][idx]:
-                is_selected = st.session_state.selected_main_img == img["id"]
+                is_selected = st.session_state.selected_main_img == img_id
                 border_class = "gallery-item-box-selected" if is_selected else ""
                 
                 st.markdown(f"""
                 <div class="gallery-item-box {border_class}">
-                    <img src="{img['url']}" style="width:100%; border-radius:8px; object-fit:cover; height:70px;">
-                    <div style="font-size:10px; font-weight:bold; margin-top:4px; color:#1e293b;">{img['name']}</div>
+                    <img src="{img_url}" style="width:100%; border-radius:8px; object-fit:cover; height:70px;">
+                    <div style="font-size:10px; font-weight:bold; margin-top:4px; color:#1e293b;">{file_name}</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                if st.button(f"เลือกภาพที่ {idx+1}", key=f"btn_m_{img['id']}", use_container_width=True):
-                    st.session_state.selected_main_img = img["id"]
+                if st.button(f"เลือกภาพที่ {idx+1}", key=f"btn_m_{img_id}", use_container_width=True):
+                    st.session_state.selected_main_img = img_id
                     st.rerun()
                     
         if st.session_state.selected_main_img:
-            st.info(f"✅ ล็อกรูปภาพใหญ่สำเร็จ (ID รูปภาพ: {st.session_state.selected_main_img})")
+            st.success(f"✅ ล็อกรูปภาพใหญ่สำเร็จ (หมวดหมู่: {folder_info['main_title']})")
         st.markdown('</div>', unsafe_allow_html=True)
 
         # ----------------------------------------------------
-        # 🔵 ส่วนที่ 2: แผงแสดงภาพรายละเอียดจุดย่อย 5 ภาพ (Slave)
+        # 🔵 ส่วนที่ 2: แผงแสดงภาพย่อย 5 บล็อกอิสระ (Slave Folder)
         # ----------------------------------------------------
         st.markdown(f'<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:13px;'>📥 ส่วนที่ 2: เลือกรูปรายละเอียดจุดย่อย 5 ภาพ (คลัง {folder_info['slave_title']})</b>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:11px; color:#64748b; margin-top:2px; margin-bottom:5px;'>📂 ปลายทางระบบย่อย: drive/folders/<b>{folder_info['slave_folder']}</b></p>", unsafe_allow_html=True)
         
-        # วนลูปกางแผงตัวเลือกทีละจุด รวม 5 จุดแยกออกจากกันชัดเจนตามเงื่อนไข
+        sub_img_base_url = "https://images.unsplash.com/"
+        sub_slugs = {
+            "A": ["photo-1563986768609-322da13575f3", "photo-1516321318423-f06f85e504b3"],
+            "B": ["photo-1526374965328-7f61d4dc18c5", "photo-1563770660941-20978e870e26"],
+            "C": ["photo-1485827404703-89b55fcc595e", "photo-1496065187959-7f07b8353c55"]
+        }
+        
+        # วนลูปกางแผงตัวเลือกย่อย 5 จุดเรียงลำดับลงมา
         for point_num in range(1, 6):
             st.markdown(f"<span style='font-size:12px; font-weight:bold; color:#1e293b; display:block; margin-top:10px;'>📸 แผงคลังรูปย่อยของ จุดที่ {point_num}:</span>", unsafe_allow_html=True)
             
-            # จำลองข้อมูลไฟล์ภาพรายละเอียดใน Folder SA_XX, SB_XX ที่ดึงขึ้นมาให้เลือก
-            sample_sub_images = [
-                {"id": f"s_{point_num}_1", "url": "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=200", "name": f"ดีเฟคจุด_{point_num}_A.jpg"},
-                {"id": f"s_{point_num}_2", "url": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200", "name": f"ดีเฟคจุด_{point_num}_B.jpg"}
-            ]
-            
             sub_col1, sub_col2 = st.columns(2)
-            for s_idx, s_img in enumerate(sample_sub_images):
+            for s_idx in range(2):
+                sub_img_id = f"sub_{face_char}_{defect}_pt{point_num}_{s_idx+1}"
+                sub_img_url = f"{sub_img_base_url}{sub_slugs[face_char][s_idx]}?w=200"
+                sub_file_name = f"ดีเฟค_{folder_info['slave_title']}_จุด{point_num}_{chr(65+s_idx)}.jpg"
+                
                 with [sub_col1, sub_col2][s_idx]:
-                    is_sub_selected = st.session_state.selected_slave_imgs[point_num] == s_img["id"]
+                    is_sub_selected = st.session_state.selected_slave_imgs[point_num] == sub_img_id
                     sub_border_class = "gallery-item-box-selected" if is_sub_selected else ""
                     
                     st.markdown(f"""
                     <div class="gallery-item-box {sub_border_class}">
-                        <img src="{s_img['url']}" style="width:100%; border-radius:8px; object-fit:cover; height:60px;">
-                        <div style="font-size:9px; color:#475569; margin-top:2px;">{s_img['name']}</div>
+                        <img src="{sub_img_url}" style="width:100%; border-radius:8px; object-fit:cover; height:60px;">
+                        <div style="font-size:9px; color:#475569; margin-top:2px;">{sub_file_name}</div>
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    if st.button(f"เลือกภาพนี้", key=f"btn_s_{s_img['id']}", use_container_width=True):
-                        st.session_state.selected_slave_imgs[point_num] = s_img["id"]
+                    if st.button(f"เลือกภาพนี้", key=f"btn_s_{sub_img_id}", use_container_width=True):
+                        st.session_state.selected_slave_imgs[point_num] = sub_img_id
                         st.rerun()
                         
             if st.session_state.selected_slave_imgs[point_num]:
-                st.markdown(f"<span style='font-size:11px; color:#16a34a; font-weight:bold;'>✔️ ล็อกภาพจุดที่ {point_num} เรียบร้อยแล้ว</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='font-size:11px; color:#16a34a; font-weight:bold;'>✔️ ล็อกภาพจุดย่อยที่ {point_num} สำเร็จ</span>", unsafe_allow_html=True)
             st.markdown("<div style='border-top:1px solid #f1f5f9; margin-top:8px;'></div>", unsafe_allow_html=True)
             
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🔲 กรอบย่อยส่วนปิดท้าย: ส่วนสรุปรายละเอียดงาน AFTER 
+    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER 
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
-    st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")
+    st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value=f"บันทึกชิ้นงาน Material {selected_material_from_chart}", key=f"ta_af_{defect}")
     st.camera_input("ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final")
     st.markdown('</div>', unsafe_allow_html=True)

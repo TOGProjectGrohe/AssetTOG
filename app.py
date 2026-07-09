@@ -3,11 +3,12 @@ import pandas as pd
 import requests
 import plotly.express as px
 import plotly.graph_objects as go
+from datetime import datetime
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลสะอาดตา
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลสะอาดตา และกล่องข้อมูลพนักงานสีดำอ่อน
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -26,7 +27,6 @@ st.markdown("""
     .login-card {
         background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
     }
-    /* ❌ ลบพื้นหลังสีดำออก ให้ใสโปร่งแสงคลีน ๆ */
     .future-graph-card {
         background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
     }
@@ -44,10 +44,24 @@ st.markdown("""
         font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
         margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
     }
+    
+    /* 🕋 กล่องดีไซน์พิเศษ: พื้นหลังสีดำอ่อนโปร่งแสง สวยงาม ตัวอักษรสีดำเข้ม */
+    .employee-dark-box {
+        background-color: rgba(0, 0, 0, 0.08) !important; 
+        border: 2px solid rgba(0, 0, 0, 0.15) !important; 
+        border-radius: 16px !important; 
+        padding: 14px 18px !important; 
+        margin-top: 12px !important; 
+        margin-bottom: 12px !important;
+        color: #000000 !important;
+        font-size: 14px !important;
+        line-height: 1.6 !important;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# 🌐 ฟังก์ชันดึงข้อมูลพนักงานจาก Google Sheet
+# 🌐 ฟังก์ชันดึงข้อมูลพนักงานจาก Google Sheet (ดึงค่า Name และ Position ตามตารางจริง)
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
@@ -59,7 +73,15 @@ def get_employee_from_sheet(input_id):
             match = df[df['ID'] == str(input_id).strip()]
             if not match.empty:
                 row = match.iloc[0]
-                return {"status": "success", "found": True, "id": str(row['ID']), "name": str(row['Name']).strip()}
+                # ตรวจสอบว่ามีคอลัมน์ Position หรือไม่ ถ้าไม่มีให้ใช้ค่าดีฟอลต์ GL ตามภาพตัวอย่าง
+                pos_val = str(row['Position']).strip() if 'Position' in df.columns else "GL"
+                return {
+                    "status": "success", 
+                    "found": True, 
+                    "id": str(row['ID']), 
+                    "name": str(row['Name']).strip(),
+                    "position": pos_val
+                }
     except:
         pass
     return {"status": "success", "found": False}
@@ -115,7 +137,18 @@ if current_page == "login":
     if input_id.strip() != "":
         result = get_employee_from_sheet(input_id)
         if result["status"] == "success" and result.get("found"):
-            st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; margin-top: 10px; text-align: center; font-size:13px; color:#16a34a;"><b>✅ ข้อมูลถูกต้อง:</b> {result["name"]}</div>', unsafe_allow_html=True)
+            
+            # 🛠️ จัดข้อมูลพนักงานลงในกล่องกรอบพื้นหลังสีดำอ่อนโปร่งแสง สวยหรู ตัวอักษรสีดำตามบรีฟเป๊ะๆ
+            now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            st.markdown(f"""
+                <div class="employee-dark-box">
+                    <b>⏱️ Timestamp:</b> {now_time}<br>
+                    <b>🆔 Employee ID:</b> {result['id']}<br>
+                    <b>👤 Name:</b> {result['name']}<br>
+                    <b>💼 Position:</b> {result['position']}
+                </div>
+            """, unsafe_allow_html=True)
+            
             if st.button("🔓 กดเพื่อเข้าระบบ"):
                 st.session_state.user_info = {"id": result["id"], "name": result["name"]}
                 st.session_state.page = "select_defect"; st.rerun()
@@ -157,18 +190,15 @@ elif current_page == "defect_view":
         })
         qty_col = "rework quantity"
 
-    # 📊 แผงกราฟสถิติด้านบน (ถอดพื้นหลังสีดำออก เป็นสีใสโปร่งแสง)
     st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 STATS REPORT (TOP 10 MATERIAL)</b>", unsafe_allow_html=True)
     st.markdown("<p style='font-size:12px; color:#475569; text-align:center; margin-top:-2px; margin-bottom:15px;'>💡 คลิกเลือกแท่งโมเดล 3D ด้านล่างเพื่อเปลี่ยนคลังภาพ</p>", unsafe_allow_html=True)
     
     if not chart_data.empty:
-        # เฉดสีพาสเทลดั้งเดิมยอดนิยมที่สลับสวยงาม
         neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
         list_of_materials = chart_data['Material'].tolist()
         color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
 
-        # 🍕 1. แผนภูมิวงกลมแบบมีมิตินูนลอย (3D-like Donut Chart) - ตัวอักษรสีดำเด่นชัด
         fig_pie = go.Figure(data=[go.Pie(
             labels=chart_data["Material"],
             values=chart_data[qty_col],
@@ -190,7 +220,6 @@ elif current_page == "defect_view":
         )
         st.plotly_chart(fig_pie, use_container_width=True)
         
-        # 📊 2. แผนภูมิแท่งแนวตั้งนูนหนา (3D Bevel Bar Chart) - ปรับเป็นสีเฉดเดียวเรียบหรู ไม่เป็นจุดไข่ปลาแล้ว
         bars_list = []
         for mat in list_of_materials:
             mat_data = chart_data[chart_data['Material'] == mat]
@@ -203,8 +232,8 @@ elif current_page == "defect_view":
                 name=mat,
                 marker=dict(
                     color=base_color,
-                    line=dict(color='#ffffff', width=3), # ขอบหนาขาวช่วยดึงความนูน 3D ลอยตัว
-                    pattern=None # ❌ ถอดลวดลายจุดประ/ลายเฉลียงออกตามบรีฟ ให้สีเนื้อสีเต็มแน่นเรียบเนียน
+                    line=dict(color='#ffffff', width=3),
+                    pattern=None
                 ),
                 hovertemplate=f"Material: {mat}<br>จำนวน: {val} ครั้ง<extra></extra>"
             ))
@@ -215,16 +244,16 @@ elif current_page == "defect_view":
             height=250, 
             showlegend=False,
             barmode='group',
-            paper_bgcolor='rgba(0,0,0,0)', # พื้นหลังใสโปร่งแสงทะลุกลืนเข้าแอปพาสเทล
-            plot_bgcolor='rgba(0,0,0,0)',  # พื้นหลังด้านในกราฟใส
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)',  
             xaxis=dict(
                 type='category', 
                 tickangle=45, 
-                tickfont=dict(color='#000000', size=10, weight='bold'), # ✍️ ตัวอักษรสีดำเข้ม
-                gridcolor='rgba(0,0,0,0.05)' # เส้นตารางสีจาง ๆ สะอาดตา
+                tickfont=dict(color='#000000', size=10, weight='bold'), 
+                gridcolor='rgba(0,0,0,0.05)'
             ),
             yaxis=dict(
-                tickfont=dict(color='#000000', size=10, weight='bold'), # ✍️ ตัวอักษรตัวเลขแกนตั้งสีดำเข้ม
+                tickfont=dict(color='#000000', size=10, weight='bold'), 
                 gridcolor='rgba(0,0,0,0.05)',
                 zerolinecolor='rgba(0,0,0,0.1)'
             ),

@@ -8,7 +8,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลสะอาดตา และกล่องข้อมูลพนักงานสีดำอ่อน
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลสะอาดตา ปรับแต่งปุ่มและโลโก้ด้านบนตามสั่ง
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -33,9 +33,39 @@ st.markdown("""
     .custom-top-navbar {
         position: absolute !important; top: 20px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
     }
+    
+    /* 🩵 ปรับแต่งปุ่ม Home และ Logout ให้เป็นสีฟ้าอ่อนพาสเทลสวยงาม ตัวอักษรสีดำ */
     .nav-btn-link {
-        background-color: #007bc3 !important; color: white !important; border-radius: 20px !important; padding: 8px 16px !important; font-size: 13px !important; font-weight: bold !important; text-decoration: none !important;
+        background-color: #bae6fd !important; 
+        color: #000000 !important; 
+        border: 1px solid rgba(0,0,0,0.05) !important;
+        border-radius: 20px !important; 
+        padding: 8px 16px !important; 
+        font-size: 13px !important; 
+        font-weight: bold !important; 
+        text-decoration: none !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
     }
+    .nav-btn-link:hover {
+        background-color: #7dd3fc !important;
+    }
+
+    /* 🖤 ปรับแต่งวงกลมโลโก้ TOG ตรงกลางให้เป็นสีดำอ่อนโปร่งแสงละมุนตา */
+    .tog-logo-circle {
+        width: 50px !important; 
+        height: 50px !important; 
+        background-color: rgba(0, 0, 0, 0.2) !important; 
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        border-radius: 50% !important; 
+        display: flex !important; 
+        justify-content: center !important; 
+        align-items: center !important; 
+        color: #000000 !important; 
+        font-weight: bold !important; 
+        font-size: 15px !important; 
+        margin: 0 auto 8px auto !important;
+    }
+
     .center-header-block {
         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
     }
@@ -44,8 +74,6 @@ st.markdown("""
         font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
         margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
     }
-    
-    /* 🕋 กล่องดีไซน์พิเศษ: พื้นหลังสีดำอ่อนโปร่งแสง สวยงาม ตัวอักษรสีดำเข้ม */
     .employee-dark-box {
         background-color: rgba(0, 0, 0, 0.08) !important; 
         border: 2px solid rgba(0, 0, 0, 0.15) !important; 
@@ -58,8 +86,6 @@ st.markdown("""
         line-height: 1.6 !important;
         box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
     }
-
-    /* 🚨 กล่องแจ้งเตือนสีแดงอ่อนสไตล์พาสเทล ตัวอักษรสีดำเข้มตามสั่ง */
     .error-pastel-box {
         background-color: rgba(239, 68, 68, 0.15) !important;
         border: 2px solid rgba(239, 68, 68, 0.3) !important;
@@ -75,7 +101,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🌐 ฟังก์ชันดึงข้อมูลพนักงานจาก Google Sheet (ดึงค่า Name และ Position ตามตารางจริง)
+# 🌐 ฟังก์ชันดึงข้อมูลพนักงานจาก Google Sheet
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
@@ -87,7 +113,6 @@ def get_employee_from_sheet(input_id):
             match = df[df['ID'] == str(input_id).strip()]
             if not match.empty:
                 row = match.iloc[0]
-                # ตรวจสอบว่ามีคอลัมน์ Position หรือไม่ ถ้าไม่มีให้ใช้ค่าดีฟอลต์ GL ตามภาพตัวอย่าง
                 pos_val = str(row['Position']).strip() if 'Position' in df.columns else "GL"
                 return {
                     "status": "success", 
@@ -141,7 +166,8 @@ if st.query_params.get("nav") == "reset":
     st.session_state.page = "login"; st.session_state.user_info = None; st.session_state.current_defect = None
     st.query_params.clear(); st.rerun()
 
-st.markdown('<div class="center-header-block"><div style="width:50px; height:50px; background-color:#000000; border-radius:50%; display:flex; justify-content:center; align-items:center; color:#ffffff; font-weight:bold; font-size:15px; margin:0 auto 8px auto;">TOG</div><span style="font-size:18px; font-weight:bold; color:white;">TOG App</span></div>', unsafe_allow_html=True)
+# 🛸 เรียกใช้งาน div class โลโก้ TOG สีดำอ่อน และตัวอักษรสีดำที่ปรับแต่งใหม่ตามบรีฟ
+st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
@@ -151,9 +177,7 @@ if current_page == "login":
     if input_id.strip() != "":
         result = get_employee_from_sheet(input_id)
         
-        # 🟢 กรณีพบข้อมูลพนักงานในระบบ
         if result["status"] == "success" and result.get("found"):
-            # จัดข้อมูลพนักงานลงในกล่องกรอบพื้นหลังสีดำอ่อนโปร่งแสง สวยหรู ตัวอักษรสีดำ
             now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             st.markdown(f"""
                 <div class="employee-dark-box">
@@ -168,7 +192,6 @@ if current_page == "login":
                 st.session_state.user_info = {"id": result["id"], "name": result["name"]}
                 st.session_state.page = "select_defect"; st.rerun()
                 
-        # 🔴 กรณีไม่พบข้อมูลในระบบ (แสดงคำเตือนตามบรีฟ ตัวอักษรสีดำเข้มชัดเจน)
         else:
             st.markdown("""
                 <div class="error-pastel-box">

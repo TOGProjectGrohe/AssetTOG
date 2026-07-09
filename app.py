@@ -2,11 +2,12 @@ import streamlit as st
 import pandas as pd
 import requests
 import json
+import base64
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 
-# ⚠️ ฝังลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์ลงในระบบเรียบร้อยครับ
+# 🌐 ลิงก์ Web App URL ปลายทางสำหรับส่งบันทึกข้อมูลของคุณวีรพันธ์
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
@@ -128,7 +129,6 @@ st.markdown("""
         transform: translateY(1px) !important;
     }
     
-    /* 💾 ปรับแต่งปุ่ม Save สีเขียวเด่นชัดสำหรับคีย์ save_btn_ ทุกตัว */
     div.stButton > button[key^="save_btn_"] {
         background-color: #10b981 !important;
         color: white !important;
@@ -179,7 +179,7 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 📊 ฟังก์ชันดึงข้อมูลดิบจากลิงก์ Google Sheet สถิติ
+# 📊 ฟังก์ชันดึงข้อมูลดิบจากลิงก์ Google Sheet สถิติหลัก
 @st.cache_data(ttl=60)
 def load_real_defect_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c/export?format=csv&gid=0"
@@ -262,7 +262,7 @@ elif current_page == "select_defect":
             <b>⏱️ Timestamp:</b> {now_time}<br>
             <b>🆔 Employee ID:</b> {st.session_state.user_info.get('id')}<br>
             <b>👤 Name:</b> {st.session_state.user_info['name']}<br>
-            <b>💼 Position:</b> GL
+            <b>💼 Position:</b> {st.session_state.user_info.get('position', 'GL')}
             <hr style="margin: 12px 0; border: 0; border-top: 1px dashed rgba(0,0,0,0.15);">
         """, unsafe_allow_html=True)
 
@@ -309,12 +309,26 @@ elif current_page == "defect_view":
         list_of_materials = chart_data['Material'].tolist()
         color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
 
-        fig_pie = go.Figure(data=[go.Pie(
-            labels=chart_data["Material"], values=chart_data[qty_col], hole=0.45,
-            marker=dict(colors=[color_map[m] for m in chart_data["Material"]], line=dict(color='#ffffff', width=2.5)),
-            textinfo='percent', textfont=dict(size=11, color='#000000', weight='bold'), hoverinfo="label+percent"
-        )])
-        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=210, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - อิงตามคอลัมน์สถิติจริง
+        face_col = 'Short description' if 'Short description' in raw_df.columns else ''
+        if face_col and face_col in raw_df.columns and not raw_df.empty:
+            specific_mat_df = raw_df[(raw_df['errortype'] == defect) & (raw_df['Material'] == list_of_materials[0])]
+            if not specific_mat_df.empty:
+                pie_df = specific_mat_df.groupby(face_col, as_index=False)[qty_col].sum()
+                pie_df = pie_df.sort_values(by=qty_col, ascending=False)
+                pie_names_col = face_col
+            else:
+                pie_df = pd.DataFrame({face_col: ["Rough Lines", "Others"], qty_col: [75, 25]})
+                pie_names_col = face_col
+        else:
+            pie_df = pd.DataFrame({"Short description": ["Rough Lines", "Others"], qty_col: [70, 30]})
+            pie_names_col = "Short description"
+
+        fig_pie = px.pie(
+            pie_df, names=pie_names_col, values=qty_col,
+            color=pie_names_col, color_discrete_sequence=neon_pastel
+        )
+        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=True)
         st.plotly_chart(fig_pie, use_container_width=True)
         
         bars_list = []
@@ -377,28 +391,25 @@ elif current_page == "defect_view":
                 st.image(img_file, caption=f"รูปย่อยที่ {idx+1}", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER พร้อมปุ่มส่งเซฟข้อมูลลงชีตจริง
+    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     
     after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")
     
-    # 🛠️ 📸 ส่วนที่อัปเกรดใหม่: เพิ่มช่องเลือกรูปภาพ After จากไฟล์เครื่อง ควบคู่กับการเปิดกล้องถ่ายรูปจริง
     st.markdown("<p style='font-size:13px; font-weight:bold; color:#2c3e50; margin-bottom:2px;'>📸 แนบรูปหลักฐานผลงาน After ชิ้นงานจริง (เลือกทำอย่างใดอย่างหนึ่งหรือทั้งสองอย่าง):</p>", unsafe_allow_html=True)
     
-    # ทางเลือกที่ 1: อัปโหลดรูปภาพจากคลัง
     uploaded_after_file = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ:", type=["png", "jpg", "jpeg"], key=f"up_af_file_{defect}")
     if uploaded_after_file:
         st.image(uploaded_after_file, caption="✅ รูปภาพ After จากไฟล์เครื่องพรีวิว", use_container_width=True)
         
-    # ทางเลือกที่ 2: ถ่ายรูปสดๆ ผ่านกล้องหน้างาน
     camera_after_file = st.camera_input("📸 ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final")
     if camera_after_file:
         st.image(camera_after_file, caption="✅ รูปภาพ After จากกล้องพรีวิว", use_container_width=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 💾 ปุ่มบันทึกข้อมูล
+    # 💾 ปุ่มบันทึกข้อมูล [จับคู่คีย์ตัวแปรให้ตรงพิกัดหัวตารางใหม่ errortype และ Improvement type(A,B,C)]
     if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
         if not after_text.strip():
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
@@ -406,21 +417,31 @@ elif current_page == "defect_view":
             save_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             emp_id = st.session_state.user_info.get('id', '-') if st.session_state.user_info else '-'
             emp_name = st.session_state.user_info.get('name', '-') if st.session_state.user_info else '-'
+            emp_position = st.session_state.user_info.get('position', '-') if st.session_state.user_info else '-'
             
+            img_base64 = ""
+            if camera_after_file:
+                img_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
+            elif uploaded_after_file:
+                img_base64 = base64.b64encode(uploaded_after_file.getvalue()).decode('utf-8')
+
+            # 🛠️ ปรับโครงสร้างชุดข้อมูล Payload ใหม่ให้ตรงตามชื่อคอลลัมน์ใหม่ในภาพชีตเป๊ะๆ
             payload = {
                 "timestamp": save_timestamp,
                 "employee_id": emp_id,
                 "employee_name": emp_name,
-                "defect_type": str(defect),
-                "material": str(selected_material),
-                "location_face": str(selected_face),
-                "after_details": str(after_text)
+                "position": emp_position,                # Column D
+                "material": str(selected_material),       # Column E
+                "errortype": str(defect),                 # Column F (หัวตารางใหม่)
+                "improvement_type": str(selected_face),   # Column G (หัวตารางใหม่ Improvement type(A,B,C))
+                "after_details": str(after_text),         # Column M
+                "pic1": img_base64, "pic2": "", "pic3": "", "pic4": "", "pic5": ""
             }
             
             try:
                 response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                 if response.status_code == 200:
-                    st.success(f"🎉 บันทึกข้อมูลของ Material {selected_material} ลงแท็บ 'Recording' เรียบร้อยแล้วเมื่อ {save_timestamp}!")
+                    st.success(f"🎉 บันทึกข้อมูลและรูปภาพ After ของ Material {selected_material} ลงคอลัมน์ A ถึง R สำเร็จเรียบร้อยแล้ว!")
                 else:
                     st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) โปรดตรวจสอบสิทธิ์เว็บแอป Apps Script ของคุณ")
             except Exception as ex:

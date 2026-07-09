@@ -398,42 +398,57 @@ elif current_page == "defect_view":
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-  # 💾 ปุ่มบันทึกข้อมูล (ปรับแต่งใหม่ให้ลงล็อกตารางจริงครบถ้วน)
-if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
-    if not after_text.strip():
-        st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
-    else:
-        save_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        emp_id = st.session_state.user_info.get('id', '-') if st.session_state.user_info else '-'
-        emp_name = st.session_state.user_info.get('name', '-') if st.session_state.user_info else '-'
-        emp_position = st.session_state.user_info.get('position', '-') if st.session_state.user_info else '-'
-        
-        # 2.6 ดึงเฉพาะตัวเลข Defect (เช่น จาก "Defect 261" ดึงเหลือแค่ "261")
-        clean_defect = "".join(filter(str.isdigit, str(defect)))
-        if not clean_defect:
-            clean_defect = str(defect)
-        
-        # 2.7 ถอดเอาเฉพาะตัวอักษรกลุ่ม A, B, C (ตัดคำว่า "หน้า" และช่องว่างออก)
-        clean_face = str(selected_face).replace("หน้า", "").strip()
+# 💾 ปุ่มบันทึกข้อมูล (ปรับปรุงระบบดักจับค่าหลังบ้านอย่างเหนียวแน่น ข้อมูลไม่หายแน่นอน)
+    if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
+        if not after_text.strip():
+            st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
+        else:
+            # 1. ดักจับและรับค่าจากตัวแปรหน้าแอปมาล็อกไว้ในตัวแปรหลังบ้านทันทีก่อนส่ง
+            save_timestamp = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            
+            # ดักข้อมูลผู้ใช้จาก Session State ป้องกันค่าหาย
+            emp_id = str(st.session_state.user_info.get('id', '-')) if 'user_info' in st.session_state and st.session_state.user_info else '-'
+            emp_name = str(st.session_state.user_info.get('name', '-')) if 'user_info' in st.session_state and st.session_state.user_info else '-'
+            emp_position = str(st.session_state.user_info.get('position', '-')) if 'user_info' in st.session_state and st.session_state.user_info else '-'
+            
+            # 2. ดึงค่าคอลัมน์ E (Material) แปลงเป็น string ป้องกันโปรแกรมงงค่าที่เป็นตัวเลขล้วน
+            val_material = str(selected_material).strip()
+            
+            # 3. ดึงค่าคอลัมน์ F (errortype) ดักจับตัวเลข Defect ออกมาเป็นข้อความล้วน เช่น "261"
+            clean_defect = "".join(filter(str.isdigit, str(defect)))
+            if not clean_defect:
+                clean_defect = str(defect)
+            val_errortype = str(clean_defect).strip()
+            
+            # 4. ดึงค่าคอลัมน์ G (Improvement type) ถอดจากตัวเลือกวิกฤต เช่น "หน้า A" ให้เหลือแค่ "A"
+            clean_face = str(selected_face).replace("หน้า", "").strip()
+            val_improvement_type = str(clean_face) if clean_face else '-'
+            
+            # 5. ดึงค่าคอลัมน์ M (Improvement details) ข้อความสรุปผลงาน After
+            val_details = str(after_text).strip()
 
-        # จัดเตรียมคีย์รับส่งให้ตรงและเข้าใจง่าย
-        payload = {
-            "timestamp": save_timestamp,
-            "employee_id": emp_id,
-            "employee_name": emp_name,
-            "position": emp_position,
-            "material": str(selected_material),
-            "errortype": clean_defect,
-            "improvement_type": clean_face,
-            "improvement_details": str(after_text)
-        }
-        
-        try:
-            response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
-            if response.status_code == 200:
-                st.success(f"🎉 บันทึกข้อมูลของ Material {selected_material} ลงแท็บ 'Recording' ครบถ้วนเรียบร้อยแล้ว!")
-            else:
-                st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) โปรดตรวจสอบการ Deploy Web App อีกครั้ง")
-        except Exception as ex:
-            st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
+            # ประกอบร่างข้อมูลเป็น Payload ส่งไปที่ Google Apps Script
+            payload = {
+                "timestamp": save_timestamp,           # Column A
+                "employee_id": emp_id,                 # Column B
+                "employee_name": emp_name,             # Column C
+                "position": emp_position,              # Column D
+                "material": val_material,              # Column E
+                "errortype": val_errortype,            # Column F
+                "improvement_type": val_improvement_type, # Column G
+                "improvement_details": val_details     # Column M
+            }
+            
+            # พิมพ์ตรวจสอบใน Terminal หลังบ้านของคุณเพื่อเช็กความถูกต้อง (ดูได้ในเครื่องคอมพิวเตอร์ของคุณ)
+            print("--- DEBUG PAYLOAD TO GOOGLE SHEET ---")
+            print(payload)
+            
+            try:
+                response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
+                if response.status_code == 200:
+                    st.success(f"🎉 บันทึกข้อมูลสำเร็จ! ค่าทุกช่อง (A-G และ M) ลงล็อกแท็บ 'Recording' ครบถ้วนเรียบร้อยแล้วครับ")
+                else:
+                    st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) เกิดข้อผิดพลาดฝั่งรับข้อมูล โปรดตรวจสอบความพร้อมของ Web App")
+            except Exception as ex:
+                st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
     st.markdown('</div>', unsafe_allow_html=True)

@@ -13,6 +13,9 @@ st.markdown("""
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
         display: none !important; visibility: hidden !important; height: 0 !important;
     }
+    [data-testid="stStatusWidget"], #stConnectionStatus, div[class*="viewerBadge"] {
+        display: none !important; visibility: hidden !important; height: 0 !important;
+    }
     .stApp {
         max-width: 420px !important; margin: 0px auto !important;
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
@@ -85,7 +88,7 @@ FOLDER_LINK_MAP = {
         380: {"main_url": "https://drive.google.com/drive/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "main_title": "B_380", "slave_url": "https://drive.google.com/drive/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "SB_380"}
     },
     "C": {
-        260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slate_title": "SC_260"},
+        260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
         261: {"main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
         380: {"main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_title": "SC_380"}
     }
@@ -138,6 +141,7 @@ elif current_page == "defect_view":
         
     st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงวิเคราะห์รูปงานจริงของ {defect_title}</b></div>', unsafe_allow_html=True)
     
+    # 📥 โหลดข้อมูลดิบ
     raw_df = load_real_defect_data()
     if not raw_df.empty and 'errortype' in raw_df.columns and 'Material' in raw_df.columns:
         raw_df['errortype'] = pd.to_numeric(raw_df['errortype'], errors='coerce')
@@ -160,7 +164,7 @@ elif current_page == "defect_view":
     st.markdown("<p style='font-size:11px; color:#8b949e; text-align:center; margin-top:-2px; margin-bottom:15px;'>💡 จิ้มเลือกแท่งกราฟโฮโลแกรมเพื่อเจาะลึกชิ้นงาน</p>", unsafe_allow_html=True)
     
     if not chart_data.empty:
-        # 🔑 สีเฉดเดิมที่สวยอยู่แล้ว (เทอร์ควอยซ์, ส้ม, ชมพู, ม่วง, ฟ้า, เขียวพาสเทล)
+        # 🔑 เฉดสีดั้งเดิมพาสเทลยอดฮิต ซิงค์ความถูกต้องแบบ 100%
         neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
         list_of_materials = chart_data['Material'].tolist()
         color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
@@ -169,11 +173,10 @@ elif current_page == "defect_view":
         fig_pie = go.Figure(data=[go.Pie(
             labels=chart_data["Material"],
             values=chart_data[qty_col],
-            hole=0.4, # เพิ่มช่องเจาะกลางแบบโมเดิร์น เพื่อหักเหแสงให้ดูนูนขึ้น
+            hole=0.4,
             marker=dict(
                 colors=[color_map[m] for m in chart_data["Material"]],
-                # ใช้เส้นขอบหนาสีเทาเข้มตัดขอบขาวบาง ๆ สร้าง Bevel 3D Effect ลอยเหนือพื้นหลัง
-                line=dict(color='#ffffff', width=1.5)
+                line=dict(color='#ffffff', width=2) # เส้นขอบหนาสีขาวเพิ่มมิติตัดเงา
             ),
             textinfo='percent',
             textfont=dict(size=11, color='#000000', weight='bold'),
@@ -188,7 +191,7 @@ elif current_page == "defect_view":
         )
         st.plotly_chart(fig_pie, use_container_width=True)
         
-        # 📊 2. แผนภูมิแท่งนูนมีมิติกึ่ง 3D (3D Bevel Bar Chart)
+        # 📊 2. แผนภูมิแท่งแนวตั้งนูนมีมิติกึ่ง 3D (3D Bevel Bar Chart - ซ่อมแซมบั๊กคำสั่งตัวใหม่)
         bars_list = []
         for mat in list_of_materials:
             mat_data = chart_data[chart_data['Material'] == mat]
@@ -201,10 +204,10 @@ elif current_page == "defect_view":
                 name=mat,
                 marker=dict(
                     color=base_color,
-                    # เทคนิคทำแท่งให้พุ่งนูน: ใส่เส้นขอบเรืองแสงสีขาวหนา 3px ครอบตัวแท่ง 
+                    # ทำแท่งให้พุ่งนูน: ใส่ขอบขาวหนา 3px ครอบเสมือนแสงไฮไลท์ขอบแก้ว
                     line=dict(color='#ffffff', width=3),
-                    # ผสมลวดลายตัดเฉียงเพื่อจำลองมิติเงาตกกระทบ (Volumetric Shading)
-                    pattern=dict(shape="/", solidity=0.22, gridshape="linear")
+                    # ใช้การตัดลวดลายเฉียงแบบคลาสสิกเพื่อสร้างแสงเงาตกกระทบลอยนูน โดยตัดตัวแปรเออเร่อออก
+                    pattern=dict(shape="/", solidity=0.25)
                 ),
                 hovertemplate=f"Material: {mat}<br>จำนวน: {val} ครั้ง<extra></extra>"
             ))

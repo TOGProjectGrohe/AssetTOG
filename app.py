@@ -75,7 +75,7 @@ st.markdown("""
         margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
     }
 
-    /* 🕋 กล่องใหญ่ครอบทั้งหมด: พื้นหลังสีดำอ่อนโปร่งแสง สวยหรู สไตล์โมเดิร์นกระจก */
+    /* 🕋 กล่องใหญ่ครอบทั้งหมด: พื้นหลังสีดำอ่อนโปร่งแสง */
     .employee-dark-box {
         background-color: rgba(0, 0, 0, 0.07) !important; 
         border: 2px solid rgba(0, 0, 0, 0.12) !important; 
@@ -103,17 +103,17 @@ st.markdown("""
         margin-bottom: 16px !important;
     }
 
-    /* 💎 ✨ ปุ่มเลือก Defect แบบสีฟ้าอ่อนโปร่งแสง ยืดกรอบยาวขนานเท่ากันเป๊ะ 100% */
+    /* 💎 ปุ่มเลือก Defect แบบสีฟ้าอ่อนโปร่งแสง ยืดกรอบยาวขนานเท่ากันเป๊ะ 100% */
     div.stButton > button {
-        background-color: rgba(186, 230, 253, 0.5) !important; /* ฟ้าอ่อนโปร่งแสง */
+        background-color: rgba(186, 230, 253, 0.5) !important; 
         backdrop-filter: blur(6px) !important;
         -webkit-backdrop-filter: blur(8px) !important;
         color: #000000 !important;
         font-weight: bold !important;
         font-size: 14px !important;
-        border: 2px solid rgba(255, 255, 255, 0.7) !important; /* ขอบขาวใสเพิ่มมิติมินิมอล */
+        border: 2px solid rgba(255, 255, 255, 0.7) !important; 
         border-radius: 16px !important;
-        width: 100% !important; /* บังคับยาวเท่ากันเป๊ะทุกปุ่ม */
+        width: 100% !important; 
         padding: 12px 20px !important;
         margin-bottom: 12px !important;
         display: block !important;
@@ -250,13 +250,9 @@ if current_page == "login":
             
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสอง: คัดเลือก Defect (ยุบรวมทุกองค์ประกอบเข้ากล่องดำโปร่งแสงยาวใบเดียวกัน) ----------------
+# ---------------- หน้าสอง: คัดเลือก Defect ----------------
 elif current_page == "select_defect":
-    
-    # 🕋 เปิดกล่องใหญ่ใบเดียว รวบหมดทั้ง รายชื่อ + หัวข้อ + 3 ปุ่มให้อยู่ในนี้
     st.markdown('<div class="employee-dark-box">', unsafe_allow_html=True)
-    
-    # ส่วนที่ 1: รายละเอียดข้อมูลคนล็อกอิน
     if st.session_state.user_info:
         now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         st.markdown(f"""
@@ -267,10 +263,8 @@ elif current_page == "select_defect":
             <hr style="margin: 12px 0; border: 0; border-top: 1px dashed rgba(0,0,0,0.15);">
         """, unsafe_allow_html=True)
 
-    # ส่วนที่ 2: หัวข้อหลักสีน้ำเงินอ่อน
     st.markdown('<div class="defect-title-box">🎯 โปรดเลือกประเภท Defect ที่ต้องการปรับปรุง</div>', unsafe_allow_html=True)
     
-    # ส่วนที่ 3: ปุ่มเลือก Defect ทั้ง 3 (ขยายยาวเท่ากัน 100% และแสดงผลโปร่งแสงสวยงามอยู่บนกรอบ)
     if st.button("🟠 Defect 260 (Rough Lines)"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
     if st.button("🔵 Defect 261 (Grinding Structure)"):
@@ -278,9 +272,9 @@ elif current_page == "select_defect":
     if st.button("⚫ Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
         
-    st.markdown('</div>', unsafe_allow_html=True) # 🕋 ปิดกล่องใหญ่แผงควบคุม
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสาม: บอร์ดสถิติอิง Material จริง ----------------
+# ---------------- หน้าสาม: บอร์ดสถิติอิง Material จริง (จุดแก้ไขคำพูดและย้ายตำแหน่ง) ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -308,7 +302,8 @@ elif current_page == "defect_view":
 
     st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 STATS REPORT (TOP 10 MATERIAL)</b>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:12px; color:#475569; text-align:center; margin-top:-2px; margin-bottom:15px;'>💡 คลิกเลือกแท่งโมเดล 3D ด้านล่างเพื่อเปลี่ยนคลังภาพ</p>", unsafe_allow_html=True)
+    
+    # 🔁 โดนย้ายลงไปอยู่ใต้กราฟแท่งเรียบร้อยครับ
     
     if not chart_data.empty:
         neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
@@ -348,8 +343,7 @@ elif current_page == "defect_view":
                 name=mat,
                 marker=dict(
                     color=base_color,
-                    line=dict(color='#ffffff', width=3),
-                    pattern=None
+                    line=dict(color='#ffffff', width=3)
                 ),
                 hovertemplate=f"Material: {mat}<br>จำนวน: {val} ครั้ง<extra></extra>"
             ))
@@ -377,8 +371,11 @@ elif current_page == "defect_view":
         )
         
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
-        state_key = f"sel_mat_{defect}"
         
+        # ⭐ [ตำแหน่งใหม่] ย้ายข้อความใหม่มาแสดงใต้กราฟแท่งตรงนี้เรียบร้อยครับ!
+        st.markdown("<p style='font-size:12.5px; color:#1e293b; font-weight:bold; text-align:center; margin-top:5px; margin-bottom:10px;'>💡 เลือก Material ที่ต้องการปรับปรุงจากกราฟ</p>", unsafe_allow_html=True)
+        
+        state_key = f"sel_mat_{defect}"
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             clicked_material = selected_bar["selection"]["points"][0]["x"]
             st.session_state[state_key] = clicked_material

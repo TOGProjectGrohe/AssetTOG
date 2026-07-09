@@ -129,6 +129,7 @@ st.markdown("""
         transform: translateY(1px) !important;
     }
     
+    /* 💾 ปรับแต่งปุ่ม Save สีเขียวเด่นชัดสำหรับคีย์ save_btn_ ทุกตัว */
     div.stButton > button[key^="save_btn_"] {
         background-color: #10b981 !important;
         color: white !important;
@@ -167,7 +168,6 @@ def get_employee_from_sheet(input_id):
             match = df[df['ID'] == str(input_id).strip()]
             if not match.empty:
                 row = match.iloc[0]
-                # ล็อกให้อ่านชื่อหัวคอลัมน์ตัวพิมพ์ใหญ่ตัวพิมพ์เล็กให้ถูกต้องตรงชีตพนักงาน
                 pos_val = str(row['Position']).strip() if 'Position' in df.columns else "GL"
                 return {
                     "status": "success", 
@@ -226,7 +226,7 @@ st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<h4 style='font-size:16px; margin-top:0; color:#2c3e50; text-align:center;'>🪪 ป้อนรหัสพนักงานเพื่อเข้าระบบ</h4>", unsafe_allow_html=True)
-    input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="พิมพ์ตัวเลขร乎อ เช่น 20", label_visibility="collapsed")
+    input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="พิมพ์ตัวเลขรหัส เช่น 20", label_visibility="collapsed")
     if input_id.strip() != "":
         result = get_employee_from_sheet(input_id)
         
@@ -237,7 +237,7 @@ if current_page == "login":
             st.session_state.user_info = {
                 "id": str(result["id"]), 
                 "name": str(result["name"]), 
-                "position": str(result["position"]) if result["position"] else "GL", 
+                "position": str(result["position"]) if result["position"] else "GL", # ดักจับหากไม่มีให้เป็น GL
                 "timestamp": now_time
             }
             
@@ -262,11 +262,10 @@ elif current_page == "select_defect":
     st.markdown('<div class="employee-dark-box">', unsafe_allow_html=True)
     if st.session_state.user_info:
         now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        # 🛠️ แก้ไขจุดแสดงผล: ดึงจาก session_state ตรงๆ ไม่ล็อกคำว่า GL ถาวรแล้วครับ
         st.markdown(f"""
             <b>⏱️ Timestamp:</b> {now_time}<br>
-            <b>🆔 Employee ID:</b> {st.session_state.user_info.get('id', '-')}<br>
-            <b>👤 Name:</b> {st.session_state.user_info.get('name', '-')}<br>
+            <b>🆔 Employee ID:</b> {st.session_state.user_info.get('id')}<br>
+            <b>👤 Name:</b> {st.session_state.user_info['name']}<br>
             <b>💼 Position:</b> {st.session_state.user_info.get('position', 'GL')}
             <hr style="margin: 12px 0; border: 0; border-top: 1px dashed rgba(0,0,0,0.15);">
         """, unsafe_allow_html=True)
@@ -314,6 +313,7 @@ elif current_page == "defect_view":
         list_of_materials = chart_data['Material'].tolist()
         color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
 
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - สรุปข้อมูลประเภทงานสถิติจริง
         face_col = 'Short description' if 'Short description' in raw_df.columns else ''
         if face_col and face_col in raw_df.columns and not raw_df.empty:
             specific_mat_df = raw_df[(raw_df['errortype'] == defect) & (raw_df['Material'] == list_of_materials[0])]
@@ -413,51 +413,61 @@ elif current_page == "defect_view":
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 💾 ปุ่มบันทึกข้อมูล
+    # 💾 ปุ่มบันทึกข้อมูล (ปรับปรุงระบบดักจับค่าหลังบ้านอย่างเหนียวแน่น มั่นใจค่า Position และข้อมูลหน้าโปรแกรมมาครบถ้วน)
     if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
         if not after_text.strip():
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
         else:
+            # 1. ดักจับและรับค่าจากตัวแปรหน้าแอปมาล็อกไว้ในตัวแปรหลังบ้านทันทีก่อนส่ง
             save_timestamp = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             
-            # ดักข้อมูลผู้ใช้จาก Session State
+            # ดักข้อมูลผู้ใช้จาก Session State ป้องกันค่าหายสลับหน้าจอ
             emp_id = str(st.session_state.user_info.get('id', '-')) if 'user_info' in st.session_state and st.session_state.user_info else '-'
             emp_name = str(st.session_state.user_info.get('name', '-')) if 'user_info' in st.session_state and st.session_state.user_info else '-'
             
-            # 🛠️ [จุดเคลียร์บั๊กพิกัด] ดึงค่าตำแหน่งจากคีย์พิมพ์เล็ก "position" ให้เหมือนก้าวล็อกอินแรก เพื่อให้ค่ามาครบถ้วน
+            # 🛠️ [จุดซ่อมแซมวิกฤต] ดักจับ Position บังคับล็อก String หากระบบผิดพลาดสลับหน้าจอจะเปลี่ยนช่องว่างเป็น "GL" ทันที
             emp_position = str(st.session_state.user_info.get('position', 'GL')).strip() if 'user_info' in st.session_state and st.session_state.user_info else 'GL'
             if emp_position == "" or emp_position == "None" or emp_position == "-":
                 emp_position = "GL"
             
+            # 2. ดึงค่าคอลัมน์ E (Material) แปลงเป็น string ป้องกันโปรแกรมงงค่าที่เป็นตัวเลขล้วน
             val_material = str(selected_material).strip()
             
+            # 3. ดึงค่าคอลัมน์ F (errortype) ดักจับตัวเลข Defect ออกมาเป็นข้อความล้วน เช่น "261"
             clean_defect = "".join(filter(str.isdigit, str(defect)))
             if not clean_defect:
                 clean_defect = str(defect)
             val_errortype = str(clean_defect).strip()
             
+            # 4. ดึงค่าคอลัมน์ G (Improvement type) ถอดจากตัวเลือกวิกฤต เช่น "หน้า A" ให้เหลือแค่ "A"
             clean_face = str(selected_face).replace("หน้า", "").strip()
             val_improvement_type = str(clean_face) if clean_face else '-'
             
+            # 5. ดึงค่าคอลัมน์ M (Improvement details) ข้อความสรุปผลงาน After
             val_details = str(after_text).strip()
 
+            # ประกอบร่างข้อมูลเป็น Payload ส่งไปที่ Google Apps Script แมตช์กับ JavaScript เวอร์ชันคอลัมน์ A ถึง M ล่าสุด
             payload = {
                 "timestamp": save_timestamp,               # Column A
                 "employee_id": emp_id,                     # Column B
                 "employee_name": emp_name,                 # Column C
-                "position": emp_position,                  # Column D (มาแน่นอนครับ!)
+                "position": emp_position,                  # Column D (มาแน่นอน ไม่โล่งแล้วครับ)
                 "material": val_material,                  # Column E
                 "errortype": val_errortype,                # Column F
                 "improvement_type": val_improvement_type,  # Column G
                 "improvement_details": val_details         # Column M
             }
             
+            # พิมพ์ตรวจสอบใน Terminal หลังบ้านเพื่อเช็กความถูกต้อง
+            print("--- DEBUG PAYLOAD TO GOOGLE SHEET ---")
+            print(payload)
+            
             try:
                 response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                 if response.status_code == 200:
-                    st.success(f"🎉 บันทึกข้อมูลสำเร็จ! คอลัมน์ D ({emp_position}) และค่าทุกช่องลงล็อกเรียบร้อยครับ")
+                    st.success(f"🎉 บันทึกข้อมูลสำเร็จ! คอลัมน์ D ({emp_position}) และค่าทุกช่องลงล็อกตาราง 'Recording' ครบถ้วนเรียบร้อยแล้วครับ")
                 else:
-                    st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
+                    st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) เกิดข้อผิดพลาดฝั่งรับข้อมูล โปรดตรวจสอบการอัปเดตเวอร์ชันบน Apps Script")
             except Exception as ex:
                 st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
                 

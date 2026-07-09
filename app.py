@@ -4,7 +4,7 @@ import pandas as pd
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทล
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทล (ปรับปรุงปุ่มให้โค้งมนและสวยงามตามหน้าตาล่าสุด)
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -33,11 +33,11 @@ st.markdown("""
         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
     }
     
-    /* 🎯 สไตล์ปุ่มลิงก์เปิดโฟลเดอร์ Google Drive */
+    /* 🎯 ปุ่มลิงก์สีเขียวเปิดโฟลเดอร์ Google Drive แบบมนสวยงามตามหน้าจอล่าสุดของคุณวีรพันธ์ */
     .drive-link-button {
         display: block !important; text-align: center !important; background-color: #10b981 !important; color: white !important;
         font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
-        margin: 10px 0 !important; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2) !important; font-size: 14px !important;
+        margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
     }
     .drive-link-button:hover {
         background-color: #059669 !important; color: white !important;
@@ -62,7 +62,7 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 🔗 บัญชีรายชื่อลิงก์ URL โฟลเดอร์ Google Drive จริงแยกตามหน้างานและประเภท Defect
+# 🔗 รายชื่อลิงก์ URL คลังภาพจริงแยกตามหน้างานและประเภท Defect
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "slave_title": "SA_260"},
@@ -118,7 +118,7 @@ elif current_page == "select_defect":
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
-# ---------------- หน้าสาม: ระบบจิ้มลิงก์เปิดคลังภาพจริงและเลือกรูปภาพ ----------------
+# ---------------- หน้าสาม: ปรับปรุงให้อัปโหลดภาพรายละเอียดจุดย่อยได้พร้อมกัน 5 รูป ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -133,7 +133,7 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
         
-        # 🔗 ส่วนที่ 1: จัดการภาพหลัก (Main)
+        # 📂 ส่วนที่ 1: จัดการภาพหลัก (เลือกได้ 1 รูปเดี่ยว)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🔗 กดเปิดดูรูปในคลัง {folder_info["main_title"]}</a>', unsafe_allow_html=True)
@@ -143,14 +143,31 @@ elif current_page == "defect_view":
             st.image(uploaded_main, caption="✅ รูปภาพหลักที่คุณเลือก", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 🔗 ส่วนที่ 2: จัดการภาพย่อย (Slave)
+        # 📂 ส่วนที่ 2: จัดการภาพย่อย (แก้ไขให้เลือกแนบรูปภาพได้พร้อมกัน สูงสุด 5 รูป)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🔗 กดเปิดดูรูปในคลัง {folder_info["slave_title"]}</a>', unsafe_allow_html=True)
         
-        uploaded_slave = st.file_uploader("เมื่อเลือกรูปภาพย่อยที่ต้องการได้แล้ว นำไฟล์มาใส่ที่นี่:", type=["png", "jpg", "jpeg"], key=f"up_s_{defect}")
-        if uploaded_slave:
-            st.image(uploaded_slave, caption="✅ รูปภาพย่อยที่คุณเลือก", use_container_width=True)
+        # 🔑 จุดสำคัญ: ใส่ accept_multiple_files=True เพื่อให้ลากวางหรือกดเลือกได้พร้อมกันหลาย ๆ รูป
+        uploaded_slaves = st.file_uploader(
+            "เมื่อเลือกรูปรายละเอียดจุดย่อยได้แล้ว นำไฟล์มาใส่ที่นี่ (แนบพร้อมกันได้สูงสุด 5 รูป):", 
+            type=["png", "jpg", "jpeg"], 
+            accept_multiple_files=True, 
+            key=f"up_s_multiple_{defect}"
+        )
+        
+        # กางแสดงผลรูปภาพย่อยทั้งหมดที่พนักงานเลือกแนบเข้ามา
+        if uploaded_slaves:
+            # จำกัดการประมวลผลสูงสุด 5 รูปเพื่อความปลอดภัยของหน่วยความจำ
+            allowed_slaves = uploaded_slaves[:5]
+            st.markdown(f"<p style='font-size:12px; color:#10b981; font-weight:bold;'>📸 รูปภาพรายละเอียดจุดย่อยที่แนบอยู่ ({len(allowed_slaves)}/5 รูป):</p>", unsafe_allow_html=True)
+            
+            # วนลูปกางรูปขึ้นมาโชว์ทีละรูปให้ครบถ้วน
+            for idx, img_file in enumerate(allowed_slaves):
+                st.image(img_file, caption=f"รูปภาพย่อยที่ {idx+1}: {img_file.name}", use_container_width=True)
+                
+            if len(uploaded_slaves) > 5:
+                st.warning("⚠️ ระบบรองรับภาพย่อยสูงสุด 5 รูปต่อครั้ง รูปส่วนเกินจะไม่ถูกแสดงผล")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # 🔲 ส่วนสรุปรายละเอียดงาน AFTER

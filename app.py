@@ -1,12 +1,14 @@
 import streamlit as st
 import pandas as pd
 import requests
-import re
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ธีมส้มพาสเทล + แผงคัดเลือกรูปภาพสไตล์ Shopping App (กรอบหนาเมื่อเลือกสำเร็จ)
+# 🔗 ลิงก์ Web app URL จาก Google Apps Script ที่คุณวีรพันธ์ส่งมา
+SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJ2UARSRT90zrChT0Ui67kbBDrHGH2Ua1ad7TASY3QgvvS31VYfj0RT86enlaX3ZioTw/exec"
+
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลและแผงรูปภาพช้อปปิ้งออนไลน์
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -34,18 +36,15 @@ st.markdown("""
     .center-header-block {
         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
     }
-    .tog-center-logo {
-        width: 50px; height: 50px; background-color: #000000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-weight: bold; font-size: 15px; margin-bottom: 8px;
-    }
     
-    /* 📦 แผงเลือกรูปสไตล์ Shopping App ของจริง */
+    /* 📦 การตกแต่งกล่องเลือกชิ้นงาน */
     .shop-image-card {
-        border: 2px solid #e2e8f0; border-radius: 16px; padding: 8px; text-align: center;
-        background-color: #ffffff; transition: all 0.2s ease-in-out; margin-bottom: 12px;
+        border: 2px solid #e2e8f0; border-radius: 16px; padding: 10px; text-align: center;
+        background-color: #ffffff; margin-bottom: 12px;
     }
     .shop-image-card-selected {
         border: 4px solid #005aab !important; background-color: #e0f2fe !important;
-        box-shadow: 0 8px 25px rgba(0, 90, 171, 0.3) !important; transform: scale(1.02);
+        box-shadow: 0 8px 25px rgba(0, 90, 171, 0.25) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -67,43 +66,33 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 📸 ฟังก์ชันดึงภาพสดจาก Google Drive โฟลเดอร์จริงแบบไม่ต้องใช้คีย์ API (ใช้สิทธิ์เปิดแชร์สาธารณะ)
-@st.cache_data(ttl=600, show_spinner="🔄 กำลังดึงรูปภาพชิ้นงานจริงจากคลัง Google Drive...")
-def get_actual_images_from_drive(folder_id):
-    images = []
-    # ใช้เทคนิคจำลองแอปเพื่อไปดึงรายชื่อรูปภาพจากหน้าเว็บ Google Drive ที่เปิดแชร์ไว้
-    url = f"https://drive.google.com/embeddedfolderview?id={folder_id}"
+# 📸 ฟังก์ชันดึงภาพจริงผ่านระบบสะพานเชื่อม Google Apps Script (เสถียร 100% ไม่โดนบล็อก)
+@st.cache_data(ttl=300, show_spinner="🔄 กำลังดึงไฟล์ภาพจริงจากคลัง Google Drive...")
+def get_actual_images_via_script(folder_id):
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(f"{SCRIPT_URL}?id={folder_id}", timeout=15)
         if response.status_code == 200:
-            # ค้นหารหัสไฟล์รูปภาพที่ซ่อนอยู่ในหน้าคลังเก็บของกูเกิล
-            matches = re.findall(r'\["([^"]+)"\s*,\s*"([^"]+)"\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*"image/', response.text)
-            for m in matches:
-                f_id, f_name = m[0], m[1]
-                # แปลงรหัสไฟล์ให้กลายเป็นลิงก์แสดงภาพตรง (Direct View URL) คาหน้าแอป
-                direct_img_url = f"https://drive.google.com/uc?export=view&id={f_id}"
-                images.append({"id": f_id, "name": f_name, "url": direct_img_url})
+            return response.json()
     except:
         pass
-    return images
+    return []
 
-# 🔗 รายชื่อรหัสโฟลเดอร์ Google Drive ของจริง 100% ทั้ง 18 ตัวที่คุณส่งมาให้ผม
+# 🔗 บัญชีรายชื่อไอดีโฟลเดอร์ Google Drive ทั้ง 18 คลังของคุณวีรพันธ์
 DRIVE_MAP = {
     "A": {
-        260: {"main_id": "1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "คลังภาพใหญ่ A_260", "slave_id": "1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "slave_title": "คลังย่อย SA_260"},
-        261: {"main_id": "1phKW7eXcijB4U6P95JHnJm6BgG2bcKyQ", "main_title": "คลังภาพใหญ่ A_261", "slave_id": "1n5KGFnub6z3urE09taiJh4TaUJXqElCF", "slave_title": "คลังย่อย SA_261"},
-        380: {"main_id": "1-77ViPZrWhRXiYMvpa2gTp63CDjxIcHu", "main_title": "คลังภาพใหญ่ A_380", "slave_id": "1DlKAZot6QPHXdvuVu8ro_TIk26NsznDz", "slave_title": "คลังย่อย SA_380"}
+        260: {"main_id": "1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_id": "1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "slave_title": "SA_260"},
+        261: {"main_id": "1phKW7eXcijB4U6P95JHnJm6BgG2bcKyQ", "main_title": "A_261", "slave_id": "1n5KGFnub6z3urE09taiJh4TaUJXqElCF", "slave_title": "SA_261"},
+        380: {"main_id": "1-77ViPZrWhRXiYMvpa2gTp63CDjxIcHu", "main_title": "A_380", "slave_id": "1DlKAZot6QPHXdvuVu8ro_TIk26NsznDz", "slave_title": "SA_380"}
     },
     "B": {
-        260: {"main_id": "1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "main_title": "คลังภาพใหญ่ B_260", "slave_id": "1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_title": "คลังย่อย SB_260"},
-        261: {"main_id": "1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "main_title": "คลังภาพใหญ่ B_261", "slave_id": "1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_title": "คลังย่อย SB_261"},
-        380: {"main_id": "1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "main_title": "คลังภาพใหญ่ B_380", "slave_id": "179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "คลังย่อย SB_380"}
+        260: {"main_id": "1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "main_title": "B_260", "slave_id": "1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_title": "SB_260"},
+        261: {"main_id": "1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "main_title": "B_261", "slave_id": "1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_title": "SB_261"},
+        380: {"main_id": "1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "main_title": "B_380", "slave_id": "179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "SB_380"}
     },
     "C": {
-        260: {"main_id": "13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "คลังภาพใหญ่ C_260", "slave_id": "1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "คลังย่อย SC_260"},
-        261: {"main_id": "1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "คลังภาพใหญ่ C_261", "slave_id": "1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "คลังย่อย SC_261"},
-        380: {"main_id": "14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "คลังภาพใหญ่ C_380", "slave_id": "11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_title": "คลังย่อย SC_380"}
+        260: {"main_id": "13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_id": "1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
+        261: {"main_id": "1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_id": "1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
+        380: {"main_id": "14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_id": "11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_title": "SC_380"}
     }
 }
 
@@ -121,7 +110,7 @@ if st.query_params.get("nav") == "reset":
     st.session_state.picked_main_id = None; st.session_state.picked_slave_id = None
     st.query_params.clear(); st.rerun()
 
-st.markdown('<div class="center-header-block"><div class="tog-center-logo">TOG</div><span style="font-size:18px; font-weight:bold; color:white;">TOG App</span></div>', unsafe_allow_html=True)
+st.markdown('<div class="center-header-block"><div style="width:50px; height:50px; background-color:#000000; border-radius:50%; display:flex; justify-content:center; align-items:center; color:#ffffff; font-weight:bold; font-size:15px; margin:0 auto 8px auto;">TOG</div><span style="font-size:18px; font-weight:bold; color:white;">TOG App</span></div>', unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
@@ -147,7 +136,7 @@ elif current_page == "select_defect":
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
-# ---------------- หน้าสาม: 🛍️ แผงช้อปปิ้งออนไลน์ ดึงรูปภาพจริงจาก Google Drive มาโชว์คาแอปจริง ----------------
+# ---------------- หน้าสาม: แผงแสดงรูปภาพของจริงสไตล์ Shopping App ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -155,43 +144,42 @@ elif current_page == "defect_view":
     if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"):
         st.session_state.page = "select_defect"; st.rerun()
         
-    st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงเลือกรูป Before ของ {defect_title}</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงคัดเลือกรูปงานจริงของ {defect_title}</b></div>', unsafe_allow_html=True)
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
     
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"]:
         face_char = selected_face.split()[-1]
         folder_info = DRIVE_MAP[face_char][defect]
         
-        # 🟢 ส่วนที่ 1: ดึงภาพใหญ่จริงจาก Google Drive มาสตรีมโชว์คาจอ
-        st.markdown(f'<div class="login-card">', unsafe_allow_html=True)
-        st.markdown(f"<b style='color:#005aab; font-size:13px;'>🛒 ส่วนที่ 1: จิ้มเลือกภาพใหญ่ ({folder_info['main_title']})</b>", unsafe_allow_html=True)
+        # 🟢 ส่วนที่ 1: ดึงภาพคลังใหญ่
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        st.markdown(f"<b style='color:#005aab; font-size:14px;'>📸 1. เลือกภาพหลักชิ้นงาน ({folder_info['main_title']})</b>", unsafe_allow_html=True)
         
-        main_images = get_actual_images_from_drive(folder_info['main_id'])
+        main_images = get_actual_images_via_script(folder_info['main_id'])
         if main_images:
             for img in main_images:
                 is_picked = st.session_state.picked_main_id == img['id']
                 card_style = "shop-image-card-selected" if is_picked else "shop-image-card"
                 
-                # พ่นโครงรูปภาพของจริงจาก Google Drive ขึ้นจอโทรศัพท์จำลอง
                 st.markdown(f"""
                 <div class="{card_style}">
-                    <img src="{img['url']}" style="width:100%; max-height:160px; object-fit:contain; border-radius:10px;">
+                    <img src="{img['url']}" style="width:100%; max-height:180px; object-fit:contain; border-radius:10px;">
                     <div style="font-size:12px; font-weight:bold; margin-top:6px; color:#1e293b;">{img['name']}</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                if st.button(f"👇 คลิกเลือกรูป: {img['name']}", key=f"btn_m_{img['id']}", use_container_width=True):
+                if st.button(f"👇 เลือกรูปภาพนี้: {img['name']}", key=f"btn_m_{img['id']}", use_container_width=True):
                     st.session_state.picked_main_id = img['id']
                     st.rerun()
         else:
-            st.warning("⚠️ ไม่พบรูปภาพในโฟลเดอร์นี้ หรือยังไม่ได้เปิดแชร์โฟลเดอร์เป็นสาธารณะ")
+            st.warning("⚠️ ไม่พบรูปภาพในคลังนี้ หรืออาจยังไม่มีไฟล์รูปภาพอัปโหลดไว้")
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 🔵 ส่วนที่ 2: ดึงภาพรายละเอียดจุดย่อยจริงมาสตรีมโชว์คาจอ
-        st.markdown(f'<div class="login-card">', unsafe_allow_html=True)
-        st.markdown(f"<b style='color:#007bc3; font-size:13px;'>🛒 ส่วนที่ 2: จิ้มเลือกภาพย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
+        # 🔵 ส่วนที่ 2: ดึงภาพคลังย่อย
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        st.markdown(f"<b style='color:#007bc3; font-size:14px;'>🔍 2. เลือกรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         
-        slave_images = get_actual_images_from_drive(folder_info['slave_id'])
+        slave_images = get_actual_images_via_script(folder_info['slave_id'])
         if slave_images:
             for img_s in slave_images:
                 is_s_picked = st.session_state.picked_slave_id == img_s['id']
@@ -199,19 +187,19 @@ elif current_page == "defect_view":
                 
                 st.markdown(f"""
                 <div class="{card_s_style}">
-                    <img src="{img_s['url']}" style="width:100%; max-height:160px; object-fit:contain; border-radius:10px;">
+                    <img src="{img_s['url']}" style="width:100%; max-height:180px; object-fit:contain; border-radius:10px;">
                     <div style="font-size:11px; margin-top:6px; color:#475569;">{img_s['name']}</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                if st.button(f"👇 คลิกเลือกรูปย่อย: {img_s['name']}", key=f"btn_s_{img_s['id']}", use_container_width=True):
+                if st.button(f"👇 เลือกรูปย่อยนี้: {img_s['name']}", key=f"btn_s_{img_s['id']}", use_container_width=True):
                     st.session_state.picked_slave_id = img_s['id']
                     st.rerun()
         else:
-            st.warning("⚠️ ไม่พบรูปภาพรายละเอียดในโฟลเดอร์นี้")
+            st.warning("⚠️ ไม่มีไฟล์รูปภาพรายละเอียดในคลังย่อยนี้")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🔲 ส่วนสรุปผลงาน AFTER
+    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
     st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")

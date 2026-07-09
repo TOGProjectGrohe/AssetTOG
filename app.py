@@ -231,24 +231,27 @@ if current_page == "login":
         
         if result["status"] == "success" and result.get("found"):
             now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # ล็อกค่าเก็บเข้าสู่ Session State ให้ครบถ้วนและแปลงเป็นข้อความทันทีเพื่อป้องกันค่าหาย
             st.session_state.user_info = {
-                "id": result["id"], 
-                "name": result["name"], 
-                "position": result["position"],
+                "id": str(result["id"]), 
+                "name": str(result["name"]), 
+                "position": str(result["position"]) if result["position"] else "GL", # ดักจับหากไม่มีให้เป็น GL
                 "timestamp": now_time
             }
             
             st.markdown(f"""
                 <div class="employee-dark-box">
                     <b>⏱️ Timestamp:</b> {now_time}<br>
-                    <b>🆔 Employee ID:</b> {result['id']}<br>
-                    <b>👤 Name:</b> {result['name']}<br>
-                    <b>💼 Position:</b> {result['position']}
+                    <b>🆔 Employee ID:</b> {st.session_state.user_info['id']}<br>
+                    <b>👤 Name:</b> {st.session_state.user_info['name']}<br>
+                    <b>💼 Position:</b> {st.session_state.user_info['position']}
                 </div>
             """, unsafe_allow_html=True)
             
             if st.button("🔓 กดเพื่อเข้าระบบ"):
-                st.session_state.page = "select_defect"; st.rerun()
+                st.session_state.page = "select_defect"
+                st.rerun()
         else:
             st.markdown('<div class="error-pastel-box">❌ ไม่พบข้อมูล โปรดคีย์ ID อีกครั้ง</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)

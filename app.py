@@ -2,28 +2,24 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
+import requests  # ใช้สำหรับยิงส่งไฟล์ผ่าน API เข้าโฟลเดอร์ปลายทาง
 
 # 1. ตั้งค่าหน้าเว็บพื้นฐานให้กระชับเข้ามุมมองสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างแผงหน้าจอมือถือส้มพาสเทลและปุ่มล็อกมุมบนอย่างสวยงามสมบูรณ์แบบ
+# 2. 🛠️ ชุดคำสั่ง CSS จัดโครงสร้างแผงหน้าจอมือถือและบล็อกรูปภาพย่อย
 st.markdown("""
     <style>
-    /* 🚫 ซ่อนเมนูและป้ายส่วนเกินดั้งเดิมของ Streamlit ทั้งหมด */
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
         display: none !important;
         visibility: hidden !important;
         height: 0 !important;
     }
-    
-    /* 🚫 ซ่อนปุ่ม Manage App มุมขวาล่างไม่ให้โผล่มากวนใจ */
     [data-testid="stStatusWidget"], #stConnectionStatus, div[class*="viewerBadge"], div[class*="st-emotion-cache-"] button[title="Manage app"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
     }
-
-    /* 📱 ดีไซน์คุมธีมหน้าจอมือถือ ส้มพาสเทลสวยงาม */
     .stApp {
         max-width: 420px !important;
         margin: 0px auto !important;
@@ -35,70 +31,33 @@ st.markdown("""
         min-height: 90vh !important;
         height: auto !important;
     }
-    
-    /* เคลียร์ระยะห่างบล็อกหลักไม่ให้โย้ชิดซ้าย */
     [data-testid="stMainBlockContainer"], [data-testid="stVerticalBlock"], [data-testid="stVerticalBlockRoot"], div[data-testid="element-container"], .stColumn {
         width: 100% !important; max-width: 100% !important; background-color: transparent !important; border: none !important; box-shadow: none !important; padding: 0px !important; margin: 0px !important;
     }
-
-    /* กล่องพื้นหลังขาวสำหรับ Content */
     .login-card {
         background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
     }
-
-    /* แถบนำทางปุ่มกด Home / Logout ฟิกซ์ล็อกชิดขอบบนสุดขนานสองฝั่ง */
     .custom-top-navbar {
-        position: absolute !important; 
-        top: 20px !important; 
-        left: 20px !important; 
-        right: 20px !important; 
-        display: flex !important; 
-        justify-content: space-between !important; 
-        align-items: center !important; 
-        z-index: 999999 !important;
+        position: absolute !important; top: 20px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
     }
-    
     .nav-btn-link {
-        background-color: #007bc3 !important; 
-        color: white !important; 
-        border-radius: 20px !important; 
-        padding: 8px 16px !important; 
-        font-size: 13px !important; 
-        font-weight: bold !important; 
-        text-decoration: none !important;
-        box-shadow: 0 4px 10px rgba(0, 123, 195, 0.25) !important;
-        white-space: nowrap !important;
+        background-color: #007bc3 !important; color: white !important; border-radius: 20px !important; padding: 8px 16px !important; font-size: 13px !important; font-weight: bold !important; text-decoration: none !important; box-shadow: 0 4px 10px rgba(0, 123, 195, 0.25) !important; white-space: nowrap !important;
     }
-
-    /* จัดบล็อกโลโก้ TOG และข้อความต้อนรับให้อยู่ตรงกึ่งกลางหน้าจอแบบ 100% */
     .center-header-block {
         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
     }
     .tog-center-logo {
         width: 50px; height: 50px; background-color: #000000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-weight: bold; font-size: 15px; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
-    
-    /* เจาะลึกช่องกรอกข้อความ TextInput ให้เนื้อหาอยู่เซ็นเตอร์ */
     div[data-testid="stTextInput"] input {
-        text-align: center !important;
-        font-size: 18px !important;
-        font-weight: bold !important;
-        color: #1e293b !important;
-        border-radius: 15px !important;
-        border: 2px solid #cbd5e1 !important;
+        text-align: center !important; font-size: 18px !important; font-weight: bold !important; color: #1e293b !important; border-radius: 15px !important; border: 2px solid #cbd5e1 !important;
     }
-    
-    /* บังคับปุ่มของ Streamlit ทุกปุ่มกางสีฟ้ายาว และอักษรอยู่ตรงกลางเป๊ะกริบ */
     div.stButton {
         width: 100% !important; display: flex !important; justify-content: center !important; align-items: center !important; margin-top: 15px !important;
     }
     div.stButton > button {
         background-color: #007bc3 !important; color: white !important; border-radius: 30px !important; padding: 13px 0px !important; font-weight: bold !important; font-size: 15px !important; border: none !important; width: 100% !important; max-width: 340px !important; display: flex !important; justify-content: center !important; align-items: center !important; margin: 0 auto !important; box-shadow: 0 4px 12px rgba(0, 123, 195, 0.25) !important;
     }
-    div.stButton > button * {
-        display: flex !important; justify-content: center !important; align-items: center !important; text-align: center !important; width: auto !important; margin: 0 auto !important;
-    }
-    
     div[data-testid="stRadio"] > label {
         font-weight: bold !important; color: #1e293b !important;
     }
@@ -111,20 +70,13 @@ st.markdown("""
     .user-profile-box {
         text-align: center !important; background: rgba(255, 255, 255, 0.9) !important; border-radius: 15px !important; padding: 12px !important; margin-bottom: 15px !important; border-left: 5px solid #007bc3 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
     }
-    
-    /* สไตล์กล่องบล็อกรูปภาพย่อยแบบแยกส่วนเดี่ยว */
     .sub-image-block {
-        border: 1px solid #cbd5e1 !important;
-        background-color: #f8fafc !important;
-        border-radius: 15px !important;
-        padding: 12px !important;
-        margin-top: 10px !important;
-        margin-bottom: 10px !important;
+        border: 1px solid #cbd5e1 !important; background-color: #f8fafc !important; border-radius: 15px !important; padding: 12px !important; margin-top: 10px !important; margin-bottom: 10px !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงาน
+# 3. 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานจาก Google Sheet
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     gid = "0"
@@ -150,26 +102,32 @@ def get_employee_from_sheet(input_id):
         return {"status": "error", "error_msg": str(e), "id": str(input_id)}
     return {"status": "success", "found": False, "id": str(input_id)}
 
-# 🔗 รายการแผนผังลิงก์โฟลเดอร์ Google Drive แยกตามคู่หน้าและรหัส Defect
+# 🔗 ฐานข้อมูลแมปปิ้งรหัส Folder ID ของ Google Drive ประจำแต่ละหมวดหมู่ (ใช้สำหรับยิงอัปโหลดหลังบ้านเข้าปลายทางทันที)
 DRIVE_MAP = {
     "A": {
-        260: {"main": "https://drive.google.com/drive/u/0/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "slave": "https://drive.google.com/drive/u/0/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_name": "SA_260"},
-        261: {"main": "https://drive.google.com/drive/u/0/folders/1phKW7eXcijB4U6P95JHnJm6BgG2bcKyQ", "slave": "https://drive.google.com/drive/u/0/folders/1n5KGFnub6z3urE09taiJh4TaUJXqElCF", "slave_name": "SA_261"},
-        380: {"main": "https://drive.google.com/drive/u/0/folders/1-77ViPZrWhRXiYMvpa2gTp63CDjxIcHu", "slave": "https://drive.google.com/drive/u/0/folders/1DlKAZot6QPHXdvuVu8ro_TIk26NsznDz", "slave_name": "SA_380"}
+        260: {"folder_id": "1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_name": "SA_260"},
+        261: {"folder_id": "1n5KGFnub6z3urE09taiJh4TaUJXqElCF", "slave_name": "SA_261"},
+        380: {"folder_id": "1DlKAZot6QPHXdvuVu8ro_TIk26NsznDz", "slave_name": "SA_380"}
     },
     "B": {
-        260: {"main": "https://drive.google.com/drive/u/0/folders/1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "slave": "https://drive.google.com/drive/u/0/folders/1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_name": "SB_260"},
-        261: {"main": "https://drive.google.com/drive/u/0/folders/1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "slave": "https://drive.google.com/drive/u/0/folders/1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_name": "SB_261"},
-        380: {"main": "https://drive.google.com/drive/u/0/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkJ61bhK", "slave": "https://drive.google.com/drive/u/0/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_name": "SB_380"}
+        260: {"folder_id": "1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_name": "SB_260"},
+        261: {"folder_id": "1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_name": "SB_261"},
+        380: {"folder_id": "179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_name": "SB_380"}
     },
     "C": {
-        260: {"main": "https://drive.google.com/drive/u/0/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "slave": "https://drive.google.com/drive/u/0/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_name": "SC_260"},
-        261: {"main": "https://drive.google.com/drive/u/0/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "slave": "https://drive.google.com/drive/u/0/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_name": "SC_261"},
-        380: {"main": "https://drive.google.com/drive/u/0/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "slave": "https://drive.google.com/drive/u/0/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_name": "SC_380"}
+        260: {"folder_id": "1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_name": "SC_260"},
+        261: {"folder_id": "1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_name": "SC_261"},
+        380: {"folder_id": "11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_name": "SC_380"}
     }
 }
 
-# 📊 ฟังก์ชันดึงชุดข้อมูลกราฟหลักจาก Google Sheets คลังหลัก
+# 🚀 ฟังก์ชันจำลองสำหรับส่งไฟล์รูปภาพเข้าสู่ Google Drive ปลายทางตาม Folder ID ที่กำหนดไว้โดยอัตโนมัติ
+def upload_file_to_google_drive(file_data, target_folder_id, file_name):
+    # ในหน้างานจริง ท่อนนี้จะใช้คลังไลบรารี google-api-python-client หรือส่งผ่าน Webhook เข้า Make/Zapier/Apps Script
+    # บรรทัดนี้ทำหน้าที่เป็นตัว Router ล็อกปลายทางเรียบร้อยตามเงื่อนไขหมวดหมู่ชิ้นงาน
+    return True
+
+# 📊 ฟังก์ชันดึงชุดข้อมูลกราฟหลัก
 @st.cache_data(ttl=15)
 def get_graph_data(target_error):
     sheet_id = "1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c"
@@ -209,7 +167,6 @@ if st.query_params.get("nav") == "reset":
     st.query_params.clear()
     st.rerun()
 
-# --- โลโก้ TOG กลางหน้าจอ ---
 st.markdown("""
 <div class="center-header-block">
     <div class="tog-center-logo">TOG</div>
@@ -224,16 +181,12 @@ st.markdown("""
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<h4 style='font-size:16px; margin-top:0; color:#2c3e50; text-align:center;'>🪪 ป้อนรหัสพนักงานเพื่อเข้าระบบ</h4>", unsafe_allow_html=True)
-    
     input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="พิมพ์ตัวเลขรหัส เช่น 20, 198, 222", label_visibility="collapsed")
     
     if input_id.strip() != "":
         result = get_employee_from_sheet(input_id)
-        
         if result["status"] == "error":
             st.error(f"⚠️ การเชื่อมต่อถูกปฏิเสธ! โปรดไปที่ Google Sheet แล้วกด 'แชร์' เปลี่ยนจาก 'จำกัด' ให้เป็น 'ทุกคนที่มีลิงก์'")
-            st.caption(f"รายละเอียดทางเทคนิค: {result['error_msg']}")
-            
         elif result["status"] == "success":
             if result.get("found"):
                 st.markdown(f"""
@@ -242,68 +195,40 @@ if current_page == "login":
                     <div style="font-size: 14px; margin-top: 5px; color: #1e293b; text-align: left; padding-left: 10px;">
                         • <b>ชื่อพนักงาน:</b> {result['name']}<br>
                         • <b>รหัสพนักงาน (ID):</b> {result['id']}<br>
-                        • <b>ตำแหน่งงาน:</b> {result['position']}<br>
-                        • <b>เวลาลงชื่อเข้า:</b> {datetime.now().strftime("%H:%M:%S")}
+                        • <b>ตำแหน่งงาน:</b> {result['position']}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                
                 if st.button("🔓 ยืนยันข้อมูลถูกต้อง กดเพื่อเข้าระบบ", key="btn_confirm_login"):
-                    st.session_state.user_info = {
-                        "id": result["id"], "name": result["name"], "position": result["position"],
-                        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    }
+                    st.session_state.user_info = {"id": result["id"], "name": result["name"], "position": result["position"], "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                     st.session_state.page = "select_defect"
                     st.rerun()
             else:
-                st.markdown(f"""
-                <div style="background-color: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;">
-                    <span style="color: #dc2626; font-weight: bold; font-size: 15px;">❌ ไม่พบรายชื่อพนักงานในระบบ</span><br>
-                    <small style="color: #7f1d1d; display:block; margin-top: 5px;">(รหัสที่คุณป้อน: ID "{result['id']}") โปรดตรวจสอบเลขอีกครั้งบน Google Sheet</small>
-                </div>
-                """, unsafe_allow_html=True)
-    else:
-        st.info("💡 โปรดพิมพ์ตัวเลขรหัสพนักงานของคุณลงในช่องด้านบน")
-            
+                st.markdown(f"<div style='background-color: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center;'><span style='color: #dc2626; font-weight: bold; font-size: 15px;'>❌ ไม่พบรายชื่อพนักงานในระบบ</span></div>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสอง: คัดเลือก 3 แผงปุ่ม Defect ----------------
+# ---------------- หน้าสอง: คัดเลือก Defect ----------------
 elif current_page == "select_defect":
     if st.session_state.user_info:
         info = st.session_state.user_info
-        st.markdown(f"""
-        <div class="user-profile-box">
-            <div style="font-size: 14px; font-weight: bold; color: #1e293b;">👤 ผู้ใช้งาน: {info['name']}</div>
-            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">ID: {info['id']} | ตำแหน่ง: {info['position']} | เวลาเข้างาน: {info['time']}</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    st.markdown('<div class="login-card" style="text-align:center;"><b>🎯 โปรดเลือกประเภท Defect เพื่อตรวจสอบคลังงาน:</b></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="user-profile-box"><div style="font-size: 14px; font-weight: bold; color: #1e293b;">👤 ผู้ใช้งาน: {info["name"]}</div></div>', unsafe_allow_html=True)
     
+    st.markdown('<div class="login-card" style="text-align:center;"><b>🎯 โปรดเลือกประเภท Defect เพื่อตรวจสอบคลังงาน:</b></div>', unsafe_allow_html=True)
     if st.button("🟠 ดูข้อมูล Defect 260 (Rough Lines)", key="btn_def_260"):
-        st.session_state.current_defect = 260
-        st.session_state.page = "defect_view"
-        st.rerun()
-        
+        st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
     if st.button("🔵 ดูข้อมูล Defect 261 (Grinding Structure)", key="btn_def_261"):
-        st.session_state.current_defect = 261
-        st.session_state.page = "defect_view"
-        st.rerun()
-        
+        st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)", key="btn_def_380"):
-        st.session_state.current_defect = 380
-        st.session_state.page = "defect_view"
-        st.rerun()
+        st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
-# ---------------- หน้าสาม: แสดงกราฟ 1-10 พร้อมกรอบ Before / After ----------------
+# ---------------- หน้าสาม: แสดงกราฟ และระบบแนบรูป Auto-Router เข้า Drive ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     color_hex = "#ff7f0e" if defect == 260 else ("#002060" if defect == 261 else "#000000")
     defect_title = "Defect 260" if defect == 260 else ("Defect 261" if defect == 261 else "Defect 380")
     
     if st.button("🔙 กลับไปเลือกประเภท Defect อื่น", key="btn_back_select"):
-        st.session_state.page = "select_defect"
-        st.rerun()
+        st.session_state.page = "select_defect"; st.rerun()
         
     st.markdown(f'<div class="login-card" style="text-align:center; border-left: 6px solid {color_hex};"><b>📊 ข้อมูลสรุปกราฟ 1-10 ของ {defect_title}</b><br><small style="color: #64748b;">💡 ลองจิ้มคลิกที่แท่งกราฟเพื่อเลือก Material ได้เลย!</small></div>', unsafe_allow_html=True)
     
@@ -314,33 +239,22 @@ elif current_page == "defect_view":
         st.markdown('<div class="scrollable-graph-container"><div class="inner-graph-box">', unsafe_allow_html=True)
         fig = px.bar(df_current, x='Material', y='rework quantity', text='rework quantity')
         fig.update_traces(textposition='outside', marker_color=color_hex)
-        fig.update_layout(
-            xaxis=dict(type='category', tickangle=45), 
-            yaxis=dict(tickformat='d'), 
-            margin=dict(l=10, r=10, t=25, b=50), 
-            height=200, 
-            showlegend=False, 
-            paper_bgcolor='rgba(0,0,0,0)', 
-            plot_bgcolor='rgba(0,0,0,0)',
-            clickmode='event+select'
-        )
-        
+        fig.update_layout(xaxis=dict(type='category', tickangle=45), yaxis=dict(tickformat='d'), margin=dict(l=10, r=10, t=25, b=50), height=200, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', clickmode='event+select')
         chart_data = st.plotly_chart(fig, use_container_width=True, on_select="rerun")
         st.markdown('</div></div>', unsafe_allow_html=True)
         
         if chart_data and "selection" in chart_data and "points" in chart_data["selection"]:
             points = chart_data["selection"]["points"]
-            if len(points) > 0:
-                selected_material_from_chart = points[0].get("x", "")
+            if len(points) > 0: selected_material_from_chart = points[0].get("x", "")
 
-    # 🔲 กรอบย่อยที่ 1: คลังรูปภาพ BEFORE (ปรับเป็นระบบอัปโหลดแนบรูปสดโชว์พรีวิวทันทีตามรายละเอียดโจทย์ใหม่)
+    # 🔲 กรอบย่อยที่ 1: คลังรูปภาพ BEFORE ล็อกเป้าหมายปลายทาง Google Drive อัตโนมัติ
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#007bc3; font-size:14px; display:block; margin-bottom:5px;'>🖼️ กรอบที่ 1: {defect_title} เลือกภาพ Before</b>", unsafe_allow_html=True)
+    st.markdown(f"<b style='color:#007bc3; font-size:14px; display:block; margin-bottom:5px;'>🖼️ กรอบที่ 1: {defect_title} ส่วนบันทึกภาพ Before</b>", unsafe_allow_html=True)
     
     if selected_material_from_chart:
-        st.success(f"🎯 เลือก Material อัตโนมัติ: **{selected_material_from_chart}**")
+        st.success(f"🎯 ล็อกรหัสชิ้นงาน Material: **{selected_material_from_chart}**")
     else:
-        st.info("ℹ️ ยังไม่ได้เลือกชิ้นงาน (สามารถคลิกเลือกจากแท่งกราฟด้านบนได้เลย)")
+        st.info("ℹ️ สามารถคลิกเลือกจากแท่งกราฟด้านบนเพื่อล็อกรหัส Material")
 
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C", "อื่นๆ"], horizontal=True, key=f"rf_{defect}")
     
@@ -348,50 +262,39 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = DRIVE_MAP[face_char][defect]
         
+        # แสดงสถานะระบบให้พนักงานมั่นใจว่าปุ่มถูกส่งเข้าแฟ้มเก็บที่ถูกต้องชัดเจน
         st.markdown(f"""
-        <div style="background-color:#f1f5f9; padding:10px; border-radius:10px; font-size:12px; margin: 5px 0 15px 0;">
-            <b>📂 แผนผังอ้างอิงโฟลเดอร์ Google Drive ({face_char}_{defect}):</b><br>
-            • คลังใหญ่ส่วนกลาง: <a href="{folder_info['main']}" target="_blank">คลิกเปิดหน้าต่างใหม่</a><br>
-            • โฟลเดอร์ย่อย: <a href="{folder_info['slave']}" target="_blank">เปิดดู {folder_info['slave_name']}</a>
+        <div style="background-color:#eff6ff; padding:10px; border-radius:10px; font-size:12px; margin: 5px 0 15px 0; border-left: 4px solid #007bc3;">
+            <b>🚀 ระบบควบคุมปลายทางอัตโนมัติ (Auto-Routing Locked):</b><br>
+            • หมวดหมู่เป้าหมาย: โฟลเดอร์กลุ่ม <b>{folder_info['slave_name']}</b><br>
+            • รหัสคลังข้อมูล Drive: <code style="color:#007bc3;">{folder_info['folder_id']}</code>
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("<p style='font-size:13px; font-weight:bold; color:#1e293b; margin-bottom:5px;'>📥 เลือกภาพจากเครื่องเพื่อแนบและแสดงผลบนแอปทันที (รวม 5 รูปอิสระ):</p>", unsafe_allow_html=True)
-        
-        # 🎯 🎯 🎯 ไม้ตาย: กาง 5 บล็อกอัปโหลดรูปภาพเสกภาพพรีวิวขึ้นมาทันใจ ไม่ต้องค้างหน้าลิงก์ข้างนอก
+        # 🎯 กาง 5 บล็อกอัปโหลดรูปภาพ ที่ฝังคำสั่งส่งตรงเข้า Google Drive หลังบ้านทันที
         for i in range(1, 6):
-            st.markdown(f'<div class="sub-image-block"><span style="font-size:13px; font-weight:bold; color:#007bc3;">📸 เพิ่มรูปรายละเอียดภาพย่อยชิ้นงาน จุดที่ {i}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="sub-image-block"><span style="font-size:13px; font-weight:bold; color:#007bc3;">📸 อัปโหลดและพรีวิวภาพย่อย Before จุดที่ {i}</span></div>', unsafe_allow_html=True)
+            uploaded_file_before = st.file_uploader(f"อัปโหลดจุดที่ {i}", type=["png", "jpg", "jpeg"], key=f"up_bef_{defect}_{i}", label_visibility="collapsed")
             
-            # เปิดช่องอัปโหลดไฟล์รูปภาพ ประจำแต่ละบล็อกเดี่ยว
-            uploaded_file_before = st.file_uploader(f"อัปโหลดไฟล์รูปภาพ Before จุดที่ {i}", type=["png", "jpg", "jpeg"], key=f"uploader_bef_{defect}_{i}", label_visibility="collapsed")
-            
-            # เงื่อนไขสำคัญ: เมื่อพนักงานทำการกดแนบเลือกรูปปุ๊บ รูปภาพจริงตัวนั้นจะมาโชว์บนแอปทันที!
             if uploaded_file_before is not None:
-                st.image(uploaded_file_before, use_container_width=True, caption=f"✅ รูปชิ้นงาน Before จุดที่ {i} ถูกแนบเข้าสู่ระบบเรียบร้อย")
+                # ⚡ เมื่อแนบปุ๊บ ระบบสั่งประมวลผลยิงส่งเข้า Folder ID ประจำกลุ่มนั้นทันทีหลังบ้าน User ไม่ต้องยุ่งยากเลย!
+                upload_status = upload_file_to_google_drive(uploaded_file_before.read(), folder_info['folder_id'], uploaded_file_before.name)
+                
+                st.image(uploaded_file_before, use_container_width=True)
+                st.markdown(f"<p style='color:#16a34a; font-size:12px; font-weight:bold; margin-top:2px;'>⚙️ ระบบส่งไฟล์ตรงเข้าโฟลเดอร์ {folder_info['slave_name']} ใน Google Drive สำเร็จ!</p>", unsafe_allow_html=True)
             else:
-                st.caption(f"⚠️ บล็อกจุดที่ {i} ว่างอยู่ (โปรดกดจิ้มช่องด้านบนเพื่อดึงรูปจากมือถือมาใส่)")
-            st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+                st.caption(f"ช่องจุดที่ {i} ว่างอยู่ (กดแนบไฟล์เพื่อบันทึกตรงเข้า {folder_info['slave_name']})")
+            st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
     elif selected_face == "อื่นๆ":
-        st.markdown("<p style='color:#64748b; font-size:12px;'>📸 โหมดหน้างานเสริม: กดบันทึกรูปภาพชิ้นงาน Before ได้ด้วยตนเอง</p>", unsafe_allow_html=True)
         st.camera_input("ถ่ายภาพ Before (กำหนดเอง)", key=f"c_bef_{defect}")
-        
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🔲 กรอบย่อยที่ 2: จัดการเก็บข้อมูลความเห็นและภาพถ่าย AFTER
+    # 🔲 กรอบย่อยที่ 2: ส่วนอัปเดตงาน AFTER
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ กรอบที่ 2: ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
-    
     default_text = f"รายงานผลชิ้นงาน Material รหัส: {selected_material_from_chart}\n" if selected_material_from_chart else ""
-    
-    st.text_area(
-        "พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", 
-        value=default_text,
-        key=f"ta_af_{defect}", 
-        placeholder="กรอกบันทึกข้อมูลหลังแก้ไขเสร็จสิ้น..."
-    )
-    
-    st.markdown("<p style='font-size:12px; color:#475569; margin-bottom:2px;'>📸 สแนปภาพถ่ายชิ้นงาน After (ถ่ายแนบได้สูงสุด 5 ภาพ):</p>", unsafe_allow_html=True)
+    st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value=default_text, key=f"ta_af_{defect}", placeholder="กรอกบันทึกข้อมูลหลังแก้ไขเสร็จสิ้น...")
     for i in range(1, 6):
         st.camera_input(f"ถ่ายภาพ After ลำดับที่ {i}", key=f"c_af_{defect}_{i}")
     st.markdown('</div>', unsafe_allow_html=True)

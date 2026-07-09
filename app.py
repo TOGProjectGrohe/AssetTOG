@@ -6,7 +6,7 @@ import base64
 import plotly.graph_objects as go
 from datetime import datetime
 
-# ⚠️ อัปเดตฝังลิงก์ Web App URL ตัวล่าสุดของคุณวีรพันธ์เรียบร้อยครับ
+# ⚠️ อัปเดตและเช็กความถูกต้องของลิงก์ Web App ล่าสุดของคุณวีรพันธ์เรียบร้อยครับ!
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
@@ -212,7 +212,6 @@ elif current_page == "defect_view":
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
     after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}_{st.session_state.clear_trigger}")
     
-    # ดึงพรีวิวรูป After กลับมาโชว์ 100% สวยงามตรงนี้ครับ
     uploaded_after_files = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ (สูงสุด 5 ภาพ):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_af_file_{defect}_{st.session_state.clear_trigger}")
     if uploaded_after_files:
         for idx, img_file in enumerate(uploaded_after_files[:5]): st.image(img_file, caption=f"✅ รูปภาพ After ใบที่ {idx+1}", use_container_width=True)
@@ -229,27 +228,39 @@ elif current_page == "defect_view":
             emp_name = st.session_state.user_info.get('name', '-') if st.session_state.user_info else '-'
             emp_position = st.session_state.user_info.get('position', '-') if st.session_state.user_info else '-'
             
-            # แปลงภาพเป็น Base64 ส่งไปเก็บยัง Google Script ปลายทางตามโครงสร้างตารางใหม่
-            image_payloads = []
+            img1, img2, img3, img4, img5 = "", "", "", "", ""
+            base64_list = []
+            
             if uploaded_after_files:
                 for img_file in uploaded_after_files[:5]:
                     base64_str = base64.b64encode(img_file.getvalue()).decode('utf-8')
-                    image_payloads.append({"filename": f"After_File_{img_file.name}", "mimeType": img_file.type, "data": base64_str})
-            
-            if camera_after_file:
+                    base64_list.append(base64_str)
+                    
+            if camera_after_file and len(base64_list) < 5:
                 camera_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
-                image_payloads.append({"filename": f"After_Camera_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg", "mimeType": "image/jpeg", "data": camera_base64})
+                base64_list.append(camera_base64)
+                
+            if len(base64_list) > 0: img1 = base64_list[0]
+            if len(base64_list) > 1: img2 = base64_list[1]
+            if len(base64_list) > 2: img3 = base64_list[2]
+            if len(base64_list) > 3: img4 = base64_list[3]
+            if len(base64_list) > 4: img5 = base64_list[4]
 
             payload = {
                 "timestamp": save_timestamp, 
                 "employee_id": emp_id, 
                 "employee_name": emp_name, 
-                "position": emp_position, # ดึง Position จริง และสลับ Column ในการบันทึกตามบรีฟ
-                "defect_type": f"Defect {defect}", 
+                "position": emp_position, 
                 "material": str(selected_material), 
+                "position_f": emp_position, 
+                "defect_type": f"Defect {defect}", 
                 "location_face": str(selected_face), 
                 "after_details": str(after_text),
-                "images": image_payloads
+                "pic1": img1,
+                "pic2": img2,
+                "pic3": img3,
+                "pic4": img4,
+                "pic5": img5
             }
             try:
                 response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})

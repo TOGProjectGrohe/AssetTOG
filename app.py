@@ -63,7 +63,7 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 📊 ฟังก์ชันดึงข้อมูลดิบของ Defect/Material จริงจากลิงก์ Google Sheet ของคุณวีรพันธ์
+# 📊 ฟังก์ชันดึงข้อมูลดิบจากลิงก์ Google Sheet
 @st.cache_data(ttl=60)
 def load_real_defect_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c/export?format=csv&gid=0"
@@ -75,7 +75,7 @@ def load_real_defect_data():
         st.error(f"ไม่สามารถเชื่อมต่อข้อมูลจากชีตหลักได้: {e}")
         return pd.DataFrame()
 
-# 🔗 รายชื่อลิงก์ URL คลังภาพจริงทั้ง 18 แฟ้ม
+# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -89,7 +89,7 @@ FOLDER_LINK_MAP = {
     },
     "C": {
         260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
-        261: {"main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
+        261: {"https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
         380: {"main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_title": "SC_380"}
     }
 }
@@ -141,86 +141,78 @@ elif current_page == "defect_view":
         
     st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงวิเคราะห์รูปงานจริงของ {defect_title}</b></div>', unsafe_allow_html=True)
     
-    # 📥 โหลดและประมวลผลข้อมูล Material จริงจาก Google Sheet ของคุณวีรพันธ์
+    # 📥 โหลดข้อมูล Material จริง
     raw_df = load_real_defect_data()
     if not raw_df.empty and 'errortype' in raw_df.columns and 'Material' in raw_df.columns:
-        # 1. แปลงคอลัมน์ให้อยู่ในรูปแบบที่ถูกต้อง ป้องกันปัญหาแกนเพี้ยน
         raw_df['errortype'] = pd.to_numeric(raw_df['errortype'], errors='coerce')
-        
-        # ⚠️ CRITICAL: บังคับแปลง Material ให้เป็นประเภทข้อความ (String) เพื่อป้องกันไม่ให้ Plotly ยุบแกน X เป็นเลขฐานล้าน
         raw_df['Material'] = raw_df['Material'].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
-        
-        # กรองข้อมูลเอาเฉพาะ defect ตัวปัจจุบัน
         filtered_df = raw_df[raw_df['errortype'] == defect]
-        
-        # ค้นหาคอลัมน์จำนวน Rework
         qty_col = 'rework quantity' if 'rework quantity' in raw_df.columns else raw_df.columns[-1]
         filtered_df[qty_col] = pd.to_numeric(filtered_df[qty_col], errors='coerce').fillna(0)
-        
-        # จัดกลุ่มคำนวณผลรวมของจำนวนงานเสียแยกตาม Material
         summary_df = filtered_df.groupby('Material', as_index=False)[qty_col].sum()
-        
-        # เรียงลำดับจากเสียมากที่สุดไปหาน้อยที่สุด และเลือกมาเฉพาะ 10 อันดับแรก
         chart_data = summary_df.sort_values(by=qty_col, ascending=False).head(10)
     else:
-        # Fallback เผื่อกรณีดึงชีตล้มเหลว
         chart_data = pd.DataFrame({
             "Material": ["407787135", "407787136", "407787137", "407787138", "407787139", "407787140", "407787141", "407787142", "407787143", "407787144"],
             "rework quantity": [45, 38, 32, 28, 25, 21, 18, 15, 12, 10]
         })
         qty_col = "rework quantity"
 
-    # 📊 แผงกราฟสถิติด้านบน (Dashboard เรียงตาม Material จริง 1-10 อันดับแรก)
+    # 📊 แผงกราฟสถิติด้านบน
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#1e293b; font-size:14px; display:block; text-align:center;'>📈 อัตราส่วนสถิติ {defect_title} แยกตาม Material (Top 10)</b>", unsafe_allow_html=True)
+    st.markdown(f"<b style='color:#1e293b; font-size:14px; display:block; text-align:center;'>📈 อัตราส่วนสถิติแยกตาม Material (Top 10)</b>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:12px; color:#64748b; text-align:center; margin-top:-2px; margin-bottom:10px;'>💡 จิ้มเลือกแท่งกราฟด้านล่างเพื่อเปลี่ยนชิ้นงานได้ทันที</p>", unsafe_allow_html=True)
     
     if not chart_data.empty:
-        # 🍕 1. แผนภูมิวงกลม (Pie Chart) 
+        # 🎨 ชุดสี Pastel มาตรฐานที่จะแชร์ร่วมกันทั้ง Pie และ Bar Chart
+        pastel_colors = px.colors.qualitative.Pastel
+        
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - ล็อกสีแยกตามชื่อชิ้นงาน
         fig_pie = px.pie(
             chart_data, 
             names="Material", 
             values=qty_col, 
-            color_discrete_sequence=px.colors.qualitative.Pastel
+            color="Material",
+            color_discrete_sequence=pastel_colors
         )
-        fig_pie.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10),
-            height=220,
-            showlegend=False
-        )
+        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=False)
         st.plotly_chart(fig_pie, use_container_width=True)
         
-        # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - แก้ไขบังคับแสดงแกน X เป็นแบบหมวดหมู่ตัวอักษรเรียงอันดับชัดเจน
+        # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - ✨ ซิงค์การระบายสีให้ตรงกับชื่อชิ้นงานบนคลัง Pie เป๊ะๆ
         fig_bar = px.bar(
-            chart_data,
+            chart_data, 
             x="Material", 
             y=qty_col, 
-            orientation='v',
-            color=qty_col,
-            color_continuous_scale="Purples"
+            orientation='v', 
+            color="Material", # บังคับแบ่งสีตามชิ้นงานเพื่อให้จับคู่ตรงกับ Pie Chart
+            color_discrete_sequence=pastel_colors
         )
         fig_bar.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10),
-            height=260,
-            coloraxis_showscale=False,
-            xaxis_title=None,
-            yaxis_title=None,
-            xaxis=dict(type='category', tickangle=45) # ✨ บังคับประเภทแกน X เป็น Category และเอียงตัวหนังสือให้อ่านง่าย
+            margin=dict(l=10, r=10, t=10, b=10), height=250, showlegend=False,
+            xaxis_title=None, yaxis_title=None,
+            xaxis=dict(type='category', tickangle=45),
+            clickmode='event+select'
         )
-        st.plotly_chart(fig_bar, use_container_width=True)
         
-        # 🔘 3. กล่องคลิกเลือก Material (ล้อตามกราฟด้านบน เพื่อส่งค่าไปแสดงผลและฟิลเตอร์งานด้านล่าง)
-        st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size:13px; font-weight:bold; color:#1e293b; margin-bottom:2px;'>👇 คลิกเลือกชิ้นงาน Material ที่ต้องการส่องคลังภาพ:</p>", unsafe_allow_html=True)
+        # ใช้ฟีเจอร์ on_select="rerun" เพื่อดักฟังค่าเมื่อพนักงานจิ้มแท่งกราฟ
+        selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         
         list_of_materials = chart_data['Material'].tolist()
-        selected_material = st.selectbox(
-            "เลือก Material จากกราฟ:",
-            options=list_of_materials,
-            index=0,
-            label_visibility="collapsed",
-            key=f"sel_mat_{defect}"
-        )
-        st.markdown(f'<div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 8px; border-radius: 10px; text-align: center; font-size:14px; color:#0f172a;"><b>🔍 กำลังแสดงพิกัดชิ้นงาน:</b> <span style="color:#007bc3; font-weight:bold;">{selected_material}</span></div>', unsafe_allow_html=True)
+        state_key = f"sel_mat_{defect}"
+        
+        # 🎯 ตรวจสอบความเปลี่ยนแปลงจากการคลิกกราฟแท่ง
+        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
+            clicked_material = selected_bar["selection"]["points"][0]["x"]
+            st.session_state[state_key] = clicked_material
+        
+        # กำหนดค่าดีฟอลต์ตัวแรกหากยังไม่มีการกดคลิกอะไรเลย
+        if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
+            st.session_state[state_key] = list_of_materials[0] if list_of_materials else "ไม่มีข้อมูล"
+            
+        selected_material = st.session_state[state_key]
+        
+        st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'>", unsafe_allow_html=True)
+        st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a;"><b>🔍 Material ที่เลือกจากกราฟ:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
     else:
         st.info("ไม่พบข้อมูลสถิติของ Defect นี้ในชีตระบบ")
         selected_material = "ไม่มีข้อมูล"
@@ -244,26 +236,19 @@ elif current_page == "defect_view":
             st.image(uploaded_main, caption=f"✅ รูปภาพหลัก {selected_material} ที่คุณเลือก", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 📂 ส่วนที่ 2: คลังรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป)
+        # 📂 ส่วนที่ 2: คลังรูปรายละเอียดจุดย่อย
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
         
         msg_slave = "แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):"
-        uploaded_slaves = st.file_uploader(
-            msg_slave, 
-            type=["png", "jpg", "jpeg"], 
-            accept_multiple_files=True, 
-            key=f"up_s_multiple_{defect}"
-        )
+        uploaded_slaves = st.file_uploader(msg_slave, type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}")
         
         if uploaded_slaves:
             allowed_slaves = uploaded_slaves[:5]
             st.markdown(f"<p style='font-size:12px; color:#10b981; font-weight:bold;'>📸 รูปรายละเอียดจุดย่อยที่แนบ ({len(allowed_slaves)}/5 รูป):</p>", unsafe_allow_html=True)
-            
             for idx, img_file in enumerate(allowed_slaves):
                 st.image(img_file, caption=f"รูปภาพย่อยที่ {idx+1}: {img_file.name}", use_container_width=True)
-                
             if len(uploaded_slaves) > 5:
                 st.warning("⚠️ ระบบรองรับภาพย่อยสูงสุด 5 รูปต่อครั้ง")
         st.markdown('</div>', unsafe_allow_html=True)

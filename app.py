@@ -63,6 +63,18 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
+# 📊 ฟังก์ชันดึงข้อมูลดิบของ Defect/Material จริงจากลิงก์ของคุณวีรพันธ์
+@st.cache_data(ttl=60)
+def load_real_defect_data():
+    sheet_url = "https://docs.google.com/spreadsheets/d/1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c/export?format=csv&gid=0"
+    try:
+        df = pd.read_csv(sheet_url)
+        df.columns = df.columns.str.strip()
+        return df
+    except Exception as e:
+        st.error(f"ไม่สามารถเชื่อมต่อข้อมูลจากชีตหลักได้: {e}")
+        return pd.DataFrame()
+
 # 🔗 รายชื่อลิงก์ URL คลังภาพจริงทั้ง 18 แฟ้ม
 FOLDER_LINK_MAP = {
     "A": {
@@ -119,7 +131,7 @@ elif current_page == "select_defect":
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
-# ---------------- หน้าสาม: บอร์ดสถิติอิง Material ลำดับ 1-10 ----------------
+# ---------------- หน้าสาม: บอร์ดสถิติอิง Material จริง ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -127,23 +139,38 @@ elif current_page == "defect_view":
     if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"):
         st.session_state.page = "select_defect"; st.rerun()
         
-    st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงวิเคราะห์และเลือกรูปงานจริงของ {defect_title}</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงวิเคราะห์รูปงานจริงของ {defect_title}</b></div>', unsafe_allow_html=True)
     
-    # 📊 แผงกราฟสถิติด้านบน (Dashboard เรียงตาม Material 1-10 อันดับแรก)
+    # 📥 โหลดและประมวลผลข้อมูล Material จริงจาก Google Sheet
+    raw_df = load_real_defect_data()
+    if not raw_df.empty and 'errortype' in raw_df.columns and 'Material' in raw_df.columns:
+        # กรองข้อมูลเอาเฉพาะ defect ตัวปัจจุบัน
+        filtered_df = raw_df[raw_df['errortype'] == defect]
+        
+        # จัดกลุ่มคำนวณผลรวมของจำนวนงานเสีย (rework quantity)
+        qty_col = 'rework quantity' if 'rework quantity' in raw_df.columns else raw_df.columns[-1]
+        summary_df = filtered_df.groupby('Material', as_index=False)[qty_col].sum()
+        
+        # เรียงลำดับจากเสียมากที่สุดไปหาน้อยที่สุด และเลือกมา 10 อันดับแรก
+        chart_data = summary_df.sort_values(by=qty_col, ascending=False).head(10)
+        chart_data['Material'] = chart_data['Material'].astype(str) # บังคับเป็น String ป้องกันเรียงลำดับแกนเพี้ยน
+    else:
+        # Fallback เผื่อกรณีดึงชีตไม่สำเร็จ
+        chart_data = pd.DataFrame({
+            "Material": ["SV 1.50", "CR-39", "MR-8 1.60", "SV 1.67", "ORMA", "1.60 Hi-Index", "MR-7 1.67", "1.74 Ultra", "Polycarbonate", "Trivex"],
+            "rework quantity": [45, 38, 32, 28, 25, 21, 18, 15, 12, 10]
+        })
+        qty_col = "rework quantity"
+
+    # 📊 แผงกราฟสถิติด้านบน (Dashboard เรียงตาม Material จริง 1-10 อันดับแรก)
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown("<b style='color:#1e293b; font-size:14px; display:block; text-align:center;'>📈 สถิติอัตราส่วน Defect แยกตาม Material (Top 10)</b>", unsafe_allow_html=True)
-    
-    # 🛠️ ปรับเปลี่ยนข้อมูลให้ล้อกับ Material จริงในโรงงาน (เรียงลำดับจากเจอเยอะสุดไปน้อยสุด 1-10)
-    chart_data = pd.DataFrame({
-        "Material": ["SV 1.50", "CR-39", "MR-8 1.60", "SV 1.67", "ORMA", "1.60 Hi-Index", "MR-7 1.67", "1.74 Ultra", "Polycarbonate", "Trivex"],
-        "จำนวนที่พบ (ครั้ง)": [45, 38, 32, 28, 25, 21, 18, 15, 12, 10]
-    })
+    st.markdown(f"<b style='color:#1e293b; font-size:14px; display:block; text-align:center;'>📈 อัตราส่วนสถิติ {defect_title} แยกตาม Material (Top 10)</b>", unsafe_allow_html=True)
     
     # 🍕 1. แผนภูมิวงกลม (Pie Chart) 
     fig_pie = px.pie(
         chart_data, 
         names="Material", 
-        values="จำนวนที่พบ (ครั้ง)", 
+        values=qty_col, 
         color_discrete_sequence=px.colors.qualitative.Pastel
     )
     fig_pie.update_layout(
@@ -153,23 +180,37 @@ elif current_page == "defect_view":
     )
     st.plotly_chart(fig_pie, use_container_width=True)
     
-    # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - คลีนป้ายคลิกโชว์ออก ลำดับตรงตาม Pie เป๊ะ
+    # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - คลีนป้ายข้อความ ไม่ทับซ้อน ลำดับตรงตาม Pie เป๊ะ
     fig_bar = px.bar(
         chart_data,
         x="Material", 
-        y="จำนวนที่พบ (ครั้ง)", 
+        y=qty_col, 
         orientation='v',
-        color="จำนวนที่พบ (ครั้ง)",
+        color=qty_col,
         color_continuous_scale="Purples"
     )
     fig_bar.update_layout(
         margin=dict(l=10, r=10, t=10, b=10),
         height=240,
         coloraxis_showscale=False,
-        xaxis_title=None,  # ซ่อนป้ายคำว่า Material เมื่อคลิกหรือดูภาพรวม
+        xaxis_title=None,  # ❌ ซ่อนคำว่า Material หรือ รายการชิ้นงาน ออกตามบรีฟ
         yaxis_title=None
     )
     st.plotly_chart(fig_bar, use_container_width=True)
+    
+    # 🔘 3. กล่องคลิกเลือก Material (ล้อตามกราฟด้านบน เพื่อส่งค่าไปแสดงผลและฟิลเตอร์งานด้านล่าง)
+    st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:13px; font-weight:bold; color:#1e293b; margin-bottom:2px;'>👇 คลิกเลือกชิ้นงาน Material ที่ต้องการส่องคลังภาพ:</p>", unsafe_allow_html=True)
+    
+    list_of_materials = chart_data['Material'].tolist()
+    selected_material = st.selectbox(
+        "เลือก Material จากกราฟ:",
+        options=list_of_materials,
+        index=0,
+        label_visibility="collapsed",
+        key=f"sel_mat_{defect}"
+    )
+    st.markdown(f'<div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 8px; border-radius: 10px; text-align: center; font-size:14px; color:#0f172a;"><b>🔍 กำลังแสดงพิกัดชิ้นงาน:</b> <span style="color:#007bc3; font-weight:bold;">{selected_material}</span></div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     # 🔘 ส่วนฟิลเตอร์เลือกพิกัดหน้างาน
@@ -181,13 +222,13 @@ elif current_page == "defect_view":
         
         # 📂 ส่วนที่ 1: คลังภาพหลักชิ้นงาน
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']})</b>", unsafe_allow_html=True)
+        st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        msg_main = "แนบรูปภาพหลักที่เลือกที่นี่:"
+        msg_main = f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:"
         uploaded_main = st.file_uploader(msg_main, type=["png", "jpg", "jpeg"], key=f"up_m_{defect}")
         if uploaded_main:
-            st.image(uploaded_main, caption="✅ รูปภาพหลักที่คุณเลือก", use_container_width=True)
+            st.image(uploaded_main, caption=f"✅ รูปภาพหลัก {selected_material} ที่คุณเลือก", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
         # 📂 ส่วนที่ 2: คลังรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป)
@@ -216,7 +257,7 @@ elif current_page == "defect_view":
 
     # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
+    st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")
     st.camera_input("ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final")
     st.markdown('</div>', unsafe_allow_html=True)

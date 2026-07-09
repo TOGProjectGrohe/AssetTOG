@@ -124,6 +124,9 @@ st.markdown("""
         border: 2px solid rgba(255, 255, 255, 0.9) !important;
         transform: translateY(-1px) !important;
     }
+    div.stButton > button:active {
+        transform: translateY(1px) !important;
+    }
     
     /* 💾 ปรับแต่งปุ่ม Save สีเขียวเด่นชัดสำหรับคีย์ save_btn_ ทุกตัว */
     div.stButton > button[key^="save_btn_"] {
@@ -187,7 +190,6 @@ def load_real_defect_data():
     except Exception as e:
         return pd.DataFrame()
 
-# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -380,11 +382,23 @@ elif current_page == "defect_view":
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     
     after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")
-    st.camera_input("ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final")
+    
+    # 🛠️ 📸 ส่วนที่อัปเกรดใหม่: เพิ่มช่องเลือกรูปภาพ After จากไฟล์เครื่อง ควบคู่กับการเปิดกล้องถ่ายรูปจริง
+    st.markdown("<p style='font-size:13px; font-weight:bold; color:#2c3e50; margin-bottom:2px;'>📸 แนบรูปหลักฐานผลงาน After ชิ้นงานจริง (เลือกทำอย่างใดอย่างหนึ่งหรือทั้งสองอย่าง):</p>", unsafe_allow_html=True)
+    
+    # ทางเลือกที่ 1: อัปโหลดรูปภาพจากคลัง
+    uploaded_after_file = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ:", type=["png", "jpg", "jpeg"], key=f"up_af_file_{defect}")
+    if uploaded_after_file:
+        st.image(uploaded_after_file, caption="✅ รูปภาพ After จากไฟล์เครื่องพรีวิว", use_container_width=True)
+        
+    # ทางเลือกที่ 2: ถ่ายรูปสดๆ ผ่านกล้องหน้างาน
+    camera_after_file = st.camera_input("📸 ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final")
+    if camera_after_file:
+        st.image(camera_after_file, caption="✅ รูปภาพ After จากกล้องพรีวิว", use_container_width=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 💾 ✨ แก้ไขข้อความปุ่มเหลือเพียงคำว่า "บันทึกข้อมูล" ตามภาพตัวอย่างเรียบร้อยครับ
+    # 💾 ปุ่มบันทึกข้อมูล
     if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
         if not after_text.strip():
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")

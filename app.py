@@ -8,7 +8,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลสะอาดตา ปรับแต่งปุ่มและโลโก้ด้านบนตามสั่ง
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งองค์ประกอบหน้าเลือก Defect ให้สวยงามเท่ากัน
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -34,7 +34,7 @@ st.markdown("""
         position: absolute !important; top: 20px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
     }
     
-    /* 🩵 ปรับแต่งปุ่ม Home และ Logout ให้เป็นสีฟ้าอ่อนพาสเทลสวยงาม ตัวอักษรสีดำ */
+    /* ปุ่ม Home และ Logout สีฟ้าอ่อนพาสเทล ตัวอักษรสีดำ */
     .nav-btn-link {
         background-color: #bae6fd !important; 
         color: #000000 !important; 
@@ -50,7 +50,7 @@ st.markdown("""
         background-color: #7dd3fc !important;
     }
 
-    /* 🖤 ปรับแต่งวงกลมโลโก้ TOG ตรงกลางให้เป็นสีดำอ่อนโปร่งแสงละมุนตา */
+    /* วงกลมโลโก้ TOG ตรงกลางสีดำอ่อนโปร่งแสง */
     .tog-logo-circle {
         width: 50px !important; 
         height: 50px !important; 
@@ -97,6 +97,44 @@ st.markdown("""
         font-size: 14px !important;
         font-weight: bold !important;
         text-align: center !important;
+    }
+
+    /* 🎯 หัวข้อที่ 1: กล่องข้อความสีน้ำเงินอ่อนพาสเทล ตัวอักษรสีดำ */
+    .defect-title-box {
+        background-color: #dbeafe !important;
+        border: 1px solid #bfdbfe !important;
+        border-radius: 20px !important;
+        padding: 15px !important;
+        text-align: center !important;
+        color: #000000 !important;
+        font-weight: bold !important;
+        font-size: 15px !important;
+        margin-bottom: 20px !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02) !important;
+    }
+
+    /* 📊 3D Bevel Buttons: บังคับปุ่มเลือก Defect ให้กว้างเท่ากัน (100%) สีฟ้าอ่อนพาสเทล ตัวอักษรสีดำ */
+    div.stButton > button {
+        background-color: #bae6fd !important;
+        color: #000000 !important;
+        font-weight: bold !important;
+        font-size: 14px !important;
+        border: 2px solid #ffffff !important;
+        border-radius: 16px !important;
+        width: 100% !important; /* ยาวเท่ากันเป๊ะทั้งสามกรอบ */
+        padding: 12px 20px !important;
+        margin-bottom: 12px !important;
+        display: block !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05), inset 0 -3px 0 rgba(0,0,0,0.1) !important; /* เงาด้านล่างเพิ่มความนูน */
+        transition: all 0.2s ease !important;
+    }
+    div.stButton > button:hover {
+        background-color: #7dd3fc !important;
+        transform: translateY(-1px) !important;
+    }
+    div.stButton > button:active {
+        transform: translateY(1px) !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -166,7 +204,6 @@ if st.query_params.get("nav") == "reset":
     st.session_state.page = "login"; st.session_state.user_info = None; st.session_state.current_defect = None
     st.query_params.clear(); st.rerun()
 
-# 🛸 เรียกใช้งาน div class โลโก้ TOG สีดำอ่อน และตัวอักษรสีดำที่ปรับแต่งใหม่ตามบรีฟ
 st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------
@@ -201,9 +238,12 @@ if current_page == "login":
             
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสอง: คัดเลือก Defect ----------------
+# ---------------- หน้าสอง: คัดเลือก Defect (ปรับปรุงตามบรีฟใหม่) ----------------
 elif current_page == "select_defect":
-    st.markdown('<div class="login-card" style="text-align:center;"><b>🎯 โปรดเลือกประเภท Defect เพื่อตรวจสอบคลังงาน:</b></div>', unsafe_allow_html=True)
+    # หัวข้อที่ 1: ใช้คลาสดีไซน์กล่องสีน้ำเงินอ่อน ตัวอักษรสีดำ
+    st.markdown('<div class="defect-title-box">🎯 โปรดเลือกประเภท Defect ที่ต้องการปรับปรุง</div>', unsafe_allow_html=True)
+    
+    # หัวข้อที่ 2 3 4: บรรจุเข้าตระกูลปุ่มที่ผ่านการฟอร์แมต CSS ให้กรอบยาวเท่ากัน มีมิตินูน และสีฟ้าอ่อนเรียบร้อย
     if st.button("🟠 ดูข้อมูล Defect 260 (Rough Lines)"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
     if st.button("🔵 ดูข้อมูล Defect 261 (Grinding Structure)"):

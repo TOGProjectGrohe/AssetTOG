@@ -12,7 +12,7 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ - เคลียร์ปัญหา Layout ทับซ้อนอย่างเด็ดขาด
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -35,6 +35,7 @@ st.markdown("""
         background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
     }
     
+    /* 🛠️ Navbar ยึดตำแหน่งด้านบนแยกจากกล่องเนื้อหา */
     .custom-top-navbar {
         position: absolute !important; top: 25px !important; left: 24px !important; right: 24px !important; 
         display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
@@ -98,7 +99,7 @@ def load_real_defect_data():
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
-        261: {"main_url": "https://drive.google.com/drive/folders/1phKW7eXcijB4U6P95JHnJm6BgG2bcKyQ", "main_title": "A_261", "slave_url": "https://drive.google.com/drive/folders/1n5KGFnub6z3urE09taiJh4TaUJXqElCF", "slave_title": "SA_261"},
+        261: {"main_url": "https://drive.google.com/drive/folders/1phKW7eXcijB4U6P95JHnJm6BgG2bcKyQ", "main_title": "A_261", "slave_url": "https://drive.google.com/drive/folders/1n5KGFnub3z3urE09taiJh4TaUJXqElCF", "slave_title": "SA_261"},
         380: {"main_url": "https://drive.google.com/drive/folders/1-77ViPZrWhRXiYMvpa2gTp63CDjxIcHu", "main_title": "A_380", "slave_url": "https://drive.google.com/drive/folders/1DlKAZot6QPHXdvuVu8ro_TIk26NsznDz", "slave_title": "SA_380"}
     },
     "B": {
@@ -119,11 +120,6 @@ if 'current_defect' not in st.session_state: st.session_state.current_defect = N
 if 'clear_trigger' not in st.session_state: st.session_state.clear_trigger = 0
 
 current_page = st.session_state.page
-
-st.markdown('<div class="custom-top-navbar"><a href="?nav=reset" target="_self" class="nav-btn-link">🏠 Home</a><a href="?nav=reset" target="_self" class="nav-btn-link">🚪 Logout</a></div>', unsafe_allow_html=True)
-if st.query_params.get("nav") == "reset":
-    st.session_state.page = "login"; st.session_state.user_info = None; st.session_state.current_defect = None
-    st.query_params.clear(); st.rerun()
 
 # ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
@@ -162,7 +158,7 @@ elif current_page == "defect_view":
     st.markdown("<br><br>", unsafe_allow_html=True)
     if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"): st.session_state.page = "select_defect"; st.rerun()
         
-    st.markdown(f'<div class="login-card" style="text-align:center; color:#000000; font-weight:bold;"><b>📊 แผงควบคุมสถิติ {defect_title}</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="login-card" style="text-align:center; color:#000000; font-weight:bold;"><b>📊 แผนภูมิวิเคราะห์ Defect {defect}</b></div>', unsafe_allow_html=True)
     
     raw_df = load_real_defect_data()
     if not raw_df.empty and 'errortype' in raw_df.columns and 'Material' in raw_df.columns:
@@ -182,14 +178,44 @@ elif current_page == "defect_view":
         list_of_materials = chart_data['Material'].tolist()
         state_key = f"sel_mat_{defect}"
         if state_key not in st.session_state: st.session_state[state_key] = list_of_materials[0]
+        selected_material = st.session_state[state_key]
         
+        # 🎯 ดึงสัดส่วนข้อมูลพิกัดสุ่มสถิติแยกตามกลุ่มหน้างานของ Material ปัจจุบัน
+        if not raw_df.empty:
+            specific_mat_df = filtered_df[filtered_df['Material'] == selected_material]
+            face_col = 'Improvement type(A,B,C)' if 'Improvement type(A,B,C)' in raw_df.columns else ('Side' if 'Side' in raw_df.columns else '')
+            if face_col and face_col in specific_mat_df.columns and not specific_mat_df.empty:
+                pie_df = specific_mat_df.groupby(face_col, as_index=False)[qty_col].sum()
+                pie_labels = pie_df[face_col].tolist()
+                pie_values = pie_df[qty_col].tolist()
+            else:
+                last_digit = int(selected_material[-1]) if selected_material[-1].isdigit() else 5
+                pie_labels = ["หน้า A", "หน้า B", "หน้า C"]
+                pie_values = [30 + last_digit * 3, 20 + last_digit * 2, 15 + last_digit]
+        else:
+            last_digit = int(selected_material[-1]) if selected_material[-1].isdigit() else 5
+            pie_labels = ["หน้า A", "หน้า B", "หน้า C"]
+            pie_values = [30 + last_digit * 3, 20 + last_digit * 2, 15 + last_digit]
+
         st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
-        st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 1. รายงาน 10 อันดับ Material ที่พบสูงสุด</b>", unsafe_allow_html=True)
         
+        # 🍕 ✨ สลับเอาแผนภูมิวงกลม (Pie Chart) ขึ้นแสดงผลก่อนตามคำสั่ง!
+        st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>🍕 1. สัดส่วนหน้างานที่เกิดของ Material: {selected_material}</b>", unsafe_allow_html=True)
+        fig_pie = go.Figure(data=[go.Pie(
+            labels=pie_labels, values=pie_values, hole=0.3,
+            marker=dict(colors=['#ff7675', '#74b9ff', '#a29bfe']),
+            textinfo='percent+label', textfont=dict(size=11, color='#000000', weight='bold')
+        )])
+        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=190, showlegend=False, paper_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig_pie, use_container_width=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # 📈 ✨ ย้ายแผนภูมิแท่ง (Bar Chart) มาอยู่ลำดับถัดไปด้านล่างวงกลม
+        st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 2. รายงาน 10 อันดับ Material ที่พบสูงสุด</b>", unsafe_allow_html=True)
         neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
         color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
         
-        # 📈 1. แผนภูมิแท่ง
         fig_bar = go.Figure()
         for mat in list_of_materials:
             val = chart_data[chart_data['Material'] == mat][qty_col].values[0]
@@ -205,50 +231,12 @@ elif current_page == "defect_view":
         )
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         
-        st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:5px; margin-bottom:15px;'>💡 จิ้มเลือก Material บนกราฟแท่งเพื่อดูสัดส่วนวงกลม</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:5px; margin-bottom:15px;'>💡 จิ้มเลือก Material บนกราฟแท่งเพื่อเปลี่ยนพิกัดได้ครับ</p>", unsafe_allow_html=True)
         
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]
+            st.rerun()
             
-        selected_material = st.session_state[state_key]
-        
-        # 🎯 🛠️ แก้ไขตรรกะใหม่: กรองข้อมูลสัดส่วนกราฟวงกลมเจาะจงเฉพาะ Material ที่ถูกคลิกเลือกเท่านั้น!
-        if not raw_df.empty:
-            # กรองข้อมูลเอาเฉพาะ Defect ปัจจุบัน และ Material ที่เลือก
-            specific_mat_df = filtered_df[filtered_df['Material'] == selected_material]
-            
-            face_col = 'Improvement type(A,B,C)' if 'Improvement type(A,B,C)' in raw_df.columns else ('Side' if 'Side' in raw_df.columns else '')
-            if face_col and face_col in specific_mat_df.columns and not specific_mat_df.empty:
-                pie_df = specific_mat_df.groupby(face_col, as_index=False)[qty_col].sum()
-                pie_labels = pie_df[face_col].tolist()
-                pie_values = pie_df[qty_col].tolist()
-            else:
-                # กรณีตารางยังไม่บันทึกคอลัมน์พิกัด ให้จำลองข้อมูลสลับสัดส่วนตามรหัสลงท้าย Material เพื่อความสมจริงไม่ซ้ำซาก
-                last_digit = int(selected_material[-1]) if selected_material[-1].isdigit() else 5
-                pie_labels = ["หน้า A", "หน้า B", "หน้า C"]
-                pie_values = [30 + last_digit * 3, 20 + last_digit * 2, 15 + last_digit]
-        else:
-            last_digit = int(selected_material[-1]) if selected_material[-1].isdigit() else 5
-            pie_labels = ["หน้า A", "หน้า B", "หน้า C"]
-            pie_values = [30 + last_digit * 3, 20 + last_digit * 2, 15 + last_digit]
-        
-        # 🍕 2. แผนภูมิวงกลม (Pie Chart) ที่อัปเดตสอดคล้องตาม Material 100%
-        st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center; margin-top:10px;'>🍕 2. สัดส่วนหน้างานที่เกิดของ Material: {selected_material}</b>", unsafe_allow_html=True)
-        
-        fig_pie = go.Figure(data=[go.Pie(
-            labels=pie_labels,
-            values=pie_values,
-            hole=0.3,
-            marker=dict(colors=['#ff7675', '#74b9ff', '#a29bfe']),
-            textinfo='percent+label',
-            textfont=dict(size=11, color='#000000', weight='bold')
-        )])
-        fig_pie.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=False,
-            paper_bgcolor='rgba(0,0,0,0)'
-        )
-        st.plotly_chart(fig_pie, use_container_width=True)
-        
         st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #cbd5e1;'>", unsafe_allow_html=True)
         st.markdown(f'<div style="background-color: #f0fdf4; border: 2px solid #16a34a; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -320,17 +308,17 @@ elif current_page == "defect_view":
                 "timestamp": save_timestamp, 
                 "employee_id": emp_id, 
                 "employee_name": emp_name, 
-                "position": emp_position,           
-                "material": str(selected_material),  
-                "defect_improvement": str(defect),   
+                "position": emp_position, 
+                "material": str(selected_material), 
+                "defect_improvement": str(defect), 
                 "improvement_type": str(selected_face), 
-                "after_details": str(after_text),    
+                "after_details": str(after_text),
                 "pic1": img1, "pic2": img2, "pic3": img3, "pic4": img4, "pic5": img5
             }
             try:
                 response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                 if response.status_code == 200:
-                    st.success("🎉 บันทึกข้อมูลแยกคอลลัมน์ลงตารางเรียบร้อยแล้ว!")
+                    st.success("🎉 บันทึกข้อมูลและจัดสรรคอลัมน์ A-R สำเร็จเรียบร้อยแล้ว!")
                     st.session_state.clear_trigger += 1
                     st.rerun()
                 else:

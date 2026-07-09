@@ -2,11 +2,12 @@ import streamlit as st
 import pandas as pd
 import requests
 import plotly.express as px
+import plotly.graph_objects as go
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทล
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลตัดกับกราฟโลกอนาคต
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -25,6 +26,10 @@ st.markdown("""
     .login-card {
         background-color: white !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important; margin-bottom: 15px !important; width: 100% !important;
     }
+    /* การ์ดพิเศษสำหรับแสดงกราฟธีม Dark โลกอนาคต */
+    .future-graph-card {
+        background-color: #0d1117 !important; border: 2px solid #30363d !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important; margin-bottom: 15px !important; width: 100% !important;
+    }
     .custom-top-navbar {
         position: absolute !important; top: 20px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
     }
@@ -34,7 +39,6 @@ st.markdown("""
     .center-header-block {
         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
     }
-    
     .drive-link-button {
         display: block !important; text-align: center !important; background-color: #10b981 !important; color: white !important;
         font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
@@ -75,7 +79,7 @@ def load_real_defect_data():
         st.error(f"ไม่สามารถเชื่อมต่อข้อมูลจากชีตหลักได้: {e}")
         return pd.DataFrame()
 
-# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม (แก้ไข Syntax Error จุด "main_url" ของ C_261 แล้ว)
+# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -153,27 +157,23 @@ elif current_page == "defect_view":
         chart_data = summary_df.sort_values(by=qty_col, ascending=False).head(10)
     else:
         chart_data = pd.DataFrame({
-            "Material": ["407787135", "407787136", "407787137", "407787138", "407787139", "407787140", "407787141", "407787142", "407787143", "407787144"],
-            "rework quantity": [45, 38, 32, 28, 25, 21, 18, 15, 12, 10]
+            "Material": ["418230035", "408073135", "408101135", "407787135", "408242036", "417208135", "418675035", "401328035", "417207135", "418706035"],
+            "rework quantity": [51, 45, 35, 35, 28, 21, 16, 11, 10, 8]
         })
         qty_col = "rework quantity"
 
-    # 📊 แผงกราฟสถิติด้านบน
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#1e293b; font-size:14px; display:block; text-align:center;'>📈 อัตราส่วนสถิติแยกตาม Material (Top 10)</b>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:12px; color:#64748b; text-align:center; margin-top:-2px; margin-bottom:10px;'>💡 จิ้มเลือกแท่งกราฟด้านล่างเพื่อเปลี่ยนชิ้นงานได้ทันที</p>", unsafe_allow_html=True)
+    # 📊 แผงกราฟสถิติด้านบน (ปรับเป็นกล่องดำโลกอนาคต)
+    st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
+    st.markdown(f"<b style='color:#00ffcc; font-size:15px; display:block; text-align:center; letter-spacing: 1px;'>🛸 QUANTUM STATS REPORT (BLACK MODE)</b>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:11px; color:#8b949e; text-align:center; margin-top:-2px; margin-bottom:15px;'>💡 จิ้มเลือกแท่งกราฟโฮโลแกรมเพื่อเจาะลึกชิ้นงาน</p>", unsafe_allow_html=True)
     
     if not chart_data.empty:
-        # 🎨 กำหนดเฉดสีพาสเทลมาตรฐาน
-        pastel_palette = px.colors.qualitative.Pastel
+        # 🔑 สร้างคลัง Map สีพาสเทลเรืองแสง (Neon Pastel) เพื่อแมปชื่อคีย์ให้ตรงกันเป๊ะ
+        neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
         list_of_materials = chart_data['Material'].tolist()
-        
-        # 🔑 ✨ สร้างคลัง Map สีผูกเข้ากับชื่อคีย์ชิ้นงานโดยตรง เพื่อป้องกันสีสลับกัน!
-        color_map = {}
-        for idx, mat in enumerate(list_of_materials):
-            color_map[mat] = pastel_palette[idx % len(pastel_palette)]
+        color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
 
-        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - ใช้ color_discrete_map
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - พื้นหลังดำ
         fig_pie = px.pie(
             chart_data, 
             names="Material", 
@@ -181,43 +181,78 @@ elif current_page == "defect_view":
             color="Material",
             color_discrete_map=color_map
         )
-        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=False)
+        fig_pie.update_layout(
+            margin=dict(l=10, r=10, t=10, b=10), 
+            height=200, 
+            showlegend=False,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#ffffff')
+        )
         st.plotly_chart(fig_pie, use_container_width=True)
         
-        # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - บังคับระบายสีด้วยชุด Map เดียวกัน สีตรงกับวงกลม 100%
-        fig_bar = px.bar(
-            chart_data, 
-            x="Material", 
-            y=qty_col, 
-            orientation='v', 
-            color="Material",
-            color_discrete_map=color_map
-        )
+        # 📊 2. แผนภูมิแท่ง 3D มีมิตินูนลอย (Bar Chart 3D Volume Effect)
+        # ใช้ go.Bar ร่วมกับกลยุทธ์สร้างขอบหนาและเงาไล่เฉด เพื่อให้ดูเหมือนแท่ง 3D
+        bars_list = []
+        for mat in list_of_materials:
+            mat_data = chart_data[chart_data['Material'] == mat]
+            val = mat_data[qty_col].values[0]
+            base_color = color_map[mat]
+            
+            bars_list.append(go.Bar(
+                x=[mat],
+                y=[val],
+                name=mat,
+                marker=dict(
+                    color=base_color,
+                    # เทคนิคขอบหนาสีเข้มขึ้นสร้างมิตินูน (3D Bevel Edge Effect)
+                    line=dict(color='#ffffff', width=2),
+                    # สร้างมิติความลึกเสมือนเงา 3D ตกกระทบ
+                    pattern=dict(shape="/", solidity=0.15)
+                ),
+                hovertemplate=f"Material: {mat}<br>จำนวน: {val} ครั้ง<extra></extra>"
+            ))
+            
+        fig_bar = go.Figure(data=bars_list)
         fig_bar.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10), height=250, showlegend=False,
-            xaxis_title=None, yaxis_title=None,
-            xaxis=dict(type='category', tickangle=45),
+            margin=dict(l=10, r=10, t=10, b=10), 
+            height=250, 
+            showlegend=False,
+            barmode='group',
+            paper_bgcolor='rgba(0,0,0,0)', # พื้นหลังใส ทะลุเห็นการ์ดดำ
+            plot_bgcolor='#0d1117',        # สีพื้นตารางในกราฟ
+            # ปรับแต่งเส้นตารางให้ดูเหมือนห้องแล็บโลกอนาคต
+            xaxis=dict(
+                type='category', 
+                tickangle=45, 
+                tickfont=dict(color='#8b949e', size=10),
+                gridcolor='#21262d'
+            ),
+            yaxis=dict(
+                tickfont=dict(color='#8b949e', size=10),
+                gridcolor='#21262d',
+                zerolinecolor='#30363d'
+            ),
             clickmode='event+select'
         )
         
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         state_key = f"sel_mat_{defect}"
         
-        # 🎯 ตรวจสอบความเปลี่ยนแปลงจากการคลิกกราฟแท่ง
+        # 🎯 ตรวจสอบการคลิกเลือกแท่งกราฟ
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             clicked_material = selected_bar["selection"]["points"][0]["x"]
             st.session_state[state_key] = clicked_material
         
-        # กำหนดค่าดีฟอลต์ตัวแรกหากยังไม่มีการกดคลิกอะไรเลย
         if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
             st.session_state[state_key] = list_of_materials[0] if list_of_materials else "ไม่มีข้อมูล"
             
         selected_material = st.session_state[state_key]
         
-        st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'>", unsafe_allow_html=True)
-        st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a;"><b>🔍 Material ที่เลือกจากกราฟ:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
+        st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #30363d;'>", unsafe_allow_html=True)
+        st.markdown(f'<div style="background-color: #041917; border: 1px solid #00ffcc; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#00ffcc; box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);"><b>🛸 TARGET MATERIAL:</b> <span style="font-size:16px; font-weight:bold; color:#ffffff; text-shadow: 0 0 5px #00ffcc;">{selected_material}</span></div>', unsafe_allow_html=True)
     else:
-        st.info("ไม่พบข้อมูลสถิติของ Defect นี้ในชีตระบบ")
+        st.info("ไม่พบข้อมูลสถิติในระบบ")
         selected_material = "ไม่มีข้อมูล"
     st.markdown('</div>', unsafe_allow_html=True)
     

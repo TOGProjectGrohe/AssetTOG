@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 from datetime import datetime
 
 # 🌐 ลิงก์ Google Apps Script ตัวล่าสุดของคุณวีรพันธ์
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
@@ -126,8 +126,6 @@ FOLDER_LINK_MAP = {
 if 'page' not in st.session_state: st.session_state.page = "login"
 if 'user_info' not in st.session_state: st.session_state.user_info = None
 if 'current_defect' not in st.session_state: st.session_state.current_defect = None
-
-# ใช้สำหรับ Clear ฟอร์มหลักการบันทึกเมื่อเสร็จสิ้นงาน
 if 'clear_trigger' not in st.session_state: st.session_state.clear_trigger = 0
 
 current_page = st.session_state.page
@@ -146,6 +144,7 @@ if current_page == "login":
     input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="พิมพ์ตัวเลขรหัส เช่น 20", label_visibility="collapsed")
     if input_id.strip() != "":
         result = get_employee_from_sheet(input_id)
+        
         if result["status"] == "success" and result.get("found"):
             now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             st.session_state.user_info = {
@@ -154,6 +153,7 @@ if current_page == "login":
                 "position": result["position"],
                 "timestamp": now_time
             }
+            
             st.markdown(f"""
                 <div class="employee-dark-box">
                     <b>⏱️ Timestamp:</b> {now_time}<br>
@@ -162,6 +162,7 @@ if current_page == "login":
                     <b>💼 Position:</b> {result['position']}
                 </div>
             """, unsafe_allow_html=True)
+            
             if st.button("🔓 กดเพื่อเข้าระบบ"):
                 st.session_state.page = "select_defect"; st.rerun()
         else:
@@ -251,6 +252,8 @@ elif current_page == "defect_view":
         )
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         
+        st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:8px; margin-bottom:5px;'>💡 เลือก Material ที่ต้องการปรับปรุงจากกราฟ</p>", unsafe_allow_html=True)
+        
         state_key = f"sel_mat_{defect}"
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]
@@ -270,35 +273,46 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
         
+        # 📁 ส่วนที่ 1: คลังภาพหลักชิ้นงาน (แก้ไขดึงพรีวิวรูปกลับมาโชว์แล้ว)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:", type=["png", "jpg", "jpeg"], key=f"up_m_{defect}")
+        uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:", type=["png", "jpg", "jpeg"], key=f"up_m_{defect}_{st.session_state.clear_trigger}")
+        if uploaded_main:
+            st.image(uploaded_main, caption=f"✅ รูปภาพหลัก {selected_material}", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
+        # 📁 ส่วนที่ 2: คลังรูปรายละเอียดจุดย่อย (แก้ไขดึงพรีวิวรูปกลับมาโชว์แล้ว)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        st.file_uploader("แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}")
+        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}_{st.session_state.clear_trigger}")
+        if uploaded_slaves:
+            for idx, img_file in enumerate(uploaded_slaves[:5]):
+                st.image(img_file, caption=f"รูปย่อยที่ {idx+1}", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     
-    # 📝 ใช้ clear_trigger เพื่อสั่งล้างข้อความในฟอร์มหลังจากเซฟเสร็จ
     after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}_{st.session_state.clear_trigger}")
     
     st.markdown("<p style='font-size:13px; font-weight:bold; color:#2c3e50; margin-bottom:2px;'>📸 แนบรูปหลักฐานผลงาน After ชิ้นงานจริง (แนบได้สูงสุด 5 ภาพ):</p>", unsafe_allow_html=True)
     
-    uploaded_after_files = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ (สูงสุด 5 ภาพ):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_af_file_{defect}_{st.session_state.clear_trigger}")
-    camera_after_file = st.camera_input("📸 หรือเปิดกล้องถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final_{st.session_state.clear_trigger}")
+    uploaded_after_files = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ (แนบได้สูงสุด 5 ภาพ):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_af_file_{defect}_{st.session_state.clear_trigger}")
+    if uploaded_after_files:
+        for idx, img_file in enumerate(uploaded_after_files[:5]):
+            st.image(img_file, caption=f"✅ รูปภาพ After จากคลังไฟล์ ใบที่ {idx+1}", use_container_width=True)
+        
+    camera_after_file = st.camera_input("📸 ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final_{st.session_state.clear_trigger}")
+    if camera_after_file:
+        st.image(camera_after_file, caption="✅ รูปภาพ After จากกล้องพรีวิว", use_container_width=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 💾 ปุ่มบันทึกข้อมูล
     if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
         if not after_text.strip():
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
@@ -308,41 +322,27 @@ elif current_page == "defect_view":
             emp_name = st.session_state.user_info.get('name', '-') if st.session_state.user_info else '-'
             emp_position = st.session_state.user_info.get('position', '-') if st.session_state.user_info else '-'
             
-            # 🔄 ทำการตรวจสอบและแปลงไฟล์รูปภาพ After เป็นรูปแบบ Base64 เพื่อยิงเข้าระบบ
             image_payloads = []
-            
-            # 1. จัดการรูปภาพจากช่อง Uploader (สูงสุด 5 ภาพแรก)
             if uploaded_after_files:
                 for img_file in uploaded_after_files[:5]:
-                    bytes_data = img_file.getvalue()
-                    base64_str = base64.b64encode(bytes_data).decode('utf-8')
-                    image_payloads.append({
-                        "filename": f"After_File_{img_file.name}",
-                        "mimeType": img_file.type,
-                        "data": base64_str
-                    })
+                    base64_str = base64.b64encode(img_file.getvalue()).decode('utf-8')
+                    image_payloads.append({"filename": f"After_File_{img_file.name}", "mimeType": img_file.type, "data": base64_str})
             
-            # 2. จัดการรูปภาพที่มาจากกล้อง Camera Input
             if camera_after_file:
-                camera_bytes = camera_after_file.getvalue()
-                camera_base64 = base64.b64encode(camera_bytes).decode('utf-8')
-                image_payloads.append({
-                    "filename": f"After_Camera_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg",
-                    "mimeType": "image/jpeg",
-                    "data": camera_base64
-                })
+                camera_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
+                image_payloads.append({"filename": f"After_Camera_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg", "mimeType": "image/jpeg", "data": camera_base64})
 
-            # 📊 บรรจุชุด Payload ข้อมูลตามลำดับคอลัมน์ใหม่ใน Google Sheets
+            # 📊 บรรจุ Payload เรียงข้อมูลและสลับ Column ใหม่ตามตำแหน่งแผ่นงานในรูปภาพเรียบร้อยครับ
             payload = {
                 "timestamp": save_timestamp,
                 "employee_id": emp_id,
                 "employee_name": emp_name,
-                "position": emp_position,               # 📁 Column D และส่งต่อไป Column F
-                "defect_type": f"Defect {defect}",       # 📁 ไปอยู่ที่ Column G
+                "position": emp_position,               # 📁 คัดลอกค่า SV, OP, GL จริงมาลง Column D และ F
+                "defect_type": f"Defect {defect}",       # 📁 ย้ายสลับไปอยู่ที่ Column G
                 "material": str(selected_material),
                 "location_face": str(selected_face),
-                "after_details": str(after_text),        # 📁 ย้ายไปเขียนที่ Column M
-                "images": image_payloads                 # 📸 ส่งแนบไฟล์รูปภาพจริงทั้งหมดเข้าไปในระบบ Google Script
+                "after_details": str(after_text),        # 📁 ย้ายสลับไปเขียนที่ Column M
+                "images": image_payloads                 # 📸 แนบไฟล์ Base64 ภาพจริงยิงเข้าไปเก็บใน Google Drive ผ่าน Script
             }
             
             with st.spinner("⏳ กำลังอัปโหลดภาพและบันทึกข้อมูลลงฐานข้อมูล..."):
@@ -350,8 +350,6 @@ elif current_page == "defect_view":
                     response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                     if response.status_code == 200:
                         st.success(f"🎉 บันทึกข้อมูลเรียบร้อยแล้ว! รูปภาพและรายละเอียดถูกบันทึกลงตารางแล้ว")
-                        
-                        # 🧼 สั่ง Clear ล้างฟอร์มข้อมูลเก่าทั้งหมดออกทันที เพื่อรอรับคำสั่งใหม่
                         st.session_state.clear_trigger += 1
                         st.rerun()
                     else:

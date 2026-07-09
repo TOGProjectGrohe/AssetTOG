@@ -8,7 +8,7 @@ from datetime import datetime
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งองค์ประกอบให้เป็นแนวโปร่งแสงหรูหรา
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งแผงควบคุมโปร่งแสงยาวกรอบเดียวกัน
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -74,20 +74,61 @@ st.markdown("""
         font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
         margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
     }
-    
-    /* 🕋 กล่องดีไซน์พิเศษ: พื้นหลังสีดำอ่อนโปร่งแสง สวยงาม ตัวอักษรสีดำเข้ม */
+
+    /* 🕋 กล่องใหญ่ครอบทั้งหมด: พื้นหลังสีดำอ่อนโปร่งแสง สวยหรู สไตล์โมเดิร์นกระจก */
     .employee-dark-box {
-        background-color: rgba(0, 0, 0, 0.08) !important; 
-        border: 2px solid rgba(0, 0, 0, 0.15) !important; 
-        border-radius: 16px !important; 
-        padding: 14px 18px !important; 
-        margin-top: 12px !important; 
+        background-color: rgba(0, 0, 0, 0.07) !important; 
+        border: 2px solid rgba(0, 0, 0, 0.12) !important; 
+        border-radius: 24px !important; 
+        padding: 16px !important; 
+        margin-top: 10px !important; 
         margin-bottom: 15px !important;
         color: #000000 !important;
         font-size: 14px !important;
         line-height: 1.6 !important;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
+        box-shadow: inset 0 1px 4px rgba(0,0,0,0.02) !important;
     }
+
+    /* กล่องหัวข้อหลักสีน้ำเงินอ่อน ตัวอักษรดำ ขยายให้สวยงามในกรอบ */
+    .defect-title-box {
+        background-color: #dbeafe !important;
+        border: 1px solid #bfdbfe !important;
+        border-radius: 16px !important;
+        padding: 12px !important;
+        text-align: center !important;
+        color: #000000 !important;
+        font-weight: bold !important;
+        font-size: 14px !important;
+        margin-top: 10px !important;
+        margin-bottom: 16px !important;
+    }
+
+    /* 💎 ✨ ปุ่มเลือก Defect แบบสีฟ้าอ่อนโปร่งแสง ยืดกรอบยาวขนานเท่ากันเป๊ะ 100% */
+    div.stButton > button {
+        background-color: rgba(186, 230, 253, 0.5) !important; /* ฟ้าอ่อนโปร่งแสง */
+        backdrop-filter: blur(6px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        color: #000000 !important;
+        font-weight: bold !important;
+        font-size: 14px !important;
+        border: 2px solid rgba(255, 255, 255, 0.7) !important; /* ขอบขาวใสเพิ่มมิติมินิมอล */
+        border-radius: 16px !important;
+        width: 100% !important; /* บังคับยาวเท่ากันเป๊ะทุกปุ่ม */
+        padding: 12px 20px !important;
+        margin-bottom: 12px !important;
+        display: block !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02), inset 0 1px 2px rgba(255,255,255,0.3) !important;
+        transition: all 0.2s ease !important;
+    }
+    div.stButton > button:hover {
+        background-color: rgba(125, 211, 252, 0.7) !important;
+        border: 2px solid rgba(255, 255, 255, 0.9) !important;
+        transform: translateY(-1px) !important;
+    }
+    div.stButton > button:active {
+        transform: translateY(1px) !important;
+    }
+    
     .error-pastel-box {
         background-color: rgba(239, 68, 68, 0.15) !important;
         border: 2px solid rgba(239, 68, 68, 0.3) !important;
@@ -99,48 +140,6 @@ st.markdown("""
         font-size: 14px !important;
         font-weight: bold !important;
         text-align: center !important;
-    }
-
-    /* กล่องหัวข้อหลักสีน้ำเงินอ่อน ตัวอักษรดำ */
-    .defect-title-box {
-        background-color: #dbeafe !important;
-        border: 1px solid #bfdbfe !important;
-        border-radius: 20px !important;
-        padding: 15px !important;
-        text-align: center !important;
-        color: #000000 !important;
-        font-weight: bold !important;
-        font-size: 15px !important;
-        margin-top: 10px !important;
-        margin-bottom: 20px !important;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02) !important;
-    }
-
-    /* 💎 ปรับแต่งกรอบปุ่มเลือก Defect ให้เป็นสีฟ้าอ่อนแบบโปร่งแสง (Glassmorphic) สวยหรู กว้างเท่ากัน */
-    div.stButton > button {
-        background-color: rgba(186, 230, 253, 0.45) !important;
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
-        color: #000000 !important;
-        font-weight: bold !important;
-        font-size: 14px !important;
-        border: 2px solid rgba(255, 255, 255, 0.6) !important;
-        border-radius: 16px !important;
-        width: 100% !important;
-        padding: 12px 20px !important;
-        margin-bottom: 12px !important;
-        display: block !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03), inset 0 1px 2px rgba(255,255,255,0.4) !important;
-        transition: all 0.25s ease !important;
-    }
-    div.stButton > button:hover {
-        background-color: rgba(125, 211, 252, 0.65) !important;
-        border: 2px solid rgba(255, 255, 255, 0.8) !important;
-        transform: translateY(-1px) !important;
-    }
-    div.stButton > button:active {
-        transform: translateY(1px) !important;
-        background-color: rgba(125, 211, 252, 0.45) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -180,7 +179,7 @@ def load_real_defect_data():
     except Exception as e:
         return pd.DataFrame()
 
-# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม (แก้ไขจุดบกพร่องแถว หน้า C แล้ว)
+# 🔗 รายชื่อลิงก์ URL คลังภาพทั้ง 18 แฟ้ม
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -223,7 +222,6 @@ if current_page == "login":
         if result["status"] == "success" and result.get("found"):
             now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
-            # เก็บข้อมูลลงใน Session เพื่อส่งไปใช้หน้าถัดๆ ไป
             st.session_state.user_info = {
                 "id": result["id"], 
                 "name": result["name"], 
@@ -252,31 +250,35 @@ if current_page == "login":
             
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสอง: คัดเลือก Defect (เพิ่มกล่องข้อมูลพนักงานโชว์ด้านบนแบบโปร่งแสง) ----------------
+# ---------------- หน้าสอง: คัดเลือก Defect (ยุบรวมทุกองค์ประกอบเข้ากล่องดำโปร่งแสงยาวใบเดียวกัน) ----------------
 elif current_page == "select_defect":
-    # 👤 ดึงข้อมูลพนักงานขึ้นมาโชว์ในกรอบพื้นหลังสีดำอ่อน โปร่งแสง ตัวอักษรสีดำ ก่อนเลือก Defect เพื่อความต่อเนื่อง
+    
+    # 🕋 เปิดกล่องใหญ่ใบเดียว รวบหมดทั้ง รายชื่อ + หัวข้อ + 3 ปุ่มให้อยู่ในนี้
+    st.markdown('<div class="employee-dark-box">', unsafe_allow_html=True)
+    
+    # ส่วนที่ 1: รายละเอียดข้อมูลคนล็อกอิน
     if st.session_state.user_info:
-        u_info = st.session_state.user_info
         now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         st.markdown(f"""
-            <div class="employee-dark-box">
-                <b>⏱️ Timestamp:</b> {now_time}<br>
-                <b>🆔 Employee ID:</b> {st.session_state.user_info.get('id')}<br>
-                <b>👤 Name:</b> {st.session_state.user_info['name']}<br>
-                <b>💼 Position:</b> GL
-            </div>
+            <b>⏱️ Timestamp:</b> {now_time}<br>
+            <b>🆔 Employee ID:</b> {st.session_state.user_info.get('id')}<br>
+            <b>👤 Name:</b> {st.session_state.user_info['name']}<br>
+            <b>💼 Position:</b> GL
+            <hr style="margin: 12px 0; border: 0; border-top: 1px dashed rgba(0,0,0,0.15);">
         """, unsafe_allow_html=True)
 
-    # หัวข้อกล่องสีน้ำเงินอ่อน ตัวอักษรดำ
+    # ส่วนที่ 2: หัวข้อหลักสีน้ำเงินอ่อน
     st.markdown('<div class="defect-title-box">🎯 โปรดเลือกประเภท Defect ที่ต้องการปรับปรุง</div>', unsafe_allow_html=True)
     
-    # ปุ่มเลือกแบบโปร่งแสง สีฟ้าอ่อน กรอบเท่ากันขนานเป๊ะ 
+    # ส่วนที่ 3: ปุ่มเลือก Defect ทั้ง 3 (ขยายยาวเท่ากัน 100% และแสดงผลโปร่งแสงสวยงามอยู่บนกรอบ)
     if st.button("🟠 Defect 260 (Rough Lines)"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
     if st.button("🔵 Defect 261 (Grinding Structure)"):
         st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
     if st.button("⚫ Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
+        
+    st.markdown('</div>', unsafe_allow_html=True) # 🕋 ปิดกล่องใหญ่แผงควบคุม
 
 # ---------------- หน้าสาม: บอร์ดสถิติอิง Material จริง ----------------
 elif current_page == "defect_view":
@@ -374,7 +376,6 @@ elif current_page == "defect_view":
             clickmode='event+select'
         )
         
-        # แก้ไขโค้ดที่ค้างคำว่า Implementers เรียบร้อยแล้วตรงจุดนี้
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         state_key = f"sel_mat_{defect}"
         

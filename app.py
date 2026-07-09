@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import requests
-import plotly.express as px  # เรียกใช้ Plotly ทำกราฟสถิติสไตล์พาสเทล
+import plotly.express as px
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
@@ -35,7 +35,7 @@ st.markdown("""
         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
     }
     
-    /* 🎯 ปุ่มลิงก์สีเขียวเปิดคลังภาพ Google Drive บังคับ Grid View */
+    /* 🎯 ปุ่มลิงก์สีเขียวเปิดคลังภาพ Google Drive */
     .drive-link-button {
         display: block !important; text-align: center !important; background-color: #10b981 !important; color: white !important;
         font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
@@ -47,7 +47,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานจาก Google Sheet ลิงก์หลักของคุณวีรพันธ์
+# 🌐 ฟังก์ชันดึงข้อมูลรายชื่อพนักงานจาก Google Sheet
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
@@ -64,7 +64,7 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 🔗 คลังรายชื่อลิงก์ Google Drive จริงทั้ง 18 แฟ้ม (แก้ปัญหาลิงก์ SA_260 แยกจากกันถูกต้องครับ)
+# 🔗 รายชื่อลิงก์ URL คลังภาพจริงทั้ง 18 แฟ้ม
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -120,7 +120,7 @@ elif current_page == "select_defect":
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
-# ---------------- หน้าสาม: แผงควบคุมสถิติ กราฟวงกลมบน/แท่งล่าง + ลิงก์ตรงคลังภาพและอัปโหลด 5 รูป ----------------
+# ---------------- หน้าสาม: กราฟสถิติ 1-10 อันดับแรก + ลิงก์ตรงคลังภาพและอัปโหลด 5 รูป ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -130,17 +130,16 @@ elif current_page == "defect_view":
         
     st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงวิเคราะห์และเลือกรูปงานจริงของ {defect_title}</b></div>', unsafe_allow_html=True)
     
-    # 📊 ----------------- 🛠️ แก้ไขส่วนจุดบั๊กสถิติกราฟพาสเทล 1-10 อันดับแรก -----------------
+    # 📊 แผงกราฟสถิติด้านบน (Dashboard 1-10 อันดับแรก)
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<b style='color:#1e293b; font-size:14px; display:block; text-align:center;'>📈 สถิติอัตราส่วน Defect 1-10 อันดับแรก</b>", unsafe_allow_html=True)
     
-    # ดึงข้อมูลจำลอง 10 รายการแรกมาคำนวณทำกราฟ
     chart_data = pd.DataFrame({
         "รายการชิ้นงาน": [f"ชิ้นงานที่ {i}" for i in range(1, 11)],
         "จำนวนที่พบ (ครั้ง)": [45, 38, 32, 28, 25, 21, 18, 15, 12, 10]
     })
     
-    # 🍕 1. แผนภูมิวงกลม (Pie Chart) - แก้ไขพาธจานสีอ้างอิงของ Plotly เป็นแบบสมบูรณ์ชัวร์ผ่าน 100%
+    # 🍕 1. แผนภูมิวงกลม (Pie Chart) - ซ่อมแซมระบบเรียกจานสีผ่านฉลุย
     fig_pie = px.pie(
         chart_data, 
         names="รายการชิ้นงาน", 
@@ -154,7 +153,7 @@ elif current_page == "defect_view":
     )
     st.plotly_chart(fig_pie, use_container_width=True)
     
-    # 📊 2. แผนภูมิแท่ง (Bar Chart) อยู่ด้านล่างสลับตำแหน่งสไตล์ Dashboard คลีน ๆ
+    # 📊 2. แผนภูมิแท่ง (Bar Chart) อยู่ด้านล่าง
     fig_bar = px.bar(
         chart_data.iloc[::-1],
         x="จำนวนที่พบ (ครั้ง)", 
@@ -171,27 +170,54 @@ elif current_page == "defect_view":
     st.plotly_chart(fig_bar, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # 🔘 ส่วนจัดการฟิลเตอร์พิกัดหน้างานพนักงาน
+    # 🔘 ส่วนฟิลเตอร์เลือกพิกัดหน้างาน
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
     
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"]:
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
         
-        # 📂 แผงควบคุมที่ 1: จัดการอัปโหลดรูปภาพหลักชิ้นงาน
+        # 📂 ส่วนที่ 1: คลังภาพหลักชิ้นงาน
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        uploaded_main = st.file_uploader("เมื่อเลือกรูปภาพหลักที่ต้องการได้แล้ว นำไฟล์มาใส่ที่นี่:", type=["png", "jpg", "jpeg"], key=f"up_m_{defect}")
+        # 🛠️ ย่อข้อความลงตัวแปร String สั้น ๆ ป้องกันข้อผิดพลาด Syntax Error หลุดบรรทัด
+        msg_main = "แนบรูปภาพหลักที่เลือกที่นี่:"
+        uploaded_main = st.file_uploader(msg_main, type=["png", "jpg", "jpeg"], key=f"up_m_{defect}")
         if uploaded_main:
             st.image(uploaded_main, caption="✅ รูปภาพหลักที่คุณเลือก", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 📂 แผงควบคุมที่ 2: จัดการอัปโหลดรูปภาพรายละเอียดจุดย่อย (เซ็ตอัปโหลดได้สูงสุด 5 รูป)
+        # 📂 ส่วนที่ 2: คลังรูปรายละเอียดจุดย่อย (อัปโหลดพร้อมกันได้สูงสุด 5 รูป)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
         
+        # 🛠️ ย่อข้อความป้องกันการเออเร่อ
+        msg_slave = "แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):"
         uploaded_slaves = st.file_uploader(
-            "เมื่อ
+            msg_slave, 
+            type=["png", "jpg", "jpeg"], 
+            accept_multiple_files=True, 
+            key=f"up_s_multiple_{defect}"
+        )
+        
+        if uploaded_slaves:
+            allowed_slaves = uploaded_slaves[:5]
+            st.markdown(f"<p style='font-size:12px; color:#10b981; font-weight:bold;'>📸 รูปรายละเอียดจุดย่อยที่แนบ ({len(allowed_slaves)}/5 รูป):</p>", unsafe_allow_html=True)
+            
+            for idx, img_file in enumerate(allowed_slaves):
+                st.image(img_file, caption=f"รูปภาพย่อยที่ {idx+1}: {img_file.name}", use_container_width=True)
+                
+            if len(uploaded_slaves) > 5:
+                st.warning("⚠️ ระบบรองรับภาพย่อยสูงสุด 5 รูปต่อครั้ง")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
+    st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
+    st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
+    st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")
+    st.camera_input("ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final")
+    st.markdown('</div>', unsafe_allow_html=True)
+ 

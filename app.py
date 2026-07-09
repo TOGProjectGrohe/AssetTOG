@@ -274,7 +274,7 @@ elif current_page == "select_defect":
         
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสาม: บอร์ดสถิติอิง Material จริง (จุดแก้ไขคำพูดและย้ายตำแหน่ง) ----------------
+# ---------------- หน้าสาม: บอร์ดสถิติอิง Material จริง (อัปเดตชื่อหัวข้อตามบรีฟใหม่) ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -282,7 +282,8 @@ elif current_page == "defect_view":
     if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"):
         st.session_state.page = "select_defect"; st.rerun()
         
-    st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงวิเคราะห์รูปงานจริงของ {defect_title}</b></div>', unsafe_allow_html=True)
+    # ✨ 🛠️ ปรับแก้ข้อความหัวข้อการวิเคราะห์หลักตรงนี้ให้เป็นคำว่า "แผนภูมิ Defect [รหัส]" ตามสั่งเรียบร้อยครับ
+    st.markdown(f'<div class="login-card" style="text-align:center; color:#000000; font-weight:bold;"><b>📊 แผนภูมิ Defect {defect}</b></div>', unsafe_allow_html=True)
     
     raw_df = load_real_defect_data()
     if not raw_df.empty and 'errortype' in raw_df.columns and 'Material' in raw_df.columns:
@@ -301,9 +302,9 @@ elif current_page == "defect_view":
         qty_col = "rework quantity"
 
     st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 STATS REPORT (TOP 10 MATERIAL)</b>", unsafe_allow_html=True)
     
-    # 🔁 โดนย้ายลงไปอยู่ใต้กราฟแท่งเรียบร้อยครับ
+    # ส่วนหัวข้อรายงานสถิติย่อย 10 อันดับจริงประจำหน้างาน
+    st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 รายงาน 10 อันดับ Defect {defect} ที่พบ</b>", unsafe_allow_html=True)
     
     if not chart_data.empty:
         neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
@@ -343,7 +344,8 @@ elif current_page == "defect_view":
                 name=mat,
                 marker=dict(
                     color=base_color,
-                    line=dict(color='#ffffff', width=3)
+                    line=dict(color='#ffffff', width=3),
+                    pattern=None
                 ),
                 hovertemplate=f"Material: {mat}<br>จำนวน: {val} ครั้ง<extra></extra>"
             ))
@@ -372,8 +374,7 @@ elif current_page == "defect_view":
         
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         
-        # ⭐ [ตำแหน่งใหม่] ย้ายข้อความใหม่มาแสดงใต้กราฟแท่งตรงนี้เรียบร้อยครับ!
-        st.markdown("<p style='font-size:12.5px; color:#1e293b; font-weight:bold; text-align:center; margin-top:5px; margin-bottom:10px;'>💡 เลือก Material ที่ต้องการปรับปรุงจากกราฟ</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:8px; margin-bottom:5px;'>💡 เลือก Material ที่ต้องการปรับปรุงจากกราฟ</p>", unsafe_allow_html=True)
         
         state_key = f"sel_mat_{defect}"
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:

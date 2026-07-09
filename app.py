@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
-import requests
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอธีมส้มพาสเทล และแผงภาพสไตล์ Shopping Online (ดึงภาพสด ไม่รกเครื่องพนักงาน)
+# 2. 🎨 CSS ตกแต่งหน้าจอธีมส้มพาสเทล ปุ่มกดขนาดใหญ่สีสันสดใส เหมาะสำหรับพนักงานหน้างาน
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -37,19 +36,18 @@ st.markdown("""
         width: 50px; height: 50px; background-color: #000000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ffffff; font-weight: bold; font-size: 15px; margin-bottom: 8px;
     }
     
-    /* 📦 แผงเลือกรูปสไตล์ Shopping App */
-    .shop-image-card {
-        border: 2px solid #e2e8f0; border-radius: 16px; padding: 8px; text-align: center;
-        background-color: #ffffff; transition: all 0.2s ease-in-out; margin-bottom: 12px;
+    /* 🔵 ปุ่มลิงก์ข้ามไปดูคลัง Google Drive ของจริง */
+    .drive-link-button {
+        display: block !important; text-align: center !important; background-color: #005aab !important;
+        color: white !important; font-weight: bold !important; padding: 12px !important;
+        border-radius: 12px !important; text-decoration: none !important; margin-top: 10px !important;
+        margin-bottom: 15px !important; box-shadow: 0 4px 10px rgba(0,90,171,0.2) !important;
     }
-    .shop-image-card-selected {
-        border: 3.5px solid #007bc3 !important; background-color: #f0f7ff !important;
-        box-shadow: 0 8px 20px rgba(0, 123, 195, 0.2) !important; transform: scale(1.02);
-    }
+    .drive-link-button:hover { background-color: #004482 !important; color: white !important; }
     </style>
 """, unsafe_allow_html=True)
 
-# 🌐 ฟังก์ชันข้อมูลพนักงานจาก Google Sheet (คงไว้เหมือนเดิม)
+# 🌐 ฟังก์ชันดึงข้อมูลพนักงานจาก Google Sheet
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
@@ -66,68 +64,34 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 🌐 ฟังก์ชันดึงภาพสดจาก Microsoft OneDrive (ไม่ต้องผุกบัตรเครดิต)
-@st.cache_resource(show_spinner="🔄 กำลังสแกนรูปภาพจาก Microsoft OneDrive...")
-def get_images_from_onedrive(folder_id):
-    # ตรงนี้อนาคตเราจะเอา Access Token ของ Microsoft มาใส่แทนคีย์กุญแจของกูเกิลครับ
-    access_token = "YOUR_MICROSOFT_ACCESS_TOKEN"
-    
-    # ถ้าใส่คีย์แล้ว มันจะยิงไปดึงรูปภาพจากโฟลเดอร์ของ OneDrive ตรงๆ
-    if access_token != "YOUR_MICROSOFT_ACCESS_TOKEN":
-        try:
-            url = f"https://graph.microsoft.com/v1.0/me/drive/items/{folder_id}/children"
-            headers = {'Authorization': f'Bearer {access_token}'}
-            response = requests.get(url, headers=headers).json()
-            
-            image_list = []
-            for item in response.get('value', []):
-                if 'image' in item:
-                    image_list.append({
-                        "id": item['id'], "name": item['name'],
-                        "embed_url": item['@microsoft.graph.downloadUrl'] # ลิงก์รูปภาพตรงของไมโครซอฟท์
-                    })
-            return image_list
-        except:
-            pass
-
-    # ระบบจำลองรูปภาพจริงให้เห็นความสวยงามก่อนเชื่อมต่อคีย์จริง
-    return [
-        {"id": "od_1", "name": "รูปชิ้นงานจากOneDrive_01.jpg", "embed_url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=300"},
-        {"id": "od_2", "name": "รูปชิ้นงานจากOneDrive_02.jpg", "embed_url": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=300"}
-    ]
-
-# 🔗 คลังจับคู่รหัสโฟลเดอร์ของ Microsoft OneDrive (เปลี่ยนจากลิงก์ Google Drive)
-# อนาคตเราแค่เอา ID โฟลเดอร์ที่อยู่บน OneDrive มากรอกแทนที่ตัวเลขจำลองด้านล่างนี้ครับ
-ONEDRIVE_MAP = {
+# 🔗 ฐานข้อมูล ID โฟลเดอร์ Google Drive ของจริงทั้ง 18 ตัวของคุณเป๊ะ ๆ
+DRIVE_MAP = {
     "A": {
-        260: {"main_id": "OD_FOLDER_ID_A_260", "main_title": "A_260", "slave_id": "OD_FOLDER_ID_SA_260", "slave_title": "SA_260"},
-        261: {"main_id": "OD_FOLDER_ID_A_261", "main_title": "A_261", "slave_id": "OD_FOLDER_ID_SA_261", "slave_title": "SA_261"},
-        380: {"main_id": "OD_FOLDER_ID_A_380", "main_title": "A_380", "slave_id": "OD_FOLDER_ID_SA_380", "slave_title": "SA_380"}
+        260: {"main_id": "1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_id": "1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "slave_title": "SA_260"},
+        261: {"main_id": "1phKW7eXcijB4U6P95JHnJm6BgG2bcKyQ", "main_title": "A_261", "slave_id": "1n5KGFnub6z3urE09taiJh4TaUJXqElCF", "slave_title": "SA_261"},
+        380: {"main_id": "1-77ViPZrWhRXiYMvpa2gTp63CDjxIcHu", "main_title": "A_380", "slave_id": "1DlKAZot6QPHXdvuVu8ro_TIk26NsznDz", "slave_title": "SA_380"}
     },
     "B": {
-        260: {"main_id": "OD_FOLDER_ID_B_260", "main_title": "B_260", "slave_id": "OD_FOLDER_ID_SB_260", "slave_title": "SB_260"},
-        261: {"main_id": "OD_FOLDER_ID_B_261", "main_title": "B_261", "slave_id": "OD_FOLDER_ID_SB_261", "slave_title": "SB_261"},
-        380: {"main_id": "OD_FOLDER_ID_B_380", "main_title": "B_380", "slave_id": "OD_FOLDER_ID_SB_380", "slave_title": "SB_380"}
+        260: {"main_id": "1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "main_title": "B_260", "slave_id": "1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_title": "SB_260"},
+        261: {"main_id": "1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "main_title": "B_261", "slave_id": "1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_title": "SB_261"},
+        380: {"main_id": "1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "main_title": "B_380", "slave_id": "179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "SB_380"}
     },
     "C": {
-        260: {"main_id": "OD_FOLDER_ID_C_260", "main_title": "C_260", "slave_id": "OD_FOLDER_ID_SC_260", "slave_title": "SC_260"},
-        261: {"main_id": "OD_FOLDER_ID_C_261", "main_title": "C_261", "slave_id": "OD_FOLDER_ID_SC_261", "slave_title": "SC_261"},
-        380: {"main_id": "OD_FOLDER_ID_C_380", "main_title": "C_380", "slave_id": "OD_FOLDER_ID_SC_380", "slave_title": "SC_380"}
+        260: {"main_id": "13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_id": "1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
+        261: {"main_id": "1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_id": "1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
+        380: {"main_id": "14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_id": "11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_title": "SC_380"}
     }
 }
 
 if 'page' not in st.session_state: st.session_state.page = "login"
 if 'user_info' not in st.session_state: st.session_state.user_info = None
 if 'current_defect' not in st.session_state: st.session_state.current_defect = None
-if 'selected_main_photo_id' not in st.session_state: st.session_state.selected_main_photo_id = None
-if 'selected_slave_photo_id' not in st.session_state: st.session_state.selected_slave_photo_id = None
 
 current_page = st.session_state.page
 
 st.markdown('<div class="custom-top-navbar"><a href="?nav=reset" target="_self" class="nav-btn-link">🏠 Home</a><a href="?nav=reset" target="_self" class="nav-btn-link">🚪 Logout</a></div>', unsafe_allow_html=True)
 if st.query_params.get("nav") == "reset":
     st.session_state.page = "login"; st.session_state.user_info = None; st.session_state.current_defect = None
-    st.session_state.selected_main_photo_id = None; st.session_state.selected_slave_photo_id = None
     st.query_params.clear(); st.rerun()
 
 st.markdown('<div class="center-header-block"><div class="tog-center-logo">TOG</div><span style="font-size:18px; font-weight:bold; color:white;">TOG App</span></div>', unsafe_allow_html=True)
@@ -156,7 +120,7 @@ elif current_page == "select_defect":
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
 
-# ---------------- หน้าสาม: 🛍️ ระบบคัดรูปสไตล์ร้านช้อปปิ้งออนไลน์ ดึงรูปภาพสดจาก OneDrive (กรอบละ 1 รูปถ้วน) ----------------
+# ---------------- หน้าสาม: ส่วนเชื่อมต่อคลังภาพของจริง 100% ไม่ใช้รูปสุ่มจำลอง ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -164,58 +128,45 @@ elif current_page == "defect_view":
     if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"):
         st.session_state.page = "select_defect"; st.rerun()
         
-    st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 ส่วนคัดเลือกชิ้นงาน Before ของ {defect_title}</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 ส่วนตรวจสอบคลังงานชิ้นงาน Before ของ {defect_title}</b></div>', unsafe_allow_html=True)
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
     
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"]:
         face_char = selected_face.split()[-1]
-        folder_info = ONEDRIVE_MAP[face_char][defect]
+        folder_info = DRIVE_MAP[face_char][defect]
         
-        # 🟢 กรอบที่ 1: ภาพใหญ่ (ดึงสดจาก OneDrive คลังหลัก)
+        # 🟢 ส่วนที่ 1: จัดการภาพใหญ่ต้นทาง (ของจริง)
         st.markdown(f'<div class="login-card">', unsafe_allow_html=True)
-        st.markdown(f"<b style='color:#005aab; font-size:13px;'>🛒 ส่วนที่ 1: จิ้มเลือกภาพใหญ่ต้นทาง (คลัง OneDrive: {folder_info['main_title']})</b>", unsafe_allow_html=True)
+        st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพใหญ่ต้นทาง ({folder_info['main_title']})</b>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size:12px; color:#64748b; margin-bottom:5px;'>กดปุ่มด้านล่างเพื่อเปิดดูรูปชิ้นงานของจริงใน Google Drive:</p>", unsafe_allow_html=True)
         
-        main_photos = get_images_from_onedrive(folder_info['main_id'])
-        if main_photos:
-            for item in main_photos:
-                is_picked = st.session_state.selected_main_photo_id == item['id']
-                selected_css = "shop-image-card-selected" if is_picked else ""
-                
-                st.markdown(f"""
-                <div class="shop-image-card {selected_css}">
-                    <img src="{item['embed_url']}" style="width:100%; max-height:160px; object-fit:contain; border-radius:10px;">
-                    <div style="font-size:12px; font-weight:bold; margin-top:6px; color:#1e293b;">{item['name']}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                if st.button(f"👇 เลือกรูปภาพ: {item['name']}", key=f"pick_main_{item['id']}", use_container_width=True):
-                    st.session_state.selected_main_photo_id = item['id']
-                    st.rerun()
+        # ลิงก์ตรงเข้าโฟลเดอร์ Google Drive จริงชิ้นที่ 1
+        main_url = f"https://drive.google.com/drive/folders/{folder_info['main_id']}"
+        st.markdown(f'<a href="{main_url}" target="_blank" class="drive-link-button">🔍 กดเปิดดูคลังภาพใหญ่ของจริง ↗️</a>', unsafe_allow_html=True)
+        
+        # กล่องให้พนักงานเลือกว่าดูในคลังแล้วตกลงใช้ภาพหมายเลขอะไร
+        st.markdown("<b style='font-size:12px;'>✍️ พนักงานยืนยันรหัส/ชื่อรูปภาพที่เลือก:</b>", unsafe_allow_html=True)
+        st.selectbox("ระบุหมายเลขภาพต้นทางที่เลือก:", 
+                     ["-- โปรดเลือกชื่อหรือเลขรูปภาพที่ท่านส่องดูเมื่อกี้ --", "รูปภาพชิ้นงานที่ 1", "รูปภาพชิ้นงานที่ 2", "รูปภาพชิ้นงานที่ 3", "รูปภาพชิ้นงานที่ 4", "รูปภาพชิ้นงานที่ 5"], 
+                     key=f"sel_main_{defect}", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 🔵 กรอบที่ 2: ภาพรายละเอียดจุดย่อย (ดึงสดจาก OneDrive คลังย่อย - เหลือ 1 รูปถ้วนตามสเปก)
+        # 🔵 ส่วนที่ 2: จัดการภาพรายละเอียดจุดย่อย (ของจริง)
         st.markdown(f'<div class="login-card">', unsafe_allow_html=True)
-        st.markdown(f"<b style='color:#007bc3; font-size:13px;'>🛒 ส่วนที่ 2: จิ้มเลือกภาพรายละเอียด (คลัง OneDrive: {folder_info['slave_title']})</b>", unsafe_allow_html=True)
+        st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังภาพจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size:12px; color:#64748b; margin-bottom:5px;'>กดปุ่มด้านล่างเพื่อเปิดดูภาพรายละเอียดใน Google Drive:</p>", unsafe_allow_html=True)
         
-        slave_photos = get_images_from_onedrive(folder_info['slave_id'])
-        if slave_photos:
-            for sub_item in slave_photos:
-                is_sub_picked = st.session_state.selected_slave_photo_id == sub_item['id']
-                sub_selected_css = "shop-image-card-selected" if is_sub_picked else ""
-                
-                st.markdown(f"""
-                <div class="shop-image-card {sub_selected_css}">
-                    <img src="{sub_item['embed_url']}" style="width:100%; max-height:160px; object-fit:contain; border-radius:10px;">
-                    <div style="font-size:11px; margin-top:6px; color:#475569;">{sub_item['name']}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                if st.button(f"👇 เลือกรูปภาพ: {sub_item['name']}", key=f"pick_slave_{sub_item['id']}", use_container_width=True):
-                    st.session_state.selected_slave_photo_id = sub_item['id']
-                    st.rerun()
+        # ลิงก์ตรงเข้าโฟลเดอร์ Google Drive จริงชิ้นที่ 2
+        slave_url = f"https://drive.google.com/drive/folders/{folder_info['slave_id']}"
+        st.markdown(f'<a href="{slave_url}" target="_blank" class="drive-link-button">🔍 กดเปิดดูคลังภาพย่อยของจริง ↗️</a>', unsafe_allow_html=True)
+        
+        st.markdown("<b style='font-size:12px;'>✍️ พนักงานยืนยันรหัส/ชื่อรูปภาพรายละเอียดที่เลือก:</b>", unsafe_allow_html=True)
+        st.selectbox("ระบุหมายเลขภาพย่อยที่เลือก:", 
+                     ["-- โปรดเลือกชื่อหรือเลขรูปภาพที่ท่านส่องดูเมื่อกี้ --", "รายละเอียดจุดที่ A", "รายละเอียดจุดที่ B", "รายละเอียดจุดที่ C", "รายละเอียดจุดที่ D"], 
+                     key=f"sel_slave_{defect}", label_visibility="collapsed")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
+    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER (ถ่ายรูปสดขึ้นระบบได้ทันที)
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
     st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")

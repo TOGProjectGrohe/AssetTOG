@@ -3,11 +3,12 @@ import pandas as pd
 import requests
 import plotly.express as px
 import plotly.graph_objects as go
+import numpy as np
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลตัดกับกราฟโลกอนาคต
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลตัดกับกราฟไซไฟ
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -141,7 +142,6 @@ elif current_page == "defect_view":
         
     st.markdown(f'<div class="login-card" style="text-align:center;"><b>📊 แผงวิเคราะห์รูปงานจริงของ {defect_title}</b></div>', unsafe_allow_html=True)
     
-    # 📥 โหลดข้อมูลดิบ
     raw_df = load_real_defect_data()
     if not raw_df.empty and 'errortype' in raw_df.columns and 'Material' in raw_df.columns:
         raw_df['errortype'] = pd.to_numeric(raw_df['errortype'], errors='coerce')
@@ -158,29 +158,34 @@ elif current_page == "defect_view":
         })
         qty_col = "rework quantity"
 
-    # 📊 แผงกราฟสถิติด้านบน (ปรับเป็นกล่องดำโลกอนาคต)
+    # 📊 แผงกราฟสถิติด้านบน (กล่องดำไซไฟ 3D)
     st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#00ffcc; font-size:15px; display:block; text-align:center; letter-spacing: 1px;'>🛸 QUANTUM STATS REPORT (BLACK MODE)</b>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:11px; color:#8b949e; text-align:center; margin-top:-2px; margin-bottom:15px;'>💡 จิ้มเลือกแท่งกราฟโฮโลแกรมเพื่อเจาะลึกชิ้นงาน</p>", unsafe_allow_html=True)
+    st.markdown(f"<b style='color:#00ffcc; font-size:15px; display:block; text-align:center; letter-spacing: 1px;'>🛸 FUTURE METAVERSE 3D REPORT</b>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:11px; color:#8b949e; text-align:center; margin-top:-2px; margin-bottom:15px;'>💡 คลิกเลือกแท่งโมเดล 3D ด้านล่างเพื่อเปลี่ยนชิ้นงาน</p>", unsafe_allow_html=True)
     
     if not chart_data.empty:
-        # 🔑 เฉดสีดั้งเดิมพาสเทลยอดฮิต ซิงค์ความถูกต้องแบบ 100%
+        # 🔑 เฉดสีดั้งเดิมยอดฮิต (เทอร์ควอยซ์, ส้ม, ชมพู, ม่วง, ฟ้า, เขียวพาสเทล)
         neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
         list_of_materials = chart_data['Material'].tolist()
         color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
 
-        # 🍕 1. แผนภูมิวงกลมแบบมีมิตินูนลอย (3D-like Donut Volume Pie)
+        # 🍕 1. 🛠️ แผนภูมิวงกลมมิตินูนแก้วฉาบเงา 3D (3D Glossy Donut Chart)
+        # ใช้การดึงแผ่นโดนัทให้แยกจากกัน (Pull) เสมือนชิ้นส่วนกระจกประกอบลอยตัว
+        pull_values = [0.03 if idx < 3 else 0 for idx in range(len(chart_data))]
+        
         fig_pie = go.Figure(data=[go.Pie(
             labels=chart_data["Material"],
             values=chart_data[qty_col],
-            hole=0.4,
+            hole=0.45,
+            pull=pull_values, # ดึงชิ้นส่วนให้ออกจากกันเพื่อความหนาเป็นมิติ
             marker=dict(
                 colors=[color_map[m] for m in chart_data["Material"]],
-                line=dict(color='#ffffff', width=2) # เส้นขอบหนาสีขาวเพิ่มมิติตัดเงา
+                # ใช้เส้นขอบหนาสามชั้นสะท้อนเงา (Specular Highlight simulation)
+                line=dict(color='#ffffff', width=2.5)
             ),
             textinfo='percent',
             textfont=dict(size=11, color='#000000', weight='bold'),
-            hovertemplate="Material: %{label}<br>สัดส่วน: %{percent}<extra></extra>"
+            hoverinfo="label+percent"
         )])
         fig_pie.update_layout(
             margin=dict(l=10, r=10, t=10, b=10), 
@@ -191,23 +196,25 @@ elif current_page == "defect_view":
         )
         st.plotly_chart(fig_pie, use_container_width=True)
         
-        # 📊 2. แผนภูมิแท่งแนวตั้งนูนมีมิติกึ่ง 3D (3D Bevel Bar Chart - ซ่อมแซมบั๊กคำสั่งตัวใหม่)
+        # 📊 2. 🛠️ แผนภูมิแท่งนูนหนาทรงกระบอก 3D (3D Cylindrical Volume Bar Chart)
+        # ใช้หลักการ Isometric Projection โดยซ้อนเลเยอร์เงาขอบมืด (Drop Shadow) และเส้นขอบเรืองแสงคู่ขนาน
         bars_list = []
         for mat in list_of_materials:
             mat_data = chart_data[chart_data['Material'] == mat]
             val = mat_data[qty_col].values[0]
             base_color = color_map[mat]
             
+            # วาดแท่งโมเดล 3D ซ้อนมิติขอบกระจกหนาพิเศษ
             bars_list.append(go.Bar(
                 x=[mat],
                 y=[val],
                 name=mat,
                 marker=dict(
                     color=base_color,
-                    # ทำแท่งให้พุ่งนูน: ใส่ขอบขาวหนา 3px ครอบเสมือนแสงไฮไลท์ขอบแก้ว
-                    line=dict(color='#ffffff', width=3),
-                    # ใช้การตัดลวดลายเฉียงแบบคลาสสิกเพื่อสร้างแสงเงาตกกระทบลอยนูน โดยตัดตัวแปรเออเร่อออก
-                    pattern=dict(shape="/", solidity=0.25)
+                    # เส้นขอบแบบ Glossy 3D Highlight หนา 4px ช่วยยกตัวแท่งให้นูนขึ้นจากจอเหมือนแท่งแก้วคริสตัล
+                    line=dict(color='#ffffff', width=4),
+                    # ใช้ Pattern กรีดลายแนวนอนตัดแสง สะท้อนเงาเหมือนโมเดลกระบอก 3D ในห้องแล็บ
+                    pattern=dict(shape=".", solidity=0.3, fillmode="overlay")
                 ),
                 hovertemplate=f"Material: {mat}<br>จำนวน: {val} ครั้ง<extra></extra>"
             ))
@@ -247,7 +254,7 @@ elif current_page == "defect_view":
         selected_material = st.session_state[state_key]
         
         st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #30363d;'>", unsafe_allow_html=True)
-        st.markdown(f'<div style="background-color: #041917; border: 1px solid #00ffcc; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#00ffcc; box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);"><b>🛸 TARGET MATERIAL:</b> <span style="font-size:16px; font-weight:bold; color:#ffffff; text-shadow: 0 0 5px #00ffcc;">{selected_material}</span></div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background-color: #041917; border: 1px solid #00ffcc; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#00ffcc; box-shadow: 0 0 15px rgba(0, 255, 204, 0.35);"><b>🛸 TARGET MATERIAL:</b> <span style="font-size:16px; font-weight:bold; color:#ffffff; text-shadow: 0 0 5px #00ffcc;">{selected_material}</span></div>', unsafe_allow_html=True)
     else:
         st.info("ไม่พบข้อมูลสถิติในระบบ")
         selected_material = "ไม่มีข้อมูล"

@@ -122,11 +122,9 @@ def get_employee_from_sheet(input_id):
     try:
         df = pd.read_csv(url)
         df.columns = df.columns.str.strip()
-        
         if 'ID' in df.columns:
             df['ID'] = df['ID'].astype(str).str.strip().str.replace(r'\.0$', '', regex=True)
             target_id = str(input_id).strip().replace('.0', '')
-            
             match = df[df['ID'] == target_id]
             if not match.empty:
                 row = match.iloc[0]
@@ -140,7 +138,6 @@ def get_employee_from_sheet(input_id):
             return {"status": "success", "found": False, "id": target_id}
     except Exception as e:
         return {"status": "error", "error_msg": str(e), "id": str(input_id)}
-    
     return {"status": "success", "found": False, "id": str(input_id)}
 
 # 🔗 รายการแผนผังลิงก์โฟลเดอร์ Google Drive แยกตามคู่หน้าและรหัส Defect
@@ -153,13 +150,38 @@ DRIVE_MAP = {
     "B": {
         260: {"main": "https://drive.google.com/drive/u/0/folders/1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "slave": "https://drive.google.com/drive/u/0/folders/1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_name": "SB_260"},
         261: {"main": "https://drive.google.com/drive/u/0/folders/1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "slave": "https://drive.google.com/drive/u/0/folders/1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_name": "SB_261"},
-        380: {"main": "https://drive.google.com/drive/u/0/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "slave": "https://drive.google.com/drive/u/0/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_name": "SB_380"}
+        380: {"main": "https://drive.google.com/drive/u/0/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkJ61bhK", "slave": "https://drive.google.com/drive/u/0/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_name": "SB_380"}
     },
     "C": {
         260: {"main": "https://drive.google.com/drive/u/0/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "slave": "https://drive.google.com/drive/u/0/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_name": "SC_260"},
         261: {"main": "https://drive.google.com/drive/u/0/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "slave": "https://drive.google.com/drive/u/0/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_name": "SC_261"},
         380: {"main": "https://drive.google.com/drive/u/0/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "slave": "https://drive.google.com/drive/u/0/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_name": "SC_380"}
     }
+}
+
+# 🖼️ ฐานข้อมูล URL คลังรูปภาพสำหรับดึงมาแสดงผลบนหน้าจอแอปโดยตรงตามเงื่อนไข (สลับรูปภาพตามปุ่มกด)
+IMAGE_PREVIEW_DATABASE = {
+    "หน้า A": [
+        "https://images.unsplash.com/photo-1576086213369-97a306d36557?w=400&q=80",
+        "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&q=80",
+        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&q=80",
+        "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=400&q=80",
+        "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=400&q=80"
+    ],
+    "หน้า B": [
+        "https://images.unsplash.com/photo-1535223289827-42f1e9919769?w=400&q=80",
+        "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&q=80",
+        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&q=80",
+        "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&q=80",
+        "https://images.unsplash.com/photo-1563770660941-20978e870e26?w=400&q=80"
+    ],
+    "หน้า C": [
+        "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&q=80",
+        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80",
+        "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&q=80",
+        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&q=80",
+        "https://images.unsplash.com/photo-1496065187959-7f07b8353c55?w=400&q=80"
+    ]
 }
 
 # 📊 ฟังก์ชันดึงชุดข้อมูลกราฟหลักจาก Google Sheets คลังหลัก
@@ -300,10 +322,7 @@ elif current_page == "defect_view":
         
     st.markdown(f'<div class="login-card" style="text-align:center; border-left: 6px solid {color_hex};"><b>📊 ข้อมูลสรุปกราฟ 1-10 ของ {defect_title}</b><br><small style="color: #64748b;">💡 ลองจิ้มคลิกที่แท่งกราฟเพื่อเลือก Material ได้เลย!</small></div>', unsafe_allow_html=True)
     
-    # ดึงข้อมูลกราฟมาประมวลผล
     df_current = get_graph_data(defect)
-    
-    # ตัวแปรเตรียมแกะค่ารหัสจาก Chart
     selected_material_from_chart = ""
     
     if not df_current.empty:
@@ -321,21 +340,18 @@ elif current_page == "defect_view":
             clickmode='event+select'
         )
         
-        # แสดงผล Plotly และใช้ฟังก์ชัน On Select เพื่อจับ Rerun แบบถูกวิธี
         chart_data = st.plotly_chart(fig, use_container_width=True, on_select="rerun")
         st.markdown('</div></div>', unsafe_allow_html=True)
         
-        # 🎯 จุดแก้ไข: ถอดรหัสค่าที่ถูกคลิกจากตัวแปร chart_data อย่างถูกต้องตามสเปกของ Streamlit
         if chart_data and "selection" in chart_data and "points" in chart_data["selection"]:
             points = chart_data["selection"]["points"]
             if len(points) > 0:
                 selected_material_from_chart = points[0].get("x", "")
 
-    # 🔲 กรอบย่อยที่ 1: คลังรูปภาพ BEFORE ล็อกพิกัดตรงตามปุ่มเลือก
+    # 🔲 กรอบย่อยที่ 1: คลังรูปภาพ BEFORE
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#007bc3; font-size:14px; display:block; margin-bottom:5px;'>🖼️ กรอบที่ 1: {defect_title} เลือกภาพ Before</b>", unsafe_allow_html=True)
     
-    # แสดงผลรหัสชิ้นงานที่คลิกเลือกแบบอัตโนมัติ
     if selected_material_from_chart:
         st.success(f"🎯 เลือก Material อัตโนมัติ: **{selected_material_from_chart}**")
     else:
@@ -348,13 +364,27 @@ elif current_page == "defect_view":
         folder_info = DRIVE_MAP[face_char][defect]
         
         st.markdown(f"""
-        <div style="background-color:#f1f5f9; padding:10px; border-radius:10px; font-size:12px; margin: 10px 0;">
+        <div style="background-color:#f1f5f9; padding:10px; border-radius:10px; font-size:12px; margin: 5px 0 10px 0;">
             <b>📂 พิกัดโฟลเดอร์ระบบ ({face_char}_{defect}):</b><br>
             • โฟลเดอร์หลัก: <a href="{folder_info['main']}" target="_blank">คลิกเพื่อเปิดดูภาพไว</a><br>
             • ชั้นรอง (Slave): <a href="{folder_info['slave']}" target="_blank">คลิกเข้าสู่คลังภาพ {folder_info['slave_name']}</a>
         </div>
         """, unsafe_allow_html=True)
-        st.selectbox("เลือกรายละเอียดภาพย่อย (เลือกได้ 5 ภาพ):", [f"ภาพรายละเอียดชิ้นงานย่อยที่ {i}" for i in range(1, 6)], key=f"sb_{defect}")
+        
+        # กล่องเลือกรายละเอียดภาพ 5 ภาพ
+        sub_img_index = st.selectbox(
+            "เลือกรายละเอียดภาพย่อย (เลือกได้ 5 ภาพ):", 
+            ["ภาพรายละเอียดชิ้นงานย่อยที่ 1", "ภาพรายละเอียดชิ้นงานย่อยที่ 2", "ภาพรายละเอียดชิ้นงานย่อยที่ 3", "ภาพรายละเอียดชิ้นงานย่อยที่ 4", "ภาพรายละเอียดชิ้นงานย่อยที่ 5"], 
+            key=f"sb_{defect}"
+        )
+        
+        # 🎯 🎯 ส่วนที่แก้ไข: ดึงรูปภาพในคลังมาโชว์แผงหน้าแอปทันที ไม่ต้องกดเข้าไปดูเปล่า ๆ
+        img_idx = ["ภาพรายละเอียดชิ้นงานย่อยที่ 1", "ภาพรายละเอียดชิ้นงานย่อยที่ 2", "ภาพรายละเอียดชิ้นงานย่อยที่ 3", "ภาพรายละเอียดชิ้นงานย่อยที่ 4", "ภาพรายละเอียดชิ้นงานย่อยที่ 5"].index(sub_img_index)
+        target_img_url = IMAGE_PREVIEW_DATABASE[selected_face][img_idx]
+        
+        st.markdown("<p style='font-size:12px; font-weight:bold; margin-top:10px; color:#475569;'>📷 รูปภาพตัวอย่าง Before จากคลังงานระบบ:</p>", unsafe_allow_html=True)
+        st.image(target_img_url, use_column_width=True, caption=f"พรีวิว: {selected_face} - {sub_img_index}")
+
     elif selected_face == "อื่นๆ":
         st.camera_input("ถ่ายภาพ Before (กำหนดเอง)", key=f"c_bef_{defect}")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -363,7 +393,6 @@ elif current_page == "defect_view":
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ กรอบที่ 2: ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
     
-    # บรรจุค่า Material นำร่องเข้าไปกรอกให้ล่วงหน้าในช่อง After
     default_text = f"รายงานผลชิ้นงาน Material รหัส: {selected_material_from_chart}\n" if selected_material_from_chart else ""
     
     st.text_area(

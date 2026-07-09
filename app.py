@@ -6,7 +6,7 @@ import base64
 import plotly.graph_objects as go
 from datetime import datetime
 
-# ⚠️ อัปเดตและเช็กความถูกต้องของลิงก์ Web App ล่าสุดของคุณวีรพันธ์เรียบร้อยครับ!
+# ⚠️ อัปเดตฝังลิงก์ Web App URL ตัวล่าสุดของคุณวีรพันธ์เรียบร้อยครับ!
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
@@ -129,8 +129,6 @@ if st.query_params.get("nav") == "reset":
     st.session_state.page = "login"; st.session_state.user_info = None; st.session_state.current_defect = None
     st.query_params.clear(); st.rerun()
 
-st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
-
 # ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
@@ -178,38 +176,72 @@ elif current_page == "defect_view":
         summary_df = filtered_df.groupby('Material', as_index=False)[qty_col].sum()
         chart_data = summary_df.sort_values(by=qty_col, ascending=False).head(10)
     else:
-        chart_data = pd.DataFrame({"Material": ["418230035", "408073135"], "rework quantity": [51, 45]})
+        chart_data = pd.DataFrame({"Material": ["418230035", "408073135", "408101135", "407787135", "408242036", "417208135", "418675035", "401328035", "417207135", "418706035"], "rework quantity": [51, 45, 35, 35, 28, 21, 16, 11, 10, 8]})
         qty_col = "rework quantity"
 
     if not chart_data.empty:
         list_of_materials = chart_data['Material'].tolist()
         state_key = f"sel_mat_{defect}"
         if state_key not in st.session_state: st.session_state[state_key] = list_of_materials[0]
+        
+        # 📊 คืนชีพกราฟแท่งวิเคราะห์และตรรกะตรวจจับการกดเปลี่ยนเพื่อดึงรหัส Material เป้าหมายจริงกลับคืนมา
+        st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
+        st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 รายงาน 10 อันดับ Defect {defect} ที่พบ</b>", unsafe_allow_html=True)
+        
+        neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
+        color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
+        
+        fig_bar = go.Figure()
+        for mat in list_of_materials:
+            val = chart_data[chart_data['Material'] == mat][qty_col].values[0]
+            fig_bar.add_trace(go.Bar(
+                x=[mat], y=[val], name=mat, marker=dict(color=color_map[mat], line=dict(color='#ffffff', width=2)),
+                hovertemplate=f"Material: {mat}<br>จำนวน: {val} ครั้ง<extra></extra>"
+            ))
+        fig_bar.update_layout(
+            margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, barmode='group',
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+            xaxis=dict(type='category', tickangle=45, tickfont=dict(color='#000000', size=9, weight='bold')),
+            yaxis=dict(tickfont=dict(color='#000000', size=9, weight='bold'))
+        )
+        selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
+        
+        st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:8px; margin-bottom:5px;'>💡 เลือก Material ที่ต้องการปรับปรุงจากกราฟ</p>", unsafe_allow_html=True)
+        
+        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
+            st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]
+            
         selected_material = st.session_state[state_key]
+        st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #cbd5e1;'>", unsafe_allow_html=True)
+        st.markdown(f'<div style="background-color: #f0fdf4; border: 2px solid #16a34a; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
     else:
         selected_material = "ไม่มีข้อมูล"
-        list_of_materials = []
 
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
-    if selected_face in ["หน้า A", "หน้า B", "หน้า C"]:
+    if selected_face in ["หน้า A", "หน้า B", "หน้า C"] and selected_material != "ไม่มีข้อมูล":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
         
+        # 🔗 ✨ ส่วนลิงก์คลังภาพ Google Drive หลักชิ้นงานและจุดย่อยกลับมาทำงานสัมพันธ์กับ Material เรียบร้อยครับ!
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']})</b>", unsafe_allow_html=True)
-        uploaded_main = st.file_uploader("แนบรูปภาพหลัก:", type=["png", "jpg", "jpeg"], key=f"up_m_{defect}_{st.session_state.clear_trigger}")
+        st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
+        st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
+        uploaded_main = st.file_uploader("แนบรูปภาพหลักที่นี่:", type=["png", "jpg", "jpeg"], key=f"up_m_{defect}_{st.session_state.clear_trigger}")
         if uploaded_main: st.image(uploaded_main, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
-        uploaded_slaves = st.file_uploader("แนบรูปย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}_{st.session_state.clear_trigger}")
+        st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
+        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_s_multiple_{defect}_{st.session_state.clear_trigger}")
         if uploaded_slaves:
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
+    # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
     st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title})</b>", unsafe_allow_html=True)
+    st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}_{st.session_state.clear_trigger}")
     
     uploaded_after_files = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ (สูงสุด 5 ภาพ):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key=f"up_af_file_{defect}_{st.session_state.clear_trigger}")
@@ -256,16 +288,12 @@ elif current_page == "defect_view":
                 "defect_type": f"Defect {defect}", 
                 "location_face": str(selected_face), 
                 "after_details": str(after_text),
-                "pic1": img1,
-                "pic2": img2,
-                "pic3": img3,
-                "pic4": img4,
-                "pic5": img5
+                "pic1": img1, "pic2": img2, "pic3": img3, "pic4": img4, "pic5": img5
             }
             try:
                 response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                 if response.status_code == 200:
-                    st.success("🎉 บันทึกข้อมูลเรียบร้อยแล้ว!")
+                    st.success("🎉 บันทึกข้อมูลและรูปภาพ After เข้าตาราง Recording เรียบร้อยแล้ว!")
                     st.session_state.clear_trigger += 1
                     st.rerun()
                 else:

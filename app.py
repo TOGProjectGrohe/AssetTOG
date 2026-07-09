@@ -6,13 +6,13 @@ import base64
 import plotly.graph_objects as go
 from datetime import datetime
 
-# 🌐 ลิงก์ Web App URL ตัวล่าสุดของคุณวีรพันธ์ที่ได้รับการตรวจสอบความถูกต้องแล้ว
+# 🌐 ลิงก์ Web App URL ตัวล่าสุดของคุณวีรพันธ์
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ - แก้ไขข้อบกพร่องเรื่องปุ่มทับซ้อนกันเรียบร้อยครับ
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ - จัดการเรื่องระยะห่างและตำแหน่งปุ่มไม่ให้ทับซ้อนกัน
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -35,7 +35,7 @@ st.markdown("""
         background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
     }
     
-    /* 🛠️ จัดระเบียบแถบควบคุม Navbar ด้านบนเพื่อไม่ให้ปุ่ม Home ซ้อนทับกัน */
+    /* 🛠️ จัดระเบียบแถบควบคุม Navbar ด้านบนเพื่อไม่ให้ปุ่มซ้อนทับกัน */
     .custom-top-navbar {
         position: absolute !important; top: 25px !important; left: 24px !important; right: 24px !important; 
         display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
@@ -46,13 +46,6 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important; display: inline-block !important;
     }
     
-    .tog-logo-circle {
-        width: 50px !important; height: 50px !important; background-color: rgba(0, 0, 0, 0.2) !important; border: 1px solid rgba(0, 0, 0, 0.1) !important;
-        border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; color: #000000 !important; font-weight: bold !important; font-size: 15px !important; margin: 0 auto 8px auto !important;
-    }
-    .center-header-block {
-        display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 15px !important; margin-bottom: 25px !important; width: 100% !important;
-    }
     .drive-link-button {
         display: block !important; text-align: center !important; background-color: #10b981 !important; color: white !important;
         font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
@@ -167,11 +160,10 @@ elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
     
-    # 🛠️ ย้ายปุ่มกลับไปเลือกประเภทอื่นๆ ลงมาด้านล่าง Navbar เล็กน้อยไม่ให้เบียดกัน
     st.markdown("<br><br>", unsafe_allow_html=True)
     if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"): st.session_state.page = "select_defect"; st.rerun()
         
-    st.markdown(f'<div class="login-card" style="text-align:center; color:#000000; font-weight:bold;"><b>📊 แผนภูมิ Defect {defect}</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="login-card" style="text-align:center; color:#000000; font-weight:bold;"><b>📊 แผงควบคุมสถิติ {defect_title}</b></div>', unsafe_allow_html=True)
     
     raw_df = load_real_defect_data()
     if not raw_df.empty and 'errortype' in raw_df.columns and 'Material' in raw_df.columns:
@@ -180,11 +172,23 @@ elif current_page == "defect_view":
         filtered_df = raw_df[raw_df['errortype'] == defect]
         qty_col = 'rework quantity' if 'rework quantity' in raw_df.columns else raw_df.columns[-1]
         filtered_df[qty_col] = pd.to_numeric(filtered_df[qty_col], errors='coerce').fillna(0)
+        
         summary_df = filtered_df.groupby('Material', as_index=False)[qty_col].sum()
         chart_data = summary_df.sort_values(by=qty_col, ascending=False).head(10)
+        
+        # 📌 เตรียมข้อมูลสำหรับแผนภูมิวงกลม (แบ่งสัดส่วนตาม หน้า A, B, C)
+        face_col = 'Improvement type(A,B,C)' if 'Improvement type(A,B,C)' in filtered_df.columns else ('Side' if 'Side' in filtered_df.columns else '')
+        if face_col and face_col in filtered_df.columns:
+            pie_df = filtered_df.groupby(face_col, as_index=False)[qty_col].sum()
+        else:
+            # Fallback data หากไม่มีคอลัมน์พิกัดหน้างานในไฟล์ดิบ
+            pie_df = pd.DataFrame({"Face": ["หน้า A", "หน้า B", "หน้า C"], "quantity": [65, 45, 25]})
+            face_col = "Face"
     else:
-        chart_data = pd.DataFrame({"Material": ["407787135", "407652035"], "rework quantity": [51, 45]})
+        chart_data = pd.DataFrame({"Material": ["407787135", "407652035", "418706035"], "rework quantity": [51, 45, 30]})
+        pie_df = pd.DataFrame({"Face": ["หน้า A", "หน้า B", "หน้า C"], "quantity": [70, 40, 20]})
         qty_col = "rework quantity"
+        face_col = "Face"
 
     if not chart_data.empty:
         list_of_materials = chart_data['Material'].tolist()
@@ -192,11 +196,12 @@ elif current_page == "defect_view":
         if state_key not in st.session_state: st.session_state[state_key] = list_of_materials[0]
         
         st.markdown('<div class="future-graph-card">', unsafe_allow_html=True)
-        st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 รายงาน 10 อันดับ Defect {defect} ที่พบ</b>", unsafe_allow_html=True)
+        st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center;'>📊 1. รายงาน 10 อันดับ Material ที่พบสูงสุด</b>", unsafe_allow_html=True)
         
         neon_pastel = ['#4ef0d0', '#ffb37e', '#ff9f9f', '#d39fff', '#9fccff', '#9fff9f', '#f4ff9f', '#ff9fe2', '#b3b3ff', '#e6ffb3']
         color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
         
+        # 📈 1. แผนภูมิแท่ง
         fig_bar = go.Figure()
         for mat in list_of_materials:
             val = chart_data[chart_data['Material'] == mat][qty_col].values[0]
@@ -205,26 +210,44 @@ elif current_page == "defect_view":
                 hovertemplate=f"Material: {mat}<br>จำนวน: {val} ครั้ง<extra></extra>"
             ))
         fig_bar.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, barmode='group',
+            margin=dict(l=10, r=10, t=10, b=10), height=210, showlegend=False, barmode='group',
             paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
             xaxis=dict(type='category', tickangle=45, tickfont=dict(color='#000000', size=9, weight='bold')),
             yaxis=dict(tickfont=dict(color='#000000', size=9, weight='bold'))
         )
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         
-        st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:8px; margin-bottom:5px;'>💡 เลือก Material ที่ต้องการปรับปรุงจากกราฟ</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:13px; color:#000000; font-weight:bold; text-align:center; margin-top:5px; margin-bottom:15px;'>💡 จิ้มเลือก Material บนกราฟแท่งด้านบนได้ครับ</p>", unsafe_allow_html=True)
         
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]
             
         selected_material = st.session_state[state_key]
+        
+        # 🍕 2. แผนภูมิวงกลม (Pie Chart) ที่เรียกกลับมาแสดงผล
+        st.markdown(f"<b style='color:#000000; font-size:15px; display:block; text-align:center; margin-top:10px;'>🍕 2. สัดส่วนการเกิด Defect แยกตามพิกัดหน้างาน</b>", unsafe_allow_html=True)
+        
+        fig_pie = go.Figure(data=[go.Pie(
+            labels=pie_df[face_col].tolist(),
+            values=pie_df[pie_df.columns[-1]].tolist(),
+            hole=0.3,
+            marker=dict(colors=['#ff7675', '#74b9ff', '#a29bfe']),
+            textinfo='percent+label',
+            textfont=dict(size=11, color='#000000', weight='bold')
+        )])
+        fig_pie.update_layout(
+            margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=False,
+            paper_bgcolor='rgba(0,0,0,0)'
+        )
+        st.plotly_chart(fig_pie, use_container_width=True)
+        
         st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #cbd5e1;'>", unsafe_allow_html=True)
         st.markdown(f'<div style="background-color: #f0fdf4; border: 2px solid #16a34a; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
     else:
         selected_material = "ไม่มีข้อมูล"
 
-    selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
+    selected_face = st.radio("เลือกพิกัดหน้างานจริงที่ทำความสะอาด/ปรับปรุง:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"] and selected_material != "ไม่มีข้อมูล":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
@@ -285,16 +308,15 @@ elif current_page == "defect_view":
             if len(base64_list) > 3: img4 = base64_list[3]
             if len(base64_list) > 4: img5 = base64_list[4]
 
-            # 🛠️ ส่งจับคู่ข้อมูลตามสิทธิ์ของคอลัมน์ใหม่ (ตรงกับตาราง Google Sheet ล่าสุดที่คุณวีรพันธ์กำหนดไว้เป๊ะๆ)
             payload = {
                 "timestamp": save_timestamp, 
                 "employee_id": emp_id, 
                 "employee_name": emp_name, 
-                "position": emp_position,           # 📁 Column D: ตำแหน่งพนักงานจริง (GL)
-                "material": str(selected_material),  # 📁 Column E: รหัส Material 
-                "defect_improvement": str(defect),   # 📁 Column F: รหัสหมายเลข Defect ล้วน (เช่น 261)
-                "improvement_type": str(selected_face), # 📁 Column G: พิกัดหน้างาน (เช่น หน้า A)
-                "after_details": str(after_text),    # 📁 Column M: ข้อความผลงาน After
+                "position": emp_position,           
+                "material": str(selected_material),  
+                "defect_improvement": str(defect),   
+                "improvement_type": str(selected_face), 
+                "after_details": str(after_text),    
                 "pic1": img1, "pic2": img2, "pic3": img3, "pic4": img4, "pic5": img5
             }
             try:

@@ -53,38 +53,36 @@ st.markdown("""
         background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
     }
     
-    /* 🛠️ [ระบบจัดระเบียบปุ่มแถวบนสุดแบบ Auto Responsive] 
-       บังคับล็อกโครงปุ่ม Home และ Logout ให้อยู่ริมซ้าย-ขวาสุดของโทรศัพท์ ไม่พึ่งตารางคอลัมน์ดั้งเดิม */
-    .responsive-top-navbar-container {
+    /* 🛠️ [นวัตกรรมระบบปุ่มนำทางลอยตัวอัจฉริยะ] 
+       สร้างแถบนำทาง HTML ครอบแบบสัมบูรณ์ ล็อกให้ Home อยู่ซ้าย และ Logout อยู่ขวาเสมอ โดยไม่พึ่งพาระบบตารางคอลัมน์ของ Streamlit */
+    .pure-html-top-navbar {
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
         align-items: center !important;
         width: 100% !important;
-        padding: 0px 4px !important;
-        margin-bottom: 12px !important;
-    }
-    .responsive-top-navbar-container > div {
-        flex: 1 !important;
-        max-width: 46% !important;
+        margin-bottom: 10px !important;
+        padding: 5px 2px !important;
     }
     
-    div.stButton > button[key^="nav_top_"] {
-        background-color: #bae6fd !important; 
-        color: #000000 !important; 
+    .pure-nav-btn {
+        background-color: #bae6fd !important;
+        color: #000000 !important;
         border: 1px solid rgba(0,0,0,0.05) !important;
-        border-radius: 20px !important; 
-        padding: 8px 12px !important; 
-        font-size: 13px !important; 
+        border-radius: 20px !important;
+        padding: 8px 16px !important;
+        font-size: 13px !important;
         font-weight: bold !important;
+        text-decoration: none !important;
+        text-align: center !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
-        width: 100% !important;
-        min-height: auto !important;
         white-space: nowrap !important;
-        display: block !important;
+        display: inline-block !important;
+        width: 90px !important; /* กำหนดความกว้างตายตัวเพื่อให้มีขนาดเท่ากันทั้งสองปุ่ม */
     }
-    div.stButton > button[key^="nav_top_"]:hover {
+    .pure-nav-btn:hover {
         background-color: #7dd3fc !important;
+        color: #000000 !important;
     }
 
     /* วงกลม TOG ขนาดใหญ่สมมาตร บาลานซ์สายตาพรีเมียมแยกโซนด้านล่างปุ่มชัดเจน */
@@ -341,46 +339,31 @@ def render_employee_details_footer():
             </div>
         """, unsafe_allow_html=True)
 
-# ฟังก์ชัน NAVIGATION RESET
-def handle_navigation_reset():
-    st.session_state.page = "login"
-    st.session_state.user_info = None
-    st.session_state.current_defect = None
-    st.rerun()
-
-FOLDER_LINK_MAP = {
-    "A": {
-        260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
-        261: {"main_url": "https://drive.google.com/drive/folders/1phKW7eXcijB4U6P95JHnJm6BgG2bcKyQ", "main_title": "A_261", "slave_url": "https://drive.google.com/drive/folders/1n5KGFnub6z3urE09taiJh4TaUJXqElCF", "slave_title": "SA_261"},
-        380: {"main_url": "https://drive.google.com/drive/folders/1-77ViPZrWhRXiYMvpa2gTp63CDjxIcHu", "main_title": "A_380", "slave_url": "https://drive.google.com/drive/folders/1DlKAZot6QPHXdvuVu8ro_TIk26NsznDz", "slave_title": "SA_380"}
-    },
-    "B": {
-        260: {"main_url": "https://drive.google.com/drive/folders/1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "main_title": "B_260", "slave_url": "https://drive.google.com/drive/folders/1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_title": "SB_260"},
-        261: {"main_url": "https://drive.google.com/drive/folders/1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "main_title": "B_261", "slave_url": "https://drive.google.com/drive/folders/1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_title": "SB_261"},
-        380: {"main_url": "https://drive.google.com/drive/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "main_title": "B_380", "slave_url": "https://drive.google.com/drive/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "SB_380"}
-    },
-    "C": {
-        260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
-        261: {"main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
-        380: {"main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_title": "SC_380"}
-    }
-}
-
-# 🛠️ [สถาปัตยกรรมทางเลือกระบบ Auto Responsive] 
-# สร้างกรอบ HTML ครอบบล็อกปุ่มเนาเพื่อสั่งคำนวณ Auto ป้องกันการตกเลื่อนของ Logout แน่นอน 100%
-st.markdown('<div class="responsive-top-navbar-container">', unsafe_allow_html=True)
-col_nav_l, col_nav_r = st.columns(2)
-with col_nav_l:
-    if st.button("🏠 Home", key="nav_top_home_btn"):
-        if st.session_state.user_info:
+# 🛠️ [กลไกการเปลี่ยนหน้าความเร็วสูงผ่าน Query Parameters ดั้งเดิม]
+query_params = st.query_params
+if "action" in query_params:
+    action_val = query_params["action"]
+    if action_val == "go_home":
+        if st.session_state.get('user_info'):
             st.session_state.page = "select_defect"
-            st.rerun()
-with col_nav_r:
-    if st.button("🚪 Logout", key="nav_top_logout_btn"):
-        handle_navigation_reset()
-st.markdown('</div>', unsafe_allow_html=True)
+        st.query_params.clear()
+        st.rerun()
+    elif action_val == "go_logout":
+        st.session_state.page = "login"
+        st.session_state.user_info = None
+        st.session_state.current_defect = None
+        st.query_params.clear()
+        st.rerun()
 
-# ส่วนแสดงโลโก้กลางหน้าจอ (ขยับเข้าใกล้แถวบนขึ้นเรียบร้อย)
+# 🛠️ [ยิงโครงสร้างแบบ Pure HTML Flexbox] จัดตำแหน่งริมซ้าย-ขวาสุดอย่างมีเอกเทศ บล็อกตายตัวไม่มีตกขอบแน่นอน
+st.markdown("""
+    <div class="pure-html-top-navbar">
+        <a href="?action=go_home" target="_self" class="pure-nav-btn">🏠 Home</a>
+        <a href="?action=go_logout" target="_self" class="pure-nav-btn">🚪 Logout</a>
+    </div>
+""", unsafe_allow_html=True)
+
+# ส่วนหัวแอปพลิเคชันและวงกลม LOGO (อยู่บรรทัดล่างอย่างเป็นสัดส่วน)
 st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------

@@ -468,7 +468,8 @@ elif current_page == "defect_view":
         fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, xaxis=dict(type='category', tickangle=45), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
-        if selected_bar and "selection" in selected_bar tracking and selected_bar["selection"]["points"]:
+        # 🛠️ [แก้ไขบั๊กบรรทัดนี้] ตัดคำว่า tracking ที่เกินออก เพื่อให้โค้ดรันได้สมบูรณ์
+        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             clicked_mat = selected_bar["selection"]["points"][0]["x"]
             if clicked_mat != st.session_state[state_key]:
                 st.session_state[state_key] = clicked_mat
@@ -544,7 +545,7 @@ elif current_page == "defect_view":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>สรุปรายละเอียดผลงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     
-    # 🛠️ [จุดแก้ไข Wording ตามบรีฟ] เปลี่ยนหัวข้อช่องข้อความเป็น "พิมพ์รายละเอียดการปรับปรุงหรือข้อเสนอแนะ After:"
+    # พิมพ์รายละเอียดการปรับปรุงหรือข้อเสนอแนะ After:
     after_text = st.text_area("พิมพ์รายละเอียดการปรับปรุงหรือข้อเสนอแนะ After:", value="", key="text_area_improvement_details")
     
     uploaded_after_file = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ:", type=["png", "jpg", "jpeg"], key="up_after_file_machine")

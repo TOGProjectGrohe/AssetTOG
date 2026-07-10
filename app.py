@@ -31,7 +31,7 @@ st.markdown("""
         display: none !important; visibility: hidden !important; height: 0 !important;
     }
     
-    /* 🛠️ ปรับลด padding-top ของแอปจาก 40px เหลือ 15px เพื่อดันทุกอย่างขึ้นไปชิดด้านบน */
+    /* ปรับลด padding-top ของแอปเพื่อให้ดันทุกอย่างขึ้นไปชิดด้านบนกระชับสายตา */
     .stApp {
         max-width: 420px !important; margin: 0px auto !important;
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
@@ -63,7 +63,7 @@ st.markdown("""
         background-color: #7dd3fc !important;
     }
 
-    /* 🛠️ [จุดแก้ไขสไตล์ตามบรีฟ] ขยับบีบช่องไฟให้แคบลงเกือบชิดปุ่มด้านบนและลดขนาด margin-bottom */
+    /* วงกลม TOG ขนาดใหญ่สมมาตร บาลานซ์สายตาพรีเมียมชิดขอบบน */
     .tog-logo-circle {
         width: 110px !important; 
         height: 110px !important; 
@@ -78,20 +78,20 @@ st.markdown("""
         color: #000000 !important; 
         font-weight: 900 !important; 
         font-size: 26px !important; 
-        margin: 0px auto 4px auto !important; /* ปรับ margin-top เป็น 0px และลดด้านล่างลง */
+        margin: 0px auto 4px auto !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
         letter-spacing: 1px !important;
     }
 
-    /* 🛠️ บีบกรอบจัดกึ่งกลางกลุ่มหัวข้อให้ขยับขึ้นชิดติดแถวบน และลดระยะห่างระหว่างบล็อกถัดไป */
+    /* จัดกึ่งกลางกลุ่มหัวข้อให้ขยับขึ้นชิดติดแถวบน และลดระยะห่างระหว่างบล็อกถัดไป */
     .center-header-block {
         display: flex !important; 
         flex-direction: column !important; 
         align-items: center !important; 
         justify-content: center !important; 
         text-align: center !important; 
-        margin-top: -5px !important;   /* ใช้ค่าติดลบเล็กน้อยเพื่อดึงกลุ่มโลโก้ขึ้นไปชิดแนวปุ่มกด */
-        margin-bottom: 12px !important; /* ลดช่องไฟก่อนถึงเนื้อหาถัดไปเพื่อลดความโล้น */
+        margin-top: -5px !important;   
+        margin-bottom: 12px !important; 
         width: 100% !important;
     }
     
@@ -244,6 +244,13 @@ st.markdown("""
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
     }
     
+    /* สไตล์สีจำเพาะของเส้นขอบแผนภูมิต้นทางให้เป็นสีส้มพาสเทลเพื่อแยกโซนแรก */
+    .glass-section-divider-card.chart-zone {
+        border-left: 5px solid #ffb07c !important;
+        margin-top: 5px !important;
+        margin-bottom: 12px !important;
+    }
+    
     /* สไตล์สีจำเพาะของเส้นขอบ After ให้เป็นสีเขียวพรีเมียมเรืองแสงแยกโซน */
     .glass-section-divider-card.after-zone {
         border-left: 5px solid #10b981 !important;
@@ -262,7 +269,7 @@ st.markdown("""
         padding: 16px 20px !important;
         margin-bottom: 16px !important;
         box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        transition: cubic-bezier(0.25, 0.8, 0.25, 1) 0.3s !important;
     }
     div.stButton > button[key^="defect_btn_"]:hover {
         background-color: rgba(255, 255, 255, 0.55) !important;
@@ -369,7 +376,7 @@ with col_top_r:
     if st.button("🚪 Logout", key="nav_top_logout_btn"):
         handle_navigation_reset()
 
-# 🛠️ นำส่วนเว้นช่องว่างมาร์จิ้นเดิมออก และใช้คอมโพเนนต์ดันขึ้นชิดแบบไร้รอยต่อ
+# นำส่วนเว้นช่องว่างมาร์จิ้นเดิมออก และใช้คอมโพเนนต์ดันขึ้นชิดแบบไร้รอยต่อ
 st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------
@@ -410,7 +417,8 @@ elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
 
-    st.markdown(f'<div class="login-card" style="text-align:center; color:#000000; font-weight:bold;"><b>📊 แผนภูมิ Defect {defect}</b></div>', unsafe_allow_html=True)
+    # 🛠️ [จุดแก้ไขที่ 1 ตามบรีฟ] เปลี่ยนแผนภูมิสีขาวเดิม ให้เป็นกรอบแก้วรมดำพรีเมียมมาตรฐานเดียวกันตัวแรก (โซนกราฟ)
+    st.markdown(f'<div class="glass-section-divider-card chart-zone">📊 แผนภูมิ Defect {defect}</div>', unsafe_allow_html=True)
 
     # 📥 โหลดข้อมูล Material จริง
     raw_df = load_real_defect_data()
@@ -478,16 +486,16 @@ elif current_page == "defect_view":
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ส่วนที่ 1: ข้อความอธิบายใต้แผนภูมิสถิติทันที
+    # ข้อความอธิบายใต้แผนภูมิสถิติทันที
     st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-top:5px; margin-bottom:12px;'>📊 เลือก Material จากกราฟ</h5>", unsafe_allow_html=True)
 
-    # ส่วนที่ 2: กล่องหัวข้อกระจกเงารมดำพรีเมียมของ Before
+    # 🛠️ [จุดแก้ไขที่ 2] โซนกรอบเงารมดำมาตรฐานตัวที่สอง (โซน Before)
     st.markdown('<div class="glass-section-divider-card">📁  เลือกข้อมูล และแนบรูป ส่วนของ Before</div>', unsafe_allow_html=True)
 
-    # ส่วนที่ 3: กล่องสีเขียว TARGET MATERIAL SELECTED วางล็อกไว้ใต้กล่อง Before ทันทีตามรูปที่ 1
+    # กล่องสีเขียว TARGET MATERIAL SELECTED วางล็อกไว้ใต้กล่อง Before ทันทีตามพิมพ์เขียวรูปที่ 1
     st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; margin-bottom: 20px;"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
 
-    # ส่วนที่ 4: ตัวเลือกเลือกพิกัดหน้างาน (หน้า A, B, C)
+    # ตัวเลือกเลือกพิกัดหน้างาน (หน้า A, B, C)
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
 
     # แผงกล่องล็อกข้อมูลระบบหน้าบ้าน
@@ -499,7 +507,11 @@ elif current_page == "defect_view":
     box_defect = st.text_input("errortype (คอลัมน์ F):", value=short_defect, disabled=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ส่วนประมวลผลฟังก์ชันแนบรูปและช่องอัปโหลดเมื่อเปิดพิกัดหน้างานสำเร็จ
+    # ตัวแปรสำหรับเก็บไฟล์และตรวจจับสถานะรูปภาพหลัก
+    session_img_key = f"stored_main_img_{defect}"
+    if session_img_key not in st.session_state:
+        st.session_state[session_img_key] = None
+
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"] and selected_material != "ไม่มีข้อมูล":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
@@ -509,10 +521,6 @@ elif current_page == "defect_view":
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        session_img_key = f"stored_main_img_{defect}"
-        if session_img_key not in st.session_state:
-            st.session_state[session_img_key] = None
-
         if st.session_state[session_img_key] is None:
             st.markdown('<div element-context="main_uploader_wrapper">', unsafe_allow_html=True)
             uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่ (จำกัด 1 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=False, key=f"uploader_main_{defect}")
@@ -538,7 +546,7 @@ elif current_page == "defect_view":
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🛠 Easton Line: แนวแบ่งโซนหัวข้อ After สไตล์กระจกเงารมดำมาตรฐานเดียวกัน
+    # 🛠️ [จุดแก้ไขที่ 3] โซนกรอบเงารมดำมาตรฐานตัวที่สาม (โซน After)
     st.markdown('<div class="glass-section-divider-card after-zone">✨ ส่วนอัปเดตงาน After</div>', unsafe_allow_html=True)
 
     # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
@@ -566,7 +574,7 @@ elif current_page == "defect_view":
     render_employee_details_footer()
     st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
     
-    # 🛠️ แบ่งคอลัมน์ครึ่งซ้าย-ขวา เท่ากัน วางปุ่ม Save ไว้ซ้าย และปุ่มเปลี่ยนประเภทงานย้อนกลับไว้ขวาคู่กันอย่างลงล็อกสมบูรณ์
+    # แบ่งคอลัมน์ครึ่งซ้าย-ขวา เท่ากัน วางปุ่ม Save ไว้ซ้าย และปุ่มเปลี่ยนประเภทงานย้อนกลับไว้ขวาคู่กันอย่างลงล็อกสมบูรณ์
     col_btn_save, col_btn_back = st.columns([1, 1])
     
     with col_btn_save:

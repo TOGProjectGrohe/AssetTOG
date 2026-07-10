@@ -21,7 +21,7 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และซ่อนเฉพาะปุ่มเครื่องหมายบวกสล็อตเดี่ยวของหัวข้อ 1
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปุ่มลบรูปสีแดงพรีเมียม
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -155,9 +155,18 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
     }
 
-    /* 🛠️ [CSS มนต์ดำ] ซ่อนปุ่มเพิ่มรูป (+) เฉพาะของกล่องแรก เพื่อให้เหลือรูปเดี่ยวและเหลือปุ่มลบ (X) ไว้เปลี่ยนรูปภาพ */
-    div[element-context="main_uploader_wrapper"] button[data-testid="baseButton-secondary"] {
-        display: none !important;
+    /* 🎨 [ปุ่มลบรูปภาพสีแดงเด่นชัด] */
+    div.stButton > button[key="clear_image_btn"] {
+        background-color: #ef4444 !important;
+        color: white !important;
+        border: 1px solid #dc2626 !important;
+        padding: 8px 15px !important;
+        font-size: 13px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2) !important;
+    }
+    div.stButton > button[key="clear_image_btn"]:hover {
+        background-color: #dc2626 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -232,7 +241,7 @@ FOLDER_LINK_MAP = {
     },
     "C": {
         260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
-        261: {"main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
+        261: {"main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slate_title": "SC_261"},
         380: {"main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slate_title": "SC_380"}
     }
 }
@@ -378,23 +387,39 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
 
-        # 📁 หัวข้อที่ 1: ล็อกให้อัปโหลดได้เพียงรูปเดียว และคงปุ่มกากบาทลบรูป (X) ไว้อย่างแนบเนียน
+        # 📁 1. คลังภาพหลักชิ้นงาน (บังคับอัปโหลดได้รูปเดียว + ล็อกปิดปุ่มบวกเนียน ๆ + เพิ่มปุ่มลบรูปภาพ)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        # ห่อหุ้ม CSS wrapper เพื่อกำหนดสโคปซ่อนปุ่มเครื่องหมายบวกเพิ่มรูปตัวล่างออกตัวเดียว
-        st.markdown('<div element-context="main_uploader_wrapper">', unsafe_allow_html=True)
-        uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่ (จำกัด 1 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=False, key="up_main_work")
-        st.markdown('</div>', unsafe_allow_html=True)
-        if uploaded_main: st.image(uploaded_main, use_container_width=True)
+        # คีย์ตรวจสอบรูปภาพหลักใน Session State เพื่อควบคุม UI
+        session_img_key = f"stored_main_img_{defect}"
+        if session_img_key not in st.session_state:
+            st.session_state[session_img_key] = None
+
+        # 🛠️ ตรรกะควบคุมทางเลือกอัจฉริยะ: ถ้ายังไม่มีรูปให้โชว์ช่องอัปโหลด ถ้ามีรูปแล้วให้ซ่อนช่องและเปิดปุ่มลบ (X) แทน
+        if st.session_state[session_img_key] is None:
+            uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่ (จำกัด 1 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=False, key=f"uploader_main_{defect}")
+            if uploaded_main:
+                st.session_state[session_img_key] = uploaded_main.getvalue()
+                st.rerun()
+        else:
+            # ซ่อน Uploader เก่าทิ้งไปเลย ทำให้ปุ่มเครื่องหมายบวกหายเกลี้ยง 100% พนักงานจะหมดสิทธิ์เลือกรูปเพิ่ม
+            st.markdown("<p style='font-size:13px; color:#2c3e50; font-weight:bold;'>✅ รูปภาพหลักถูกแนบเรียบร้อยแล้ว:</p>", unsafe_allow_html=True)
+            st.image(st.session_state[session_img_key], use_container_width=True)
+            
+            # เปิดสวิตช์ปุ่มกากบาทสีแดงสำหรับล้างภาพเพื่อเปลี่ยนรูปใหม่กรณีเลือกผิด
+            if st.button("❌ กดลบรูปภาพนี้เพื่อเลือกใหม่", key="clear_image_btn"):
+                st.session_state[session_img_key] = None
+                st.rerun()
+                
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 📁 หัวข้อที่ 2: คลังรูปรายละเอียดจุดย่อย (คงสภาพให้เลือกเพิ่มรูปได้สูงสุด 5 ภาพ)
+        # 📁 2. คลังรูปรายละเอียดจุดย่อย
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info['slave_title']} ↗️</a>', unsafe_allow_html=True)
-        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (ต้องอัปโหลดอย่างน้อย 3 รูป และสูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
+        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
         if uploaded_slaves:
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -430,10 +455,11 @@ elif current_page == "defect_view":
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
     else:
         if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
-            # 🛠️ [ดักสกัดเงื่อนไขใหม่] ตรวจสอบจำนวนภาพในหัวข้อ 2 ก่อนกดส่งข้อมูลหลังบ้าน
             slave_count = len(uploaded_slaves) if uploaded_slaves else 0
             if slave_count < 3:
                 st.error(f"⚠️ บันทึกไม่สำเร็จ! โปรดแนบรูปรายละเอียดจุดย่อยในหัวข้อ 2 อย่างน้อย 3 ภาพ (ปัจจุบันมี {slave_count} ภาพ)")
+            elif st.session_state[session_img_key] is None:
+                st.error("⚠️ บันทึกไม่สำเร็จ! โปรดแนบรูปภาพหลักชิ้นงานในหัวข้อ 1 ก่อนกดบันทึก!")
             else:
                 with st.spinner("⏳ กำลังบันทึกข้อมูล โปรดรอสักครู่..."):
                     with app_lock:
@@ -446,10 +472,8 @@ elif current_page == "defect_view":
                         send_improvement_type = str(box_face).strip()
                         send_details = str(after_text).strip()
 
-                        # แปลงไฟล์ภาพเดี่ยว Picture Master (Before) เป็น Base64
-                        before_master_base64 = ""
-                        if uploaded_main:
-                            before_master_base64 = base64.b64encode(uploaded_main.getvalue()).decode('utf-8')
+                        # ดึงไฟล์ภาพเดี่ยว Picture Master (Before) จากหน่วยความจำ Session State
+                        before_master_base64 = base64.b64encode(st.session_state[session_img_key]).decode('utf-8')
 
                         # แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
                         before_slaves_base64 = []
@@ -483,6 +507,8 @@ elif current_page == "defect_view":
                             response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                             if response.status_code == 200:
                                 st.success(f"🎉 บันทึกข้อมูลและจัดส่งรูปภาพเข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยแล้วครับ!")
+                                # เคลียร์รูปภาพหลักหลังส่งข้อมูลสำเร็จ
+                                st.session_state[session_img_key] = None
                                 st.session_state.page = "select_defect"
                                 st.rerun()
                             else:

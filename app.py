@@ -21,7 +21,7 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งแผงควบคุมโปร่งแสงยาวกรอบเดียวกัน
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และซ่อนเฉพาะปุ่มเครื่องหมายบวกสล็อตเดี่ยวของหัวข้อ 1
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -153,6 +153,11 @@ st.markdown("""
         font-size: 16px !important;
         border: 2px solid #059669 !important;
         box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+    }
+
+    /* 🛠️ [CSS มนต์ดำ] ซ่อนปุ่มเพิ่มรูป (+) เฉพาะของกล่องแรก เพื่อให้เหลือรูปเดี่ยวและเหลือปุ่มลบ (X) ไว้เปลี่ยนรูปภาพ */
+    div[element-context="main_uploader_wrapper"] button[data-testid="baseButton-secondary"] {
+        display: none !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -358,7 +363,7 @@ elif current_page == "defect_view":
     # 🔘 ส่วนฟิลเตอร์เลือกพิกัดหน้างาน
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
 
-    # 🛠 Fleming สถานะกล่องล็อกข้อมูลระบบหน้าบ้าน
+    # 🛠️ สถานะกล่องล็อกข้อมูลระบบหน้าบ้าน
     st.markdown('<div class="login-card" style="padding: 10px 15px;">', unsafe_allow_html=True)
     st.markdown("<p style='font-size:12px; font-weight:bold; color:#64748b; margin-bottom:2px;'>⚙️ สถานะกล่องรับข้อมูลระบบหน้าจอ (ตรวจสอบความพร้อมก่อนส่ง):</p>", unsafe_allow_html=True)
     
@@ -373,28 +378,23 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
 
+        # 📁 หัวข้อที่ 1: ล็อกให้อัปโหลดได้เพียงรูปเดียว และคงปุ่มกากบาทลบรูป (X) ไว้อย่างแนบเนียน
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        # 🛠️ [✨ การปรับปรุง CSS โหมดซ่อนปุ่ม + อัจฉริยะ] 
-        uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:", type=["png", "jpg", "jpeg"], accept_multiple_files=False, key="up_main_work")
-        
-        # ถ้ารูปภาพหลักถูกอัปโหลดเข้ามาแล้ว ระบบจะสั่งฉีด CSS เข้าไปเพื่อซ่อนกล่องอัปโหลดสีเทาและปุ่มบวก (+) ไม่ให้โผล่มากวนใจทันที
-        if uploaded_main:
-            st.markdown("""
-                <style>
-                div[data-testid="stFileUploader"] { display: none !important; }
-                </style>
-            """, unsafe_allow_html=True)
-            st.image(uploaded_main, use_container_width=True)
-            
+        # ห่อหุ้ม CSS wrapper เพื่อกำหนดสโคปซ่อนปุ่มเครื่องหมายบวกเพิ่มรูปตัวล่างออกตัวเดียว
+        st.markdown('<div element-context="main_uploader_wrapper">', unsafe_allow_html=True)
+        uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่ (จำกัด 1 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=False, key="up_main_work")
+        st.markdown('</div>', unsafe_allow_html=True)
+        if uploaded_main: st.image(uploaded_main, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
+        # 📁 หัวข้อที่ 2: คลังรูปรายละเอียดจุดย่อย (คงสภาพให้เลือกเพิ่มรูปได้สูงสุด 5 ภาพ)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info['slave_title']} ↗️</a>', unsafe_allow_html=True)
-        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
+        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (ต้องอัปโหลดอย่างน้อย 3 รูป และสูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
         if uploaded_slaves:
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -424,66 +424,70 @@ elif current_page == "defect_view":
     render_employee_details_footer()
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 💾 ปุ่มบันทึกข้อมูล
+    # 💾 ปุ่มบันทึกข้อมูล พร้อมเงื่อนไขดักตรวจสอบภาพหัวข้อ 2
     if not after_text.strip():
         if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
     else:
         if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
-            with st.spinner("⏳ กำลังบันทึกข้อมูล โปรดรอสักครู่..."):
-                with app_lock:
-                    save_timestamp = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                    date_string = str(datetime.now().strftime("%Y%m%d"))
+            # 🛠️ [ดักสกัดเงื่อนไขใหม่] ตรวจสอบจำนวนภาพในหัวข้อ 2 ก่อนกดส่งข้อมูลหลังบ้าน
+            slave_count = len(uploaded_slaves) if uploaded_slaves else 0
+            if slave_count < 3:
+                st.error(f"⚠️ บันทึกไม่สำเร็จ! โปรดแนบรูปรายละเอียดจุดย่อยในหัวข้อ 2 อย่างน้อย 3 ภาพ (ปัจจุบันมี {slave_count} ภาพ)")
+            else:
+                with st.spinner("⏳ กำลังบันทึกข้อมูล โปรดรอสักครู่..."):
+                    with app_lock:
+                        save_timestamp = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                        date_string = str(datetime.now().strftime("%Y%m%d"))
+                        
+                        send_position = str(emp_position_val).strip()
+                        send_material = str(selected_material).strip()
+                        send_errortype = str(box_defect).strip()
+                        send_improvement_type = str(box_face).strip()
+                        send_details = str(after_text).strip()
+
+                        # แปลงไฟล์ภาพเดี่ยว Picture Master (Before) เป็น Base64
+                        before_master_base64 = ""
+                        if uploaded_main:
+                            before_master_base64 = base64.b64encode(uploaded_main.getvalue()).decode('utf-8')
+
+                        # แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
+                        before_slaves_base64 = []
+                        if uploaded_slaves:
+                            for img in uploaded_slaves[:5]:
+                                before_slaves_base64.append(base64.b64encode(img.getvalue()).decode('utf-8'))
+
+                        # แปลงไฟล์ภาพหลักผลงาน After เป็น Base64
+                        after_pic_base64 = ""
+                        if camera_after_file:
+                            after_pic_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
+                        elif uploaded_after_file:
+                            after_pic_base64 = base64.b64encode(uploaded_after_file.getvalue()).decode('utf-8')
+
+                        payload = {
+                            "timestamp": save_timestamp,
+                            "date_str": date_string,
+                            "employee_id": str(emp_id_val),
+                            "employee_name": str(emp_name_val),
+                            "position": send_position,
+                            "material": send_material,
+                            "errortype": send_errortype,
+                            "improvement_type": send_improvement_type,
+                            "improvement_details": send_details,
+                            "before_master": before_master_base64,
+                            "before_slaves": before_slaves_base64,
+                            "after_pic": after_pic_base64
+                        }
+                        
+                        try:
+                            response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
+                            if response.status_code == 200:
+                                st.success(f"🎉 บันทึกข้อมูลและจัดส่งรูปภาพเข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยแล้วครับ!")
+                                st.session_state.page = "select_defect"
+                                st.rerun()
+                            else:
+                                st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
+                        except Exception as ex:
+                            st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
                     
-                    send_position = str(emp_position_val).strip()
-                    send_material = str(selected_material).strip()
-                    send_errortype = str(box_defect).strip()
-                    send_improvement_type = str(box_face).strip()
-                    send_details = str(after_text).strip()
-
-                    # 🛠️ แปลงไฟล์ภาพเดี่ยว Picture Master (Before) เป็น Base64
-                    before_master_base64 = ""
-                    if uploaded_main:
-                        before_master_base64 = base64.b64encode(uploaded_main.getvalue()).decode('utf-8')
-
-                    # 🛠️ แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
-                    before_slaves_base64 = []
-                    if uploaded_slaves:
-                        for img in uploaded_slaves[:5]:
-                            before_slaves_base64.append(base64.b64encode(img.getvalue()).decode('utf-8'))
-
-                    # 🛠️ แปลงไฟล์ภาพหลักผลงาน After เป็น Base64
-                    after_pic_base64 = ""
-                    if camera_after_file:
-                        after_pic_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
-                    elif uploaded_after_file:
-                        after_pic_base64 = base64.b64encode(uploaded_after_file.getvalue()).decode('utf-8')
-
-                    payload = {
-                        "timestamp": save_timestamp,
-                        "date_str": date_string,
-                        "employee_id": str(emp_id_val),
-                        "employee_name": str(emp_name_val),
-                        "position": send_position,
-                        "material": send_material,
-                        "errortype": send_errortype,
-                        "improvement_type": send_improvement_type,
-                        "improvement_details": send_details,
-                        "before_master": before_master_base64,
-                        "before_slaves": before_slaves_base64,
-                        "after_pic": after_pic_base64
-                    }
-                    
-                    try:
-                        response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
-                        if response.status_code == 200:
-                            st.success(f"🎉 บันทึกข้อมูลและจัดส่งรูปภาพเข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยแล้วครับ!")
-                            
-                            st.session_state.page = "select_defect"
-                            st.rerun()
-                        else:
-                            st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
-                    except Exception as ex:
-                        st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
-                
     st.markdown('</div>', unsafe_allow_html=True)

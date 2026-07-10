@@ -256,7 +256,7 @@ st.markdown("""
         border-left: 5px solid #10b981 !important;
     }
 
-    /* 🔹 [ปุ่มสามภาพเป็นกระจกใสเคลือบแก้วเนียนตา] Pure Glassmorphic Buttons */
+    /* 🔹 [🛠️ ปรับปรุงความพรีเมียมตามบรีฟ] สั่งให้ปุ่มที่มีคีย์ขึ้นต้นด้วย defect_btn_ กางตัวยาวเท่ากัน 100% บาลานซ์ขอบกระจกใส */
     div.stButton > button[key^="defect_btn_"] {
         background-color: rgba(255, 255, 255, 0.25) !important;
         backdrop-filter: blur(14px) !important;
@@ -268,6 +268,7 @@ st.markdown("""
         border-radius: 22px !important;
         padding: 16px 20px !important;
         margin-bottom: 16px !important;
+        width: 100% !important; /* 👈 บังคับขยายปุ่มให้เต็มความกว้างโทรศัพท์ เท่ากันเป๊ะทุกปุ่มครับ */
         box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
         transition: cubic-bezier(0.25, 0.8, 0.25, 1) 0.3s !important;
     }
@@ -402,6 +403,7 @@ if current_page == "login":
 elif current_page == "select_defect":
     st.markdown('<div class="defect-header-card">🎯 โปรดเลือกประเภท Defect</div>', unsafe_allow_html=True)
     
+    # 👈 ปุ่มทั้ง 3 ปุ่มตรงนี้จะถูกดึงยืดออกไปยาวขอบชิดกันเท่ากันเป๊ะ สวยสมมาตรตามสั่งทันทีครับ
     if st.button("🟠 Defect 260 (Rough Lines)", key="defect_btn_260"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
     if st.button("🔵 Defect 261 (Grinding Structure)", key="defect_btn_261"):
@@ -417,7 +419,7 @@ elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
 
-    # 🛠️ [จุดแก้ไขที่ 1 ตามบรีฟ] เปลี่ยนแผนภูมิสีขาวเดิม ให้เป็นกรอบแก้วรมดำพรีเมียมมาตรฐานเดียวกันตัวแรก (โซนกราฟ)
+    # เปลี่ยนแผนภูมิสีขาวเดิม ให้เป็นกรอบแก้วรมดำพรีเมียมมาตรฐานเดียวกันตัวแรก (โซนกราฟ)
     st.markdown(f'<div class="glass-section-divider-card chart-zone">📊 แผนภูมิ Defect {defect}</div>', unsafe_allow_html=True)
 
     # 📥 โหลดข้อมูล Material จริง
@@ -489,7 +491,7 @@ elif current_page == "defect_view":
     # ข้อความอธิบายใต้แผนภูมิสถิติทันที
     st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-top:5px; margin-bottom:12px;'>📊 เลือก Material จากกราฟ</h5>", unsafe_allow_html=True)
 
-    # 🛠️ [จุดแก้ไขที่ 2] โซนกรอบเงารมดำมาตรฐานตัวที่สอง (โซน Before)
+    # โซนกรอบเงารมดำมาตรฐานตัวที่สอง (โซน Before)
     st.markdown('<div class="glass-section-divider-card">📁  เลือกข้อมูล และแนบรูป ส่วนของ Before</div>', unsafe_allow_html=True)
 
     # กล่องสีเขียว TARGET MATERIAL SELECTED วางล็อกไว้ใต้กล่อง Before ทันทีตามพิมพ์เขียวรูปที่ 1
@@ -507,11 +509,7 @@ elif current_page == "defect_view":
     box_defect = st.text_input("errortype (คอลัมน์ F):", value=short_defect, disabled=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ตัวแปรสำหรับเก็บไฟล์และตรวจจับสถานะรูปภาพหลัก
-    session_img_key = f"stored_main_img_{defect}"
-    if session_img_key not in st.session_state:
-        st.session_state[session_img_key] = None
-
+    # ส่วนประมวลผลฟังก์ชันแนบรูปและช่องอัปโหลดเมื่อเปิดพิกัดหน้างานสำเร็จ
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"] and selected_material != "ไม่มีข้อมูล":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
@@ -521,6 +519,10 @@ elif current_page == "defect_view":
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
+        session_img_key = f"stored_main_img_{defect}"
+        if session_img_key not in st.session_state:
+            st.session_state[session_img_key] = None
+
         if st.session_state[session_img_key] is None:
             st.markdown('<div element-context="main_uploader_wrapper">', unsafe_allow_html=True)
             uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่ (จำกัด 1 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=False, key=f"uploader_main_{defect}")
@@ -546,7 +548,7 @@ elif current_page == "defect_view":
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🛠️ [จุดแก้ไขที่ 3] โซนกรอบเงารมดำมาตรฐานตัวที่สาม (โซน After)
+    # โซนกรอบเงารมดำมาตรฐานตัวที่สาม (โซน After)
     st.markdown('<div class="glass-section-divider-card after-zone">✨ ส่วนอัปเดตงาน After</div>', unsafe_allow_html=True)
 
     # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
@@ -594,7 +596,7 @@ elif current_page == "defect_view":
             if slave_count < 3:
                 st.error(f"⚠️ บันทึกไม่สำเร็จ! โปรดแนบรูปรายละเอียดจุดย่อยในหัวข้อ 2 อย่างน้อย 3 ภาพ (ปัจจุบันมี {slave_count} ภาพ)")
             elif st.session_state[session_img_key] is None:
-                st.error("⚠️ บันทึกไม่สำเร็จ! โปรดแนบรูปภาพหลักชิ้นงานในหัวข้อ 1 ก่อนกดบันทึก!")
+                st.error("⚠️ บันทึกไม่สำเร็จ! โปรดแนบรูปภาพหลักชิ้นงาน in หัวข้อ 1 ก่อนกดบันทึก!")
             else:
                 with st.spinner("⏳ กำลังบันทึกข้อมูล โปรดรอสักครู่..."):
                     with app_lock:

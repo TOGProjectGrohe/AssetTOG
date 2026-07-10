@@ -22,6 +22,7 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
 # 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์สไตล์กระจกแก้วใส (Pure Glassmorphism)
+# 🛠️ [ลบ Absolute Position ออก] เคลียร์คำสั่งสไตล์เดิมที่ทำให้ปุ่ม Home/Logout ลอยไปทับกล่องข้อความออกเรียบร้อย
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -34,7 +35,7 @@ st.markdown("""
         max-width: 420px !important; margin: 0px auto !important;
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
         border: 12px solid #1e293b !important; border-radius: 40px !important;
-        padding: 95px 24px 24px 24px !important; box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
+        padding: 40px 24px 24px 24px !important; box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
         min-height: 90vh !important; height: auto !important;
     }
     .login-card {
@@ -43,22 +44,21 @@ st.markdown("""
     .future-graph-card {
         background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
     }
-    .custom-top-navbar {
-        position: absolute !important; top: 20px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
-    }
     
-    .nav-btn-link {
+    /* สไตล์ปุ่มกด Home และ Logout ด้านบนสุด */
+    div.stButton > button[key^="nav_top_"] {
         background-color: #bae6fd !important; 
         color: #000000 !important; 
         border: 1px solid rgba(0,0,0,0.05) !important;
         border-radius: 20px !important; 
-        padding: 8px 16px !important; 
+        padding: 6px 12px !important; 
         font-size: 13px !important; 
-        font-weight: bold !important; 
-        text-decoration: none !important;
+        font-weight: bold !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        width: 100% !important;
+        min-height: auto !important;
     }
-    .nav-btn-link:hover {
+    div.stButton > button[key^="nav_top_"]:hover {
         background-color: #7dd3fc !important;
     }
 
@@ -143,6 +143,10 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(0,0,0,0.02), inset 0 1px 2px rgba(255,255,255,0.3) !important;
         transition: all 0.2s ease !important;
     }
+    div.stButton > button:hover {
+        background-color: rgba(125, 211, 252, 0.7) !important;
+        border: 2px solid rgba(255, 255, 255, 0.9) !important;
+    }
     
     div.stButton > button[key^="save_btn_"] {
         background-color: #10b981 !important;
@@ -185,7 +189,7 @@ st.markdown("""
         letter-spacing: 0.5px;
     }
 
-    /* 🔹 [ปฏิวัติปุ่มสามปุ่มเป็นกระจกใสเคลือบแก้วเนียนตา] Pure Glassmorphic Buttons */
+    /* 🔹 [ปุ่มสามภาพเป็นกระจกใสเคลือบแก้วเนียนตา] Pure Glassmorphic Buttons */
     div.stButton > button[key^="defect_btn_"] {
         background-color: rgba(255, 255, 255, 0.25) !important;
         backdrop-filter: blur(14px) !important;
@@ -270,6 +274,13 @@ def render_employee_details_footer():
             </div>
         """, unsafe_allow_html=True)
 
+# 🛠️ [ฟังก์ชันควบคุมการ Reset หน้าด้วยปุ่มเนทีฟ]
+def handle_navigation_reset():
+    st.session_state.page = "login"
+    st.session_state.user_info = None
+    st.session_state.current_defect = None
+    st.rerun()
+
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -288,16 +299,22 @@ FOLDER_LINK_MAP = {
     }
 }
 
-if 'page' not in st.session_state: st.session_state.page = "login"
-if 'user_info' not in st.session_state: st.session_state.user_info = None
-if 'current_defect' not in st.session_state: st.session_state.current_defect = None
-
 current_page = st.session_state.page
 
-st.markdown('<div class="custom-top-navbar"><a href="?nav=reset" target="_self" class="nav-btn-link">🏠 Home</a><a href="?nav=reset" target="_self" class="nav-btn-link">🚪 Logout</a></div>', unsafe_allow_html=True)
-if st.query_params.get("nav") == "reset":
-    st.session_state.page = "login"; st.session_state.user_info = None; st.session_state.current_defect = None
-    st.query_params.clear(); st.rerun()
+# 🛠️ [วิธีที่ 1 - จัดทางเดินข้อมูลปุ่มลบนอกระบบดั้งเดิม]
+# แบ่งสัดส่วนคอลัมน์ด้านบนสุดอย่างเป็นเอกเทศ ปุ่มกดจะไม่ลอยไปทับแถวสไลด์การ์ดโปร่งแสงด้านล่าง
+col_top_l, col_top_space, col_top_r = st.columns([3, 4, 3])
+with col_top_l:
+    if st.button("🏠 Home", key="nav_top_home_btn"):
+        if st.session_state.user_info:
+            st.session_state.page = "select_defect"
+            st.rerun()
+with col_top_r:
+    if st.button("🚪 Logout", key="nav_top_logout_btn"):
+        handle_navigation_reset()
+
+st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
+st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
@@ -318,9 +335,9 @@ if current_page == "login":
             st.markdown('<div class="error-pastel-box">❌ ไม่พบข้อมูล โปรดคีย์ ID อีกครั้ง</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสอง: คัดเลือก Defect (กระจกแก้วใสวิ้ง) ----------------
+# ---------------- หน้าสอง: คัดเลือก Defect (กระจกเงารมดำหรูวิ้ง) ----------------
 elif current_page == "select_defect":
-    st.markdown('<div class="defect-header-card"><b>🎯 โปรดเลือกประเภท Defect</b></div>', unsafe_allow_html=True)
+    st.markdown('<div class="defect-header-card">🎯 โปรดเลือกประเภท Defect</div>', unsafe_allow_html=True)
     
     if st.button("🟠 Defect 260 (Rough Lines)", key="defect_btn_260"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
@@ -546,6 +563,7 @@ elif current_page == "defect_view":
                             response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                             if response.status_code == 200:
                                 st.success(f"🎉 บันทึกข้อมูลและจัดส่งรูปภาพเข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยแล้วครับ!")
+                                # เคลียร์รูปภาพหลักหลังส่งข้อมูลสำเร็จ
                                 st.session_state[session_img_key] = None
                                 st.session_state.page = "select_defect"
                                 st.rerun()

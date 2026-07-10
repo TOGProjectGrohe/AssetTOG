@@ -146,19 +146,6 @@ st.markdown("""
         border: 2px solid #059669 !important;
         box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
     }
-    
-    .error-pastel-box {
-        background-color: rgba(239, 68, 68, 0.15) !important;
-        border: 2px solid rgba(239, 68, 68, 0.3) !important;
-        border-radius: 16px !important;
-        padding: 12px 18px !important;
-        margin-top: 12px !important;
-        margin-bottom: 12px !important;
-        color: #000000 !important;
-        font-size: 14px !important;
-        font-weight: bold !important;
-        text-align: center !important;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -298,7 +285,7 @@ elif current_page == "defect_view":
         if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
             st.session_state[state_key] = list_of_materials[0]
 
-        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - ย้ายกลับขึ้นมาอยู่ด้านบนสุดตามต้องการ
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - ย้ายขึ้นบนสุดสวยงามลื่นไหล
         fig_pie = go.Figure(data=[go.Pie(
             labels=chart_data["Material"], 
             values=chart_data[qty_col], 
@@ -309,7 +296,7 @@ elif current_page == "defect_view":
         fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=False, paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_pie, use_container_width=True)
 
-        # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - อยู่ด้านล่างวงกลม ใช้ดักจับการคลิกได้อย่างลื่นไหล
+        # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart)
         bars_list = []
         for mat in list_of_materials:
             val = chart_data[chart_data['Material'] == mat][qty_col].values[0]
@@ -317,7 +304,6 @@ elif current_page == "defect_view":
         fig_bar = go.Figure(data=bars_list)
         fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, xaxis=dict(type='category', tickangle=45), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         
-        # 🛠️ ใช้ on_select="rerun" ดักจับเฉพาะตอนคลิกชิ้นงาน ทำให้สลับข้อมูลและอัปเดต Target Material รวดเร็วทันใจ
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             clicked_mat = selected_bar["selection"]["points"][0]["x"]
@@ -333,7 +319,7 @@ elif current_page == "defect_view":
     # 🔘 ส่วนฟิลเตอร์เลือกพิกัดหน้างาน
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
 
-    # 🛠️ สถานะกล่องล็อกข้อความระบบหน้าบ้าน
+    # 🛠️ สถานะกล่องล็อกข้อมูลระบบหน้าบ้าน (ไม่มีกล่องขาวกวนใจแล้วครับ)
     st.markdown('<div class="login-card" style="padding: 10px 15px;">', unsafe_allow_html=True)
     st.markdown("<p style='font-size:12px; font-weight:bold; color:#64748b; margin-bottom:2px;'>⚙️ สถานะกล่องรับข้อมูลระบบหน้าจอ (ตรวจสอบความพร้อมก่อนส่ง):</p>", unsafe_allow_html=True)
     
@@ -423,6 +409,7 @@ elif current_page == "defect_view":
             document_no = "1" 
             custom_image_name = f"{send_errortype}_{send_improvement_type}_{date_string}_{document_no}.png"
 
+            # 🛠️ [จุดแก้ไขซ่อมแซมเรื่องรูปภาพหลัก] ดึงค่าฐาน Base64 จากกล้อง camera_input_after_live หรือไฟล์อัปโหลดจริงให้ตรงคีย์
             img_base64 = ""
             if camera_after_file:
                 img_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
@@ -439,13 +426,13 @@ elif current_page == "defect_view":
                 "improvement_type": send_improvement_type,
                 "improvement_details": send_details,
                 "image_name": custom_image_name,
-                "pic1": img_base64
+                "pic1": img_base64                  # ขยายล็อกข้อมูลรูปส่งออกหลังบ้านครบถ้วน
             }
             
             try:
                 response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                 if response.status_code == 200:
-                    st.success(f"🎉 บันทึกข้อมูลและจัดส่งชื่อรูปภาพ '{custom_image_name}' เข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยแล้วครับ!")
+                    st.success(f"🎉 บันทึกข้อมูลและรูปภาพสำเร็จ! บันทึกชื่อภาพ '{custom_image_name}' ลงตารางครบถ้วนแล้วครับ")
                 else:
                     st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
             except Exception as ex:

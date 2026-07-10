@@ -324,7 +324,7 @@ FOLDER_LINK_MAP = {
 
 current_page = st.session_state.page
 
-# แบ่งสัดส่วนคอลัมน์ด้านบนสุดอย่างเป็นเอกเทศ ปุ่มกดจะไม่ลอยไปทับแถวสไลด์การ์ดโปร่งแสงด้านล่าง
+# แบ่งสัดส่วนคอลัมน์ด้านบนสุด ปุ่มกดจะไม่ลอยไปทับแถวสไลด์การ์ดโปร่งแสงด้านล่าง
 col_top_l, col_top_space, col_top_r = st.columns([3, 4, 3])
 with col_top_l:
     if st.button("🏠 Home", key="nav_top_home_btn"):
@@ -406,7 +406,7 @@ elif current_page == "defect_view":
         filtered_df = chart_data.copy()
 
     # 📊 ข้อความเตือนใจกลางแผนภูมิ
-    st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-bottom:2px;'>📊 เลือก Material จากกราฟ</h5>", unsafe_allow_html=True)
+    st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-bottom:2px;'>📊 เลือก Material จากกิราฟ</h5>", unsafe_allow_html=True)
 
     # 📊 แผงกราฟสถิติ
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
@@ -448,9 +448,6 @@ elif current_page == "defect_view":
 
         selected_material = st.session_state[state_key]
 
-        # 🛠️ [ขยับสล็อตเรียงลำดับใหม่] ย้ายกล่องสีเขียวสะท้อนแสงขึ้นมาแสดงผลต่อจากแผนภูมิสถิติทันทีเพื่อให้สายตาเลื่อนไหลได้ถูกต้องตามระบบงาน
-        st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'>", unsafe_allow_html=True)
-        st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a;"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     # 🔘 ส่วนฟิลเตอร์เลือกพิกัดหน้างาน
@@ -471,8 +468,12 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
 
-        # 🛠️ [จัดโซนขอบตัดน้ำเงิน] แนวแบ่งโซนหัวข้อ Before สไตล์กระจกเงารมดำพรีเมียม
+        # 🖤 [จัดระเบียบใหม่ตามรูปแบบที่ 2 เป๊ะๆ] 
+        # กล่องดำเงาของ Before ขยับขึ้นมาเปิดประเดิมเป็นหัวข้อหลักก่อน
         st.markdown('<div class="glass-section-divider-card">📁 เลือกข้อมูล และแนบรูป ส่วนของ Before</div>', unsafe_allow_html=True)
+
+        # 🛠️ ย้ายกล่องสีเขียวสะท้อนแสง TARGET MATERIAL SELECTED เข้ามาอยู่ในจุดนี้ (ใต้กล่องหัวข้อ Before พอดีเป๊ะ!)
+        st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; margin-bottom: 15px;"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
 
         # 📁 1. คลังภาพหลักชิ้นงาน
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
@@ -509,7 +510,7 @@ elif current_page == "defect_view":
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🛠️ [จัดโซนขอบตัดเขียว] แนวแบ่งโซนหัวข้อ After สไตล์กระจกเงารมดำมาตรฐานเดียวกับ Before เป๊ะ ๆ
+    # 🛠️ แนวแบ่งโซนหัวข้อ After สไตล์กระจกเงารมดำมาตรฐานเดียวกัน
     st.markdown('<div class="glass-section-divider-card after-zone">✨ ส่วนอัปเดตงาน After</div>', unsafe_allow_html=True)
 
     # 🔲 ส่วนสรุปรายละเอียดงาน AFTER

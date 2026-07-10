@@ -298,24 +298,7 @@ elif current_page == "defect_view":
         if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
             st.session_state[state_key] = list_of_materials[0]
 
-        # 📊 1. แผนภูมิแท่งแนวตั้ง (Bar Chart) - ย้ายขึ้นมาก่อนเพื่อลดความหน่วงในการคำนวณการคลิก
-        bars_list = []
-        for mat in list_of_materials:
-            val = chart_data[chart_data['Material'] == mat][qty_col].values[0]
-            bars_list.append(go.Bar(x=[mat], y=[val], name=mat, marker=dict(color=color_map[mat], line=dict(color='#ffffff', width=2))))
-        fig_bar = go.Figure(data=bars_list)
-        fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, xaxis=dict(type='category', tickangle=45), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        
-        # 🛠️ ใช้คุณสมบัติดักจับคลิกแบบเรียลไทม์โดยไม่มี st.rerun() มาขัดขวาง ทำให้เปลี่ยนข้อมูลได้รวดเร็วขึ้นเป็นเท่าตัว
-        selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
-        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
-            clicked_mat = selected_bar["selection"]["points"][0]["x"]
-            if clicked_mat != st.session_state[state_key]:
-                st.session_state[state_key] = clicked_mat
-
-        selected_material = st.session_state[state_key]
-
-        # 🍕 2. แผนภูมิวงกลม (Pie Chart) - อัตราส่วนแบบรูปที่ 1 ไหลลื่น
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - ย้ายกลับขึ้นมาอยู่ด้านบนสุดตามต้องการ
         fig_pie = go.Figure(data=[go.Pie(
             labels=chart_data["Material"], 
             values=chart_data[qty_col], 
@@ -325,6 +308,23 @@ elif current_page == "defect_view":
         )])
         fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=False, paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_pie, use_container_width=True)
+
+        # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - อยู่ด้านล่างวงกลม ใช้ดักจับการคลิกได้อย่างลื่นไหล
+        bars_list = []
+        for mat in list_of_materials:
+            val = chart_data[chart_data['Material'] == mat][qty_col].values[0]
+            bars_list.append(go.Bar(x=[mat], y=[val], name=mat, marker=dict(color=color_map[mat], line=dict(color='#ffffff', width=2))))
+        fig_bar = go.Figure(data=bars_list)
+        fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, xaxis=dict(type='category', tickangle=45), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        
+        # 🛠️ ใช้ on_select="rerun" ดักจับเฉพาะตอนคลิกชิ้นงาน ทำให้สลับข้อมูลและอัปเดต Target Material รวดเร็วทันใจ
+        selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
+        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
+            clicked_mat = selected_bar["selection"]["points"][0]["x"]
+            if clicked_mat != st.session_state[state_key]:
+                st.session_state[state_key] = clicked_mat
+
+        selected_material = st.session_state[state_key]
 
         st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'>", unsafe_allow_html=True)
         st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a;"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)

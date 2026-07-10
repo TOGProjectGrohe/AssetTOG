@@ -15,8 +15,8 @@ def get_global_app_lock():
 
 app_lock = get_global_app_lock()
 
-# ⚠️ ฝังลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์ลงในระบบเรียบร้อยครับ
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
+# ⚠️ ลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
@@ -186,6 +186,34 @@ def load_real_defect_data():
     except:
         return pd.DataFrame()
 
+# ฟังก์ชันแสดงผลส่วน Employee Details ด้านล่างแบบเรียลไทม์
+def render_employee_details_footer():
+    if 'user_info' in st.session_state and st.session_state.user_info:
+        now_time_view = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        emp_id_val = str(st.session_state.user_info.get('id', '-'))
+        emp_name_val = str(st.session_state.user_info.get('name', '-'))
+        emp_position_val = str(st.session_state.user_info.get('position', 'GL'))
+        if emp_position_val in ["", "None", "-", "nan"]:
+            emp_position_val = "GL"
+
+        st.markdown(f"""
+            <div class="employee-details-container">
+                <div class="employee-details-header">Employee Details</div>
+                <div class="employee-details-sub-grid">
+                    <div>Timestamp</div>
+                    <div>Employee ID</div>
+                    <div>Name</div>
+                    <div>Position</div>
+                </div>
+                <div class="employee-details-row-data">
+                    <div>{now_time_view}</div>
+                    <div>{emp_id_val}</div>
+                    <div>{emp_name_val}</div>
+                    <div>{emp_position_val}</div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -245,8 +273,12 @@ elif current_page == "select_defect":
         st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
+    
+    # 📊 แสดงรายละเอียดชื่อผู้ใช้ที่ด้านล่างของหน้าสองตามคำขอ
+    st.markdown("<br>", unsafe_allow_html=True)
+    render_employee_details_footer()
 
-# ---------------- หน้าสาม: บอร์ดสถิติอิง Material จริง ----------------
+# ---------------- หน้าสาม: บอร์ดสถิติและการอัปเดต After ----------------
 elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
@@ -293,7 +325,7 @@ elif current_page == "defect_view":
         if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
             st.session_state[state_key] = list_of_materials[0]
 
-        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - อยู่บนสุด
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart)
         fig_pie = go.Figure(data=[go.Pie(
             labels=chart_data["Material"], 
             values=chart_data[qty_col], 
@@ -370,93 +402,79 @@ elif current_page == "defect_view":
     if camera_after_file: st.image(camera_after_file, caption="✅ รูปภาพ After จากกล้องพรีวิว", use_container_width=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
+    
     if 'user_info' in st.session_state and st.session_state.user_info:
-        now_time_view = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         emp_id_val = str(st.session_state.user_info.get('id', '-'))
         emp_name_val = str(st.session_state.user_info.get('name', '-'))
         emp_position_val = str(st.session_state.user_info.get('position', 'GL'))
-        if emp_position_val == "" or emp_position_val == "None" or emp_position_val == "-":
-            emp_position_val = "GL"
-
-        st.markdown(f"""
-            <div class="employee-details-container">
-                <div class="employee-details-header">Employee Details</div>
-                <div class="employee-details-sub-grid">
-                    <div>Timestamp</div>
-                    <div>Empolyee ID</div>
-                    <div>Name</div>
-                    <div>Position</div>
-                </div>
-                <div class="employee-details-row-data">
-                    <div>{now_time_view}</div>
-                    <div>{emp_id_val}</div>
-                    <div>{emp_name_val}</div>
-                    <div>{emp_position_val}</div>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
+        if emp_position_val in ["", "None", "-", "nan"]: emp_position_val = "GL"
     else:
         emp_id_val, emp_name_val, emp_position_val = "-", "-", "GL"
 
+    render_employee_details_footer()
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 💾 ปุ่มบันทึกข้อมูล
-    if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
-        if not after_text.strip():
+    # 💾 ปุ่มบันทึกข้อมูล พร้อมสถานะกำลังเซฟข้อมูลโปรดรอสักครู่แบบไดนามิก
+    if not after_text.strip():
+        if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
-        else:
-            # 🔐 จัดคิวผู้ใช้งานผ่านระบบ Lock ความปลอดภัยสูงสุด ข้อมูลไม่ชนทับกันแน่นอน
-            # 🛠️ [จุดแก้ไข NameError] เปลี่ยนกุญแจจัดคิวจาก lock ให้แมตช์ตรงกับคำว่า app_lock ที่ประกาศไว้ด้านบนสุดของไฟล์ครับ
-            with app_lock:
-                save_timestamp = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                date_string = str(datetime.now().strftime("%Y%m%d"))
-                
-                send_position = str(emp_position_val).strip()
-                send_material = str(selected_material).strip()
-                send_errortype = str(box_defect).strip()
-                send_improvement_type = str(box_face).strip()
-                send_details = str(after_text).strip()
+    else:
+        if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
+            with st.spinner("⏳ กำลังบันทึกข้อมูล โปรดรอสักครู่..."):
+                with app_lock:
+                    save_timestamp = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                    date_string = str(datetime.now().strftime("%Y%m%d"))
+                    
+                    send_position = str(emp_position_val).strip()
+                    send_material = str(selected_material).strip()
+                    send_errortype = str(box_defect).strip()
+                    send_improvement_type = str(box_face).strip()
+                    send_details = str(after_text).strip()
 
-                # 🛠️ แปลงไฟล์ภาพเดี่ยว Picture Master (Before) เป็น Base64
-                before_master_base64 = ""
-                if uploaded_main:
-                    before_master_base64 = base64.b64encode(uploaded_main.getvalue()).decode('utf-8')
+                    # 🛠️ แปลงไฟล์ภาพเดี่ยว Picture Master (Before) เป็น Base64
+                    before_master_base64 = ""
+                    if uploaded_main:
+                        before_master_base64 = base64.b64encode(uploaded_main.getvalue()).decode('utf-8')
 
-                # 🛠️ แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
-                before_slaves_base64 = []
-                if uploaded_slaves:
-                    for img in uploaded_slaves[:5]:
-                        before_slaves_base64.append(base64.b64encode(img.getvalue()).decode('utf-8'))
+                    # 🛠️ แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
+                    before_slaves_base64 = []
+                    if uploaded_slaves:
+                        for img in uploaded_slaves[:5]:
+                            before_slaves_base64.append(base64.b64encode(img.getvalue()).decode('utf-8'))
 
-                # 🛠️ แปลงไฟล์ภาพหลักผลงาน After เป็น Base64
-                after_pic_base64 = ""
-                if camera_after_file:
-                    after_pic_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
-                elif uploaded_after_file:
-                    after_pic_base64 = base64.b64encode(uploaded_after_file.getvalue()).decode('utf-8')
+                    # 🛠️ แปลงไฟล์ภาพหลักผลงาน After เป็น Base64
+                    after_pic_base64 = ""
+                    if camera_after_file:
+                        after_pic_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
+                    elif uploaded_after_file:
+                        after_pic_base64 = base64.b64encode(uploaded_after_file.getvalue()).decode('utf-8')
 
-                payload = {
-                    "timestamp": save_timestamp,
-                    "date_str": date_string,
-                    "employee_id": str(emp_id_val),
-                    "employee_name": str(emp_name_val),
-                    "position": send_position,
-                    "material": send_material,
-                    "errortype": send_errortype,
-                    "improvement_type": send_improvement_type,
-                    "improvement_details": send_details,
-                    "before_master": before_master_base64,
-                    "before_slaves": before_slaves_base64,
-                    "after_pic": after_pic_base64
-                }
-                
-                try:
-                    response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
-                    if response.status_code == 200:
-                        st.success(f"🎉 บันทึกข้อมูลและจัดส่งรูปภาพเข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยแล้วครับ!")
-                    else:
-                        st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
-                except Exception as ex:
-                    st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
+                    payload = {
+                        "timestamp": save_timestamp,
+                        "date_str": date_string,
+                        "employee_id": str(emp_id_val),
+                        "employee_name": str(emp_name_val),
+                        "position": send_position,
+                        "material": send_material,
+                        "errortype": send_errortype,
+                        "improvement_type": send_improvement_type,
+                        "improvement_details": send_details,
+                        "before_master": before_master_base64,
+                        "before_slaves": before_slaves_base64,
+                        "after_pic": after_pic_base64
+                    }
+                    
+                    try:
+                        response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
+                        if response.status_code == 200:
+                            st.success(f"🎉 บันทึกข้อมูลและจัดส่งรูปภาพเข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยแล้วครับ!")
+                            
+                            # 🛠️ [จุดแก้ไขเพิ่มความสะดวกพนักงาน] เซฟเสร็จล้างค่าหน้ากระดาษและส่งเด้งกลับหน้า 2 ทันที
+                            st.session_state.page = "select_defect"
+                            st.rerun()
+                        else:
+                            st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
+                    except Exception as ex:
+                        st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
                 
     st.markdown('</div>', unsafe_allow_html=True)

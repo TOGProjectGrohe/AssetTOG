@@ -78,7 +78,7 @@ st.markdown("""
         margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
     }
 
-    /* 📊 ออกแบบกรอบ Employee Details ตามบลูพริ้นต์รูปภาพที่ 1 เป๊ะๆ */
+    /* 📊 กรอบ Employee Details */
     .employee-details-container {
         border: 2px solid #3b82f6 !important;
         border-radius: 8px !important;
@@ -118,19 +118,6 @@ st.markdown("""
         color: #334155 !important;
     }
 
-    .defect-title-box {
-        background-color: #dbeafe !important;
-        border: 1px solid #bfdbfe !important;
-        border-radius: 16px !important;
-        padding: 12px !important;
-        text-align: center !important;
-        color: #000000 !important;
-        font-weight: bold !important;
-        font-size: 14px !important;
-        margin-top: 10px !important;
-        margin-bottom: 16px !important;
-    }
-
     div.stButton > button {
         background-color: rgba(186, 230, 253, 0.5) !important; 
         backdrop-filter: blur(6px) !important;
@@ -150,10 +137,6 @@ st.markdown("""
     div.stButton > button:hover {
         background-color: rgba(125, 211, 252, 0.7) !important;
         border: 2px solid rgba(255, 255, 255, 0.9) !important;
-        transform: translateY(-1px) !important;
-    }
-    div.stButton > button:active {
-        transform: translateY(1px) !important;
     }
     
     div.stButton > button[key^="save_btn_"] {
@@ -162,9 +145,6 @@ st.markdown("""
         font-size: 16px !important;
         border: 2px solid #059669 !important;
         box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
-    }
-    div.stButton > button[key^="save_btn_"]:hover {
-        background-color: #059669 !important;
     }
     
     .error-pastel-box {
@@ -182,7 +162,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🌐 ฟังก์ชันดึงข้อมูลพนักงานจาก Google Sheet รายชื่อพนักงาน
+# 🌐 ฟังก์ชันดึงข้อมูลพนักงาน
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
@@ -200,7 +180,7 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 📊 ฟังก์ชันดึงข้อมูลดิบจากลิงก์ Google Sheet สถิติหลัก
+# 📊 ฟังก์ชันดึงข้อมูลดิบสถิติหลัก
 @st.cache_data(ttl=60)
 def load_real_defect_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c/export?format=csv&gid=0"
@@ -316,10 +296,26 @@ elif current_page == "defect_view":
 
         state_key = f"sel_mat_{defect}"
         if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
-            st.session_state[state_key] = list_of_materials[0] if list_of_materials else "ไม่มีข้อมูล"
+            st.session_state[state_key] = list_of_materials[0]
+
+        # 📊 1. แผนภูมิแท่งแนวตั้ง (Bar Chart) - ย้ายขึ้นมาก่อนเพื่อลดความหน่วงในการคำนวณการคลิก
+        bars_list = []
+        for mat in list_of_materials:
+            val = chart_data[chart_data['Material'] == mat][qty_col].values[0]
+            bars_list.append(go.Bar(x=[mat], y=[val], name=mat, marker=dict(color=color_map[mat], line=dict(color='#ffffff', width=2))))
+        fig_bar = go.Figure(data=bars_list)
+        fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, xaxis=dict(type='category', tickangle=45), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        
+        # 🛠️ ใช้คุณสมบัติดักจับคลิกแบบเรียลไทม์โดยไม่มี st.rerun() มาขัดขวาง ทำให้เปลี่ยนข้อมูลได้รวดเร็วขึ้นเป็นเท่าตัว
+        selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
+        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
+            clicked_mat = selected_bar["selection"]["points"][0]["x"]
+            if clicked_mat != st.session_state[state_key]:
+                st.session_state[state_key] = clicked_mat
+
         selected_material = st.session_state[state_key]
 
-        # 🛠️ [จุดแก้ไขเพื่อกลับมาเป็นรูปที่ 1] เปลี่ยนตัวแปรของแผนภูมิวงกลม (Pie Chart) ให้ดึงค่ารวมจาก chart_data เพื่อโชว์อัตราส่วนพาสเทลของ Top 10 Material ทั้งหมด
+        # 🍕 2. แผนภูมิวงกลม (Pie Chart) - อัตราส่วนแบบรูปที่ 1 ไหลลื่น
         fig_pie = go.Figure(data=[go.Pie(
             labels=chart_data["Material"], 
             values=chart_data[qty_col], 
@@ -330,19 +326,6 @@ elif current_page == "defect_view":
         fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=False, paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_pie, use_container_width=True)
 
-        # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) มีสีและลำดับสลับตรงกัน 100% 
-        bars_list = []
-        for mat in list_of_materials:
-            val = chart_data[chart_data['Material'] == mat][qty_col].values[0]
-            bars_list.append(go.Bar(x=[mat], y=[val], name=mat, marker=dict(color=color_map[mat], line=dict(color='#ffffff', width=2))))
-        fig_bar = go.Figure(data=bars_list)
-        fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, xaxis=dict(type='category', tickangle=45), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
-
-        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
-            st.session_state[state_key] = selected_bar["selection"]["points"][0]["x"]
-            st.rerun()
-
         st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'>", unsafe_allow_html=True)
         st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a;"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -350,7 +333,7 @@ elif current_page == "defect_view":
     # 🔘 ส่วนฟิลเตอร์เลือกพิกัดหน้างาน
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
 
-    # 🛠️ สถานะกล่องล็อกข้อความระบบหน้าบ้านสำหรับเตรียมตัวแปรส่งประจุ
+    # 🛠️ สถานะกล่องล็อกข้อความระบบหน้าบ้าน
     st.markdown('<div class="login-card" style="padding: 10px 15px;">', unsafe_allow_html=True)
     st.markdown("<p style='font-size:12px; font-weight:bold; color:#64748b; margin-bottom:2px;'>⚙️ สถานะกล่องรับข้อมูลระบบหน้าจอ (ตรวจสอบความพร้อมก่อนส่ง):</p>", unsafe_allow_html=True)
     

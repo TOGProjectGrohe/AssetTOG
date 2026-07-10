@@ -21,7 +21,7 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปุ่มลบรูปสีแดงพรีเมียม
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งแผงควบคุมโปร่งแสงยาวกรอบเดียวกัน
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -167,6 +167,11 @@ st.markdown("""
     }
     div.stButton > button[key="clear_image_btn"]:hover {
         background-color: #dc2626 !important;
+    }
+    
+    /* 🛠️ ซ่อนปุ่มเครื่องหมายบวก (+) ของกล่องหัวข้อ 1 เพื่อบังคับรูปเดี่ยว */
+    div[element-context="main_uploader_wrapper"] button[data-testid="baseButton-secondary"] {
+        display: none !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -387,39 +392,39 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
 
-        # 📁 1. คลังภาพหลักชิ้นงาน (บังคับอัปโหลดได้รูปเดียว + ล็อกปิดปุ่มบวกเนียน ๆ + เพิ่มปุ่มลบรูปภาพ)
+        # 📁 1. คลังภาพหลักชิ้นงาน (จำกัด 1 รูปกระชับสายตาด้วย State control ปลอดภัย 100%)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        # คีย์ตรวจสอบรูปภาพหลักใน Session State เพื่อควบคุม UI
         session_img_key = f"stored_main_img_{defect}"
         if session_img_key not in st.session_state:
             st.session_state[session_img_key] = None
 
-        # 🛠️ ตรรกะควบคุมทางเลือกอัจฉริยะ: ถ้ายังไม่มีรูปให้โชว์ช่องอัปโหลด ถ้ามีรูปแล้วให้ซ่อนช่องและเปิดปุ่มลบ (X) แทน
         if st.session_state[session_img_key] is None:
+            st.markdown('<div element-context="main_uploader_wrapper">', unsafe_allow_html=True)
             uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่ (จำกัด 1 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=False, key=f"uploader_main_{defect}")
+            st.markdown('</div>', unsafe_allow_html=True)
             if uploaded_main:
                 st.session_state[session_img_key] = uploaded_main.getvalue()
                 st.rerun()
         else:
-            # ซ่อน Uploader เก่าทิ้งไปเลย ทำให้ปุ่มเครื่องหมายบวกหายเกลี้ยง 100% พนักงานจะหมดสิทธิ์เลือกรูปเพิ่ม
             st.markdown("<p style='font-size:13px; color:#2c3e50; font-weight:bold;'>✅ รูปภาพหลักถูกแนบเรียบร้อยแล้ว:</p>", unsafe_allow_html=True)
             st.image(st.session_state[session_img_key], use_container_width=True)
             
-            # เปิดสวิตช์ปุ่มกากบาทสีแดงสำหรับล้างภาพเพื่อเปลี่ยนรูปใหม่กรณีเลือกผิด
             if st.button("❌ กดลบรูปภาพนี้เพื่อเลือกใหม่", key="clear_image_btn"):
                 st.session_state[session_img_key] = None
                 st.rerun()
                 
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 📁 2. คลังรูปรายละเอียดจุดย่อย
+        # 📁 2. คลังรูปรายละเอียดจุดย่อย (🛠️ แก้ไข Wording ตรงตามใบงานล่าสุดเรียบร้อย!)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info['slave_title']} ↗️</a>', unsafe_allow_html=True)
-        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
+        
+        # 📌 แก้ไขประโยคอธิบายหน้างานเป็น "แนบรูปรายละเอียดจุดย่อย (อย่างน้อย 3 รูป สูงสุด 5 รูป):"
+        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (อย่างน้อย 3 รูป สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
         if uploaded_slaves:
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -449,7 +454,7 @@ elif current_page == "defect_view":
     render_employee_details_footer()
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 💾 ปุ่มบันทึกข้อมูล พร้อมเงื่อนไขดักตรวจสอบภาพหัวข้อ 2
+    # 💾 ปุ่มบันทึกข้อมูล
     if not after_text.strip():
         if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")

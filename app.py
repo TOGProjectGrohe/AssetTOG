@@ -30,11 +30,13 @@ st.markdown("""
     [data-testid="stStatusWidget"], #stConnectionStatus, div[class*="viewerBadge"] {
         display: none !important; visibility: hidden !important; height: 0 !important;
     }
+    
+    /* 🛠️ ปรับลด padding-top ของแอปจาก 40px เหลือ 15px เพื่อดันทุกอย่างขึ้นไปชิดด้านบน */
     .stApp {
         max-width: 420px !important; margin: 0px auto !important;
         background: linear-gradient(180deg, #ffb07c 0%, #ffe3d1 30%, #fff7f2 100%) !important;
         border: 12px solid #1e293b !important; border-radius: 40px !important;
-        padding: 40px 24px 24px 24px !important; box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
+        padding: 15px 24px 24px 24px !important; box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
         min-height: 90vh !important; height: auto !important;
     }
     .login-card {
@@ -61,7 +63,7 @@ st.markdown("""
         background-color: #7dd3fc !important;
     }
 
-    /* 🛠️ [จุดแก้ไขสำคัญตามบรีฟ] ปรับขนาดวงกลม TOG ให้ใหญ่ขึ้นสมมาตร บาลานซ์สายตาพรีเมียม */
+    /* 🛠️ [จุดแก้ไขสไตล์ตามบรีฟ] ขยับบีบช่องไฟให้แคบลงเกือบชิดปุ่มด้านบนและลดขนาด margin-bottom */
     .tog-logo-circle {
         width: 110px !important; 
         height: 110px !important; 
@@ -76,14 +78,23 @@ st.markdown("""
         color: #000000 !important; 
         font-weight: 900 !important; 
         font-size: 26px !important; 
-        margin: 5px auto 12px auto !important;
+        margin: 0px auto 4px auto !important; /* ปรับ margin-top เป็น 0px และลดด้านล่างลง */
         box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
         letter-spacing: 1px !important;
     }
 
+    /* 🛠️ บีบกรอบจัดกึ่งกลางกลุ่มหัวข้อให้ขยับขึ้นชิดติดแถวบน และลดระยะห่างระหว่างบล็อกถัดไป */
     .center-header-block {
-        display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
+        display: flex !important; 
+        flex-direction: column !important; 
+        align-items: center !important; 
+        justify-content: center !important; 
+        text-align: center !important; 
+        margin-top: -5px !important;   /* ใช้ค่าติดลบเล็กน้อยเพื่อดึงกลุ่มโลโก้ขึ้นไปชิดแนวปุ่มกด */
+        margin-bottom: 12px !important; /* ลดช่องไฟก่อนถึงเนื้อหาถัดไปเพื่อลดความโล้น */
+        width: 100% !important;
     }
+    
     .drive-link-button {
         display: block !important; text-align: center !important; background-color: #10b981 !important; color: white !important;
         font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
@@ -358,8 +369,7 @@ with col_top_r:
     if st.button("🚪 Logout", key="nav_top_logout_btn"):
         handle_navigation_reset()
 
-st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
-# ตัวบล็อกกลางหัวข้อแอปพรีเมียม ยิงคลาส .tog-logo-circle ตัวใหม่ขยายใหญ่สวยเด่นทันทีครับ
+# 🛠️ นำส่วนเว้นช่องว่างมาร์จิ้นเดิมออก และใช้คอมโพเนนต์ดันขึ้นชิดแบบไร้รอยต่อ
 st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------
@@ -528,7 +538,7 @@ elif current_page == "defect_view":
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🛠️ แนวแบ่งโซนหัวข้อ After สไตล์กระจกเงารมดำมาตรฐานเดียวกัน
+    # 🛠 Easton Line: แนวแบ่งโซนหัวข้อ After สไตล์กระจกเงารมดำมาตรฐานเดียวกัน
     st.markdown('<div class="glass-section-divider-card after-zone">✨ ส่วนอัปเดตงาน After</div>', unsafe_allow_html=True)
 
     # 🔲 ส่วนสรุปรายละเอียดงาน AFTER

@@ -21,7 +21,7 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และการปรับแต่งสไตล์โปร่งแสงหรูหราเฉพาะหน้าเลือก Defect
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์สไตล์กระจกแก้วใส (Pure Glassmorphism)
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -126,7 +126,7 @@ st.markdown("""
         color: #334155 !important;
     }
 
-    /* 💾 ปุ่มกดมาตรฐานในระบบ */
+    /* 💾 ปุ่มกดมาตรฐานในหน้าจอที่สาม */
     div.stButton > button {
         background-color: rgba(186, 230, 253, 0.5) !important; 
         backdrop-filter: blur(6px) !important;
@@ -142,10 +142,6 @@ st.markdown("""
         display: block !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.02), inset 0 1px 2px rgba(255,255,255,0.3) !important;
         transition: all 0.2s ease !important;
-    }
-    div.stButton > button:hover {
-        background-color: rgba(125, 211, 252, 0.7) !important;
-        border: 2px solid rgba(255, 255, 255, 0.9) !important;
     }
     
     div.stButton > button[key^="save_btn_"] {
@@ -166,51 +162,53 @@ st.markdown("""
         border-radius: 12px !important;
         box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2) !important;
     }
-    div.stButton > button[key="clear_image_btn"]:hover {
-        background-color: #dc2626 !important;
-    }
     
     /* 🛠️ ซ่อนปุ่มเครื่องหมายบวก (+) ของกล่องหัวข้อ 1 เพื่อบังคับรูปเดี่ยว */
     div[element-context="main_uploader_wrapper"] button[data-testid="baseButton-secondary"] {
         display: none !important;
     }
 
-    /* 🖤 [กล่องหัวข้อดำโปร่งแสงหรูหรา] Glassmorphic Dark Card สำหรับหน้าเลือก Defect */
+    /* 🖤 [กล่องหัวข้อดำโปร่งแสงสไตล์กระจกเงารมดำพรีเมียม] */
     .defect-header-card {
-        background-color: rgba(30, 41, 59, 0.75) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        background-color: rgba(15, 23, 42, 0.45) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
         color: #ffffff !important;
-        border-radius: 20px !important;
-        padding: 16px !important;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2) !important;
-        margin-bottom: 20px !important;
+        border-radius: 24px !important;
+        padding: 18px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+        margin-bottom: 24px !important;
         text-align: center !important;
-        font-size: 16px !important;
+        font-size: 16px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
     }
 
-    /* 🔹 [ปุ่มกดสามปุ่มสีฟ้าโปร่งแสงสวยงาม] Glassmorphic Sky Blue Buttons สำหรับหน้าเลือก Defect */
+    /* 🔹 [ปฏิวัติปุ่มสามปุ่มเป็นกระจกใสเคลือบแก้วเนียนตา] Pure Glassmorphic Buttons */
     div.stButton > button[key^="defect_btn_"] {
-        background-color: rgba(14, 165, 233, 0.35) !important;
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
-        color: #0369a1 !important;
+        background-color: rgba(255, 255, 255, 0.25) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        color: #1e293b !important;
         font-weight: bold !important;
-        font-size: 14px !important;
-        border: 1.5px solid rgba(14, 165, 233, 0.5) !important;
-        border-radius: 20px !important;
-        padding: 14px 20px !important;
-        margin-bottom: 14px !important;
-        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.1) !important;
-        transition: all 0.25s ease !important;
+        font-size: 14.5px !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+        border-radius: 22px !important;
+        padding: 16px 20px !important;
+        margin-bottom: 16px !important;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
     }
     div.stButton > button[key^="defect_btn_"]:hover {
-        background-color: rgba(14, 165, 233, 0.6) !important;
-        color: #ffffff !important;
-        border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
-        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3) !important;
-        transform: translateY(-1px) !important;
+        background-color: rgba(255, 255, 255, 0.55) !important;
+        color: #000000 !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1) !important;
+        transform: translateY(-2px) !important;
+    }
+    div.stButton > button[key^="defect_btn_"]:active {
+        transform: translateY(0px) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -301,8 +299,6 @@ if st.query_params.get("nav") == "reset":
     st.session_state.page = "login"; st.session_state.user_info = None; st.session_state.current_defect = None
     st.query_params.clear(); st.rerun()
 
-st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
-
 # ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
@@ -322,7 +318,7 @@ if current_page == "login":
             st.markdown('<div class="error-pastel-box">❌ ไม่พบข้อมูล โปรดคีย์ ID อีกครั้ง</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสอง: คัดเลือก Defect ----------------
+# ---------------- หน้าสอง: คัดเลือก Defect (กระจกแก้วใสวิ้ง) ----------------
 elif current_page == "select_defect":
     st.markdown('<div class="defect-header-card"><b>🎯 โปรดเลือกประเภท Defect</b></div>', unsafe_allow_html=True)
     
@@ -402,8 +398,6 @@ elif current_page == "defect_view":
         fig_bar = go.Figure(data=bars_list)
         fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, xaxis=dict(type='category', tickangle=45), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         
-        # 🛠️ [✨ การซ่อมแซมจุด Error พิฆาต] 🛠️
-        # แก้ไขบรรทัดที่ 408: ลบคำว่า wire ที่เกินมาซึ่งทำให้เกิด SyntaxError
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             clicked_mat = selected_bar["selection"]["points"][0]["x"]
@@ -434,7 +428,7 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
 
-        # 📁 1. คลังภาพหลักชิ้นงาน (จำกัด 1 รูปกระชับสายตาด้วย State control ปลอดภัย 100%)
+        # 📁 1. คลังภาพหลักชิ้นงาน
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
@@ -460,12 +454,10 @@ elif current_page == "defect_view":
                 
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 📁 2. คลังรูปรายละเอียดจุดย่อย (🛠️ แก้ไข Wording ตรงตามใบงานล่าสุดเรียบร้อย!)
+        # 📁 2. คลังรูปรายละเอียดจุดย่อย
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info['slave_title']} ↗️</a>', unsafe_allow_html=True)
-        
-        # 📌 แก้ไขประโยคอธิบายหน้างานเป็น "แนบรูปรายละเอียดจุดย่อย (อย่างน้อย 3 รูป สูงสุด 5 รูป):"
         uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (อย่างน้อย 3 รูป สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
         if uploaded_slaves:
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
@@ -496,7 +488,7 @@ elif current_page == "defect_view":
     render_employee_details_footer()
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 💾 ปุ่มบันทึกข้อมูล พร้อมเงื่อนไขดักตรวจสอบภาพหัวข้อ 2
+    # 💾 ปุ่มบันทึกข้อมูล
     if not after_text.strip():
         if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
@@ -554,7 +546,6 @@ elif current_page == "defect_view":
                             response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                             if response.status_code == 200:
                                 st.success(f"🎉 บันทึกข้อมูลและจัดส่งรูปภาพเข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยแล้วครับ!")
-                                # เคลียร์รูปภาพหลักหลังส่งข้อมูลสำเร็จ
                                 st.session_state[session_img_key] = None
                                 st.session_state.page = "select_defect"
                                 st.rerun()

@@ -223,12 +223,12 @@ FOLDER_LINK_MAP = {
     "B": {
         260: {"main_url": "https://drive.google.com/drive/folders/1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "main_title": "B_260", "slave_url": "https://drive.google.com/drive/folders/1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_title": "SB_260"},
         261: {"main_url": "https://drive.google.com/drive/folders/1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "main_title": "B_261", "slave_url": "https://drive.google.com/drive/folders/1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_title": "SB_261"},
-        380: {"main_url": "https://drive.google.com/drive/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "main_title": "B_380", "slave_url": "https://drive.google.com/drive/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "SB_380"}
+        380: {"main_url": "https://drive.google.com/drive/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgk61bhK", "main_title": "B_380", "slave_url": "https://drive.google.com/drive/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "SB_380"}
     },
     "C": {
         260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
         261: {"main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
-        380: {"main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_title": "SC_380"}
+        380: {"main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slate_title": "SC_380"}
     }
 }
 
@@ -266,7 +266,6 @@ if current_page == "login":
 
 # ---------------- หน้าสอง: คัดเลือก Defect ----------------
 elif current_page == "select_defect":
-    # 🛠️ [จุดแก้ไข] เปลี่ยนข้อความอ้างอิงให้สั้นกระชับ สวยงามตรงตามรูปภาพตัวอย่างล่าสุด
     st.markdown('<div class="login-card" style="text-align:center;"><b>🎯 โปรดเลือกประเภท Defect</b></div>', unsafe_allow_html=True)
     if st.button("🟠 ดูข้อมูล Defect 260 (Rough Lines)"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
@@ -377,7 +376,9 @@ elif current_page == "defect_view":
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
-        uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:", type=["png", "jpg", "jpeg"], key="up_main_work")
+        
+        # 🛠️ [จุดซ่อมแซมสำคัญตามภาพใบงานล่าสุด] ล็อกความปลอดภัยด้วยคำสั่ง accept_multiple_files=False เพื่อให้เลือกได้เพียงรูปเดียว
+        uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:", type=["png", "jpg", "jpeg"], accept_multiple_files=False, key="up_main_work")
         if uploaded_main: st.image(uploaded_main, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -414,7 +415,7 @@ elif current_page == "defect_view":
     render_employee_details_footer()
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 💾 ปุ่มบันทึกข้อมูล พร้อมสถานะกำลังเซฟข้อมูลโปรดรอสักครู่แบบไดนามิก
+    # 💾 ปุ่มบันทึกข้อมูล
     if not after_text.strip():
         if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")

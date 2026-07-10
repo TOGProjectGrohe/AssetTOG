@@ -324,10 +324,8 @@ if current_page == "login":
 
 # ---------------- หน้าสอง: คัดเลือก Defect ----------------
 elif current_page == "select_defect":
-    # 🖤 [แก้จุดที่ 1] ปรับกรอบข้อความโปร่งแสงสีดำตามที่ต้องการแบบเนียนตา
     st.markdown('<div class="defect-header-card"><b>🎯 โปรดเลือกประเภท Defect</b></div>', unsafe_allow_html=True)
     
-    # 🔹 [แก้จุดที่ 2] เอาคำว่า "ดูข้อมูล" ออก และผูกสไตล์ปุ่มสีฟ้าโปร่งแสงโดยใช้ keyดัก "defect_btn_"
     if st.button("🟠 Defect 260 (Rough Lines)", key="defect_btn_260"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
     if st.button("🔵 Defect 261 (Grinding Structure)", key="defect_btn_261"):
@@ -404,8 +402,10 @@ elif current_page == "defect_view":
         fig_bar = go.Figure(data=bars_list)
         fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, xaxis=dict(type='category', tickangle=45), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         
+        # 🛠️ [✨ การซ่อมแซมจุด Error พิฆาต] 🛠️
+        # แก้ไขบรรทัดที่ 408: ลบคำว่า wire ที่เกินมาซึ่งทำให้เกิด SyntaxError
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
-        if selected_bar wire and "selection" in selected_bar and selected_bar["selection"]["points"]:
+        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             clicked_mat = selected_bar["selection"]["points"][0]["x"]
             if clicked_mat != st.session_state[state_key]:
                 st.session_state[state_key] = clicked_mat
@@ -434,7 +434,7 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
 
-        # 📁 1. คลังภาพหลักชิ้นงาน
+        # 📁 1. คลังภาพหลักชิ้นงาน (จำกัด 1 รูปกระชับสายตาด้วย State control ปลอดภัย 100%)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
@@ -460,10 +460,12 @@ elif current_page == "defect_view":
                 
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 📁 2. คลังรูปรายละเอียดจุดย่อย
+        # 📁 2. คลังรูปรายละเอียดจุดย่อย (🛠️ แก้ไข Wording ตรงตามใบงานล่าสุดเรียบร้อย!)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info['slave_title']} ↗️</a>', unsafe_allow_html=True)
+        
+        # 📌 แก้ไขประโยคอธิบายหน้างานเป็น "แนบรูปรายละเอียดจุดย่อย (อย่างน้อย 3 รูป สูงสุด 5 รูป):"
         uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (อย่างน้อย 3 รูป สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
         if uploaded_slaves:
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)

@@ -159,16 +159,18 @@ st.markdown("""
 
     /* 🎨 สไตล์ปุ่ม ย้อนกลับไปเลือก Defect อื่น */
     div.stButton > button[key^="back_defect_btn_"] {
-        background-color: #f1f5f9 !important;
-        color: #0f172a !important;
-        border: 2px solid #cbd5e1 !important;
-        font-size: 14px !important;
+        background-color: rgba(255, 255, 255, 0.4) !important;
+        backdrop-filter: blur(6px) !important;
+        -webkit-backdrop-filter: blur(6px) !important;
+        color: #000000 !important;
+        border: 2px solid rgba(255, 255, 255, 0.7) !important; 
+        font-size: 15px !important;
         border-radius: 16px !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
         margin-bottom: 0px !important;
     }
     div.stButton > button[key^="back_defect_btn_"]:hover {
-        background-color: #e2e8f0 !important;
+        background-color: rgba(255, 255, 255, 0.6) !important;
     }
 
     /* 🎨 ปุ่มลบรูปภาพเดี่ยวสีแดงในหัวข้อที่ 1 */
@@ -460,26 +462,19 @@ elif current_page == "defect_view":
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ตัวแปรสำหรับเก็บไฟล์และตรวจจับสถานะรูปภาพหลัก
-    session_img_key = f"stored_main_img_{defect}"
-    if session_img_key not in st.session_state:
-        st.session_state[session_img_key] = None
-
-    # 🛠️ [ปฏิวัติจัดเรียงลำดับใหม่หมดจดตามรูปที่ 1 เป๊ะ ๆ] 🛠️
-    
-    # ส่วนที่ 1: คำสั่งบอกพนักงานจิ้มเลือกชิ้นงานบนกราฟ (อยู่ใต้บล็อกแสดงผลกราฟทันที)
+    # ส่วนที่ 1: ข้อความอธิบายใต้แผนภูมิสถิติทันที
     st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-top:5px; margin-bottom:12px;'>📊 เลือก Material จากกราฟ</h5>", unsafe_allow_html=True)
 
-    # ส่วนที่ 2: กล่องหัวข้อดำเงารมดำสไตล์พรีเมียมของ Before 
+    # ส่วนที่ 2: กล่องหัวข้อกระจกเงารมดำพรีเมียมของ Before
     st.markdown('<div class="glass-section-divider-card">📁  เลือกข้อมูล และแนบรูป ส่วนของ Before</div>', unsafe_allow_html=True)
 
-    # ส่วนที่ 3: กล่องสีเขียวแสดงผลชื่อชิ้นงานที่เลือก ล็อกพิกัดมาแปะติดอยู่ใต้กล่อง Before ทันทีตามรูปที่ 1
+    # ส่วนที่ 3: กล่องสีเขียว TARGET MATERIAL SELECTED วางล็อกไว้ใต้กล่อง Before ทันทีตามรูปที่ 1 ของรอบก่อนหน้า
     st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; margin-bottom: 20px;"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
 
-    # ส่วนที่ 4: ตัวเลือกเลือกพิกัดหน้างาน (หน้า A, B, C) และตารางแสดงสถานะหลังบ้าน ย้ายลงมาด้านล่างสุดของโซน
+    # ส่วนที่ 4: ตัวเลือกเลือกพิกัดหน้างาน (หน้า A, B, C)
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
 
-    # แผงกล่องล็อกข้อมูลระบบหน้าบ้าน (Improvement type และ errortype)
+    # แผงกล่องล็อกข้อมูลระบบหน้าบ้าน
     st.markdown('<div class="login-card" style="padding: 10px 15px;">', unsafe_allow_html=True)
     st.markdown("<p style='font-size:12px; font-weight:bold; color:#64748b; margin-bottom:2px;'>⚙️  สถานะกล่องรับข้อมูลระบบหน้าจอ (ตรวจสอบความพร้อมก่อนส่ง):</p>", unsafe_allow_html=True)
     short_face = str(selected_face).replace("หน้า", "").strip()
@@ -498,6 +493,10 @@ elif current_page == "defect_view":
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
+        session_img_key = f"stored_main_img_{defect}"
+        if session_img_key not in st.session_state:
+            st.session_state[session_img_key] = None
+
         if st.session_state[session_img_key] is None:
             st.markdown('<div element-context="main_uploader_wrapper">', unsafe_allow_html=True)
             uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่ (จำกัด 1 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=False, key=f"uploader_main_{defect}")
@@ -523,7 +522,7 @@ elif current_page == "defect_view":
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🛠️ แนวแบ่งโซนหัวข้อ After สไตล์กระจกเงารมดำมาตรฐานเดียวกันเด่นชัด
+    # 🛠️ แนวแบ่งโซนหัวข้อ After สไตล์กระจกเงารมดำมาตรฐานเดียวกัน
     st.markdown('<div class="glass-section-divider-card after-zone">✨ ส่วนอัปเดตงาน After</div>', unsafe_allow_html=True)
 
     # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
@@ -551,14 +550,15 @@ elif current_page == "defect_view":
     render_employee_details_footer()
     st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
     
-    # 🛠️ แผงปุ่มด้านล่างสุด วางปุ่ม Save คู่กับ ปุ่มเปลี่ยนประเภทงานย้อนกลับ
+    # 🛠️ แบ่งคอลัมน์ครึ่งซ้าย-ขวา วางปุ่ม Save (ซ้าย) และปุ่มเปลี่ยนประเภทงานย้อนกลับ (ขวา) คู่กันอย่างลงล็อกสมดุล
     col_btn_save, col_btn_back = st.columns([1, 1])
     
     with col_btn_save:
         btn_save_clicked = st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}")
         
     with col_btn_back:
-        if st.button("🔙 กลับไปเลือก Defect อื่น", key=f"back_defect_btn_{defect}"):
+        # 🛠️ [จุดแก้ไขสเปกสำคัญ] ปรับ wording บนปุ่มฝั่งขวาเหลือเพียง "🔙 เลือก Defect" เพื่อให้มิติและขนาดปุ่มเท่ากันพอดีเป๊ะ ไม่ตัดตกบรรทัด
+        if st.button("🔙 เลือก Defect", key=f"back_defect_btn_{defect}"):
             st.session_state.page = "select_defect"
             st.rerun()
 

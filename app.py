@@ -147,16 +147,32 @@ st.markdown("""
         border: 2px solid rgba(255, 255, 255, 0.9) !important;
     }
     
+    /* สไตล์ปุ่ม Save */
     div.stButton > button[key^="save_btn_"] {
         background-color: #10b981 !important;
         color: white !important;
-        font-size: 16px !important;
+        font-size: 15px !important;
         border: 2px solid #059669 !important;
         box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+        margin-bottom: 0px !important;
     }
 
-    /* 🎨 [ปุ่มลบรูปภาพสีแดงเด่นชัด] */
-    div.stButton > button[key="clear_image_btn"] {
+    /* 🎨 สไตล์ปุ่ม ย้อนกลับไปเลือก Defect อื่น (ย้ายลงมาคู่ด้านล่างขวา) */
+    div.stButton > button[key^="back_defect_btn_"] {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+        border: 2px solid #cbd5e1 !important;
+        font-size: 14px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+        margin-bottom: 0px !important;
+    }
+    div.stButton > button[key^="back_defect_btn_"]:hover {
+        background-color: #e2e8f0 !important;
+    }
+
+    /* 🎨 ปุ่มลบรูปภาพเดี่ยวสีแดงในหัวข้อที่ 1 */
+    div.stButton > button[key^="clear_image_btn_"] {
         background-color: #ef4444 !important;
         color: white !important;
         border: 1px solid #dc2626 !important;
@@ -165,7 +181,7 @@ st.markdown("""
         border-radius: 12px !important;
         box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2) !important;
     }
-    div.stButton > button[key="clear_image_btn"]:hover {
+    div.stButton > button[key^="clear_image_btn_"]:hover {
         background-color: #dc2626 !important;
     }
     
@@ -316,9 +332,9 @@ FOLDER_LINK_MAP = {
         380: {"main_url": "https://drive.google.com/drive/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "main_title": "B_380", "slave_url": "https://drive.google.com/drive/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "SB_380"}
     },
     "C": {
-        260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slate_title": "SC_260"},
-        261: {"main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slate_title": "SC_261"},
-        380: {"main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slate_title": "SC_380"}
+        260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
+        261: {"main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
+        380: {"main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_title": "SC_380"}
     }
 }
 
@@ -376,9 +392,7 @@ elif current_page == "defect_view":
     defect = st.session_state.current_defect
     defect_title = f"Defect {defect}"
 
-    if st.button("🔙 กลับไปเลือกประเภท Defect อื่น"):
-        st.session_state.page = "select_defect"; st.rerun()
-
+    # 💡 [ย้ายออกแล้ว] ปุ่มกลับไปเลือกประเภท Defect เดิมที่เคยอยู่จุดนี้ ถูกย้ายไปอยู่ด้านล่างสุดขวาคู่กับปุ่ม Save แล้วครับ
     st.markdown(f'<div class="login-card" style="text-align:center; color:#000000; font-weight:bold;"><b>📊 แผนภูมิ Defect {defect}</b></div>', unsafe_allow_html=True)
 
     # 📥 โหลดข้อมูล Material จริง
@@ -406,7 +420,7 @@ elif current_page == "defect_view":
         filtered_df = chart_data.copy()
 
     # 📊 ข้อความเตือนใจกลางแผนภูมิ
-    st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-bottom:2px;'>📊 เลือก Material จากกิราฟ</h5>", unsafe_allow_html=True)
+    st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-bottom:2px;'>📊 เลือก Material จากกราฟ</h5>", unsafe_allow_html=True)
 
     # 📊 แผงกราฟสถิติ
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
@@ -453,7 +467,7 @@ elif current_page == "defect_view":
     # 🔘 ส่วนฟิลเตอร์เลือกพิกัดหน้างาน
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
 
-    # 🛠️ สถานะกล่องล็อกข้อมูลระบบหน้าบ้าน
+    # 🛠️ Status กล่องล็อกข้อมูลระบบหน้าบ้าน
     st.markdown('<div class="login-card" style="padding: 10px 15px;">', unsafe_allow_html=True)
     st.markdown("<p style='font-size:12px; font-weight:bold; color:#64748b; margin-bottom:2px;'>⚙️ สถานะกล่องรับข้อมูลระบบหน้าจอ (ตรวจสอบความพร้อมก่อนส่ง):</p>", unsafe_allow_html=True)
     
@@ -464,15 +478,19 @@ elif current_page == "defect_view":
     box_defect = st.text_input("errortype (คอลัมน์ F):", value=short_defect, disabled=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # ตัวแปรสำหรับเก็บไฟล์และตรวจจับสถานะรูปภาพหลัก
+    session_img_key = f"stored_main_img_{defect}"
+    if session_img_key not in st.session_state:
+        st.session_state[session_img_key] = None
+
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"] and selected_material != "ไม่มีข้อมูล":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
 
-        # 🖤 [จัดระเบียบใหม่ตามรูปแบบที่ 2 เป๊ะๆ] 
-        # กล่องดำเงาของ Before ขยับขึ้นมาเปิดประเดิมเป็นหัวข้อหลักก่อน
+        # 🖤 [กล่องหัวข้อดำโปร่งแสง ก่อนแนบ Before]
         st.markdown('<div class="glass-section-divider-card">📁 เลือกข้อมูล และแนบรูป ส่วนของ Before</div>', unsafe_allow_html=True)
 
-        # 🛠️ ย้ายกล่องสีเขียวสะท้อนแสง TARGET MATERIAL SELECTED เข้ามาอยู่ในจุดนี้ (ใต้กล่องหัวข้อ Before พอดีเป๊ะ!)
+        # กล่องสีเขียวสะท้อนแสง TARGET MATERIAL SELECTED อยู่ใต้กล่องดำ Before พอดีเป๊ะ
         st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; margin-bottom: 15px;"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
 
         # 📁 1. คลังภาพหลักชิ้นงาน
@@ -480,10 +498,6 @@ elif current_page == "defect_view":
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        session_img_key = f"stored_main_img_{defect}"
-        if session_img_key not in st.session_state:
-            st.session_state[session_img_key] = None
-
         if st.session_state[session_img_key] is None:
             st.markdown('<div element-context="main_uploader_wrapper">', unsafe_allow_html=True)
             uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่ (จำกัด 1 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=False, key=f"uploader_main_{defect}")
@@ -495,7 +509,8 @@ elif current_page == "defect_view":
             st.markdown("<p style='font-size:13px; color:#2c3e50; font-weight:bold;'>✅ รูปภาพหลักถูกแนบเรียบร้อยแล้ว:</p>", unsafe_allow_html=True)
             st.image(st.session_state[session_img_key], use_container_width=True)
             
-            if st.button("❌ กดลบรูปภาพนี้เพื่อเลือกใหม่", key="clear_image_btn"):
+            # คงปุ่มลบรูปภาพเดี่ยวสีแดงของกล่องที่ 1 ไว้ให้ทำความสะอาดตามปกติ
+            if st.button("❌ กดลบรูปภาพนี้เพื่อเลือกใหม่", key=f"clear_image_btn_{defect}"):
                 st.session_state[session_img_key] = None
                 st.rerun()
                 
@@ -504,7 +519,7 @@ elif current_page == "defect_view":
         # 📁 2. คลังรูปรายละเอียดจุดย่อย
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
-        st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info['slave_title']} ↗️</a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
         uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (อย่างน้อย 3 รูป สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
         if uploaded_slaves:
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
@@ -536,14 +551,26 @@ elif current_page == "defect_view":
         emp_id_val, emp_name_val, emp_position_val = "-", "-", "GL"
 
     render_employee_details_footer()
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
     
-    # 💾 ปุ่มบันทึกข้อมูล
-    if not after_text.strip():
-        if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
+    # 🛠️ [จุดจัดวางใหม่] แบ่งคอลัมน์ครึ่งซ้าย-ขวา เท่ากัน วางปุ่ม Save ไว้ซ้าย และปุ่มกลับไปเลือก Defect ไว้ขวาคู่กัน
+    col_btn_save, col_btn_back = st.columns([1, 1])
+    
+    with col_btn_save:
+        # ปุ่มบันทึกข้อมูล (ฝั่งซ้าย)
+        btn_save_clicked = st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}")
+        
+    with col_btn_back:
+        # ปุ่มกลับไปเลือกประเภท Defect อื่น (ฝั่งขวา) ย้ายมาสแตนด์บายข้างปุ่ม Save แล้วครับ
+        if st.button("🔙 กลับไปเลือก Defect อื่น", key=f"back_defect_btn_{defect}"):
+            st.session_state.page = "select_defect"
+            st.rerun()
+
+    # ส่วนประมวลผลเมื่อมีการกดปุ่ม Save ข้อมูล
+    if btn_save_clicked:
+        if not after_text.strip():
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
-    else:
-        if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
+        else:
             slave_count = len(uploaded_slaves) if uploaded_slaves else 0
             if slave_count < 3:
                 st.error(f"⚠️ บันทึกไม่สำเร็จ! โปรดแนบรูปรายละเอียดจุดย่อยในหัวข้อ 2 อย่างน้อย 3 ภาพ (ปัจจุบันมี {slave_count} ภาพ)")

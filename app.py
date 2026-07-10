@@ -53,8 +53,7 @@ st.markdown("""
         background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
     }
     
-    /* 🛠️ [นวัตกรรมระบบปุ่มนำทางลอยตัวอัจฉริยะ] 
-       สร้างแถบนำทาง HTML ครอบแบบสัมบูรณ์ ล็อกให้ Home อยู่ซ้าย และ Logout อยู่ขวาเสมอ โดยไม่พึ่งพาระบบตารางคอลัมน์ของ Streamlit */
+    /* 🛠️ [นวัตกรรมระบบปุ่มนำทางลอยตัวอัจฉริยะ] บังคับล็อกโครงปุ่มไม่ให้ตกแถวทับโลโก้บนมือถือเด็ดขาด */
     .pure-html-top-navbar {
         display: flex !important;
         flex-direction: row !important;
@@ -78,14 +77,14 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
         white-space: nowrap !important;
         display: inline-block !important;
-        width: 90px !important; /* กำหนดความกว้างตายตัวเพื่อให้มีขนาดเท่ากันทั้งสองปุ่ม */
+        width: 90px !important;
     }
     .pure-nav-btn:hover {
         background-color: #7dd3fc !important;
         color: #000000 !important;
     }
 
-    /* วงกลม TOG ขนาดใหญ่สมมาตร บาลานซ์สายตาพรีเมียมแยกโซนด้านล่างปุ่มชัดเจน */
+    /* วงกลม TOG ขนาดใหญ่สมมาตร บาลานซ์สายตาพรีเมียมแยกโซนชัดเจน */
     .tog-logo-circle {
         width: 110px !important; 
         height: 110px !important; 
@@ -339,7 +338,7 @@ def render_employee_details_footer():
             </div>
         """, unsafe_allow_html=True)
 
-# 🛠️ [กลไกการเปลี่ยนหน้าความเร็วสูงผ่าน Query Parameters ดั้งเดิม]
+# ฟังก์ชันดักจับ URL ควบคุมการเปลี่ยนหน้าความเร็วสูง
 query_params = st.query_params
 if "action" in query_params:
     action_val = query_params["action"]
@@ -355,7 +354,7 @@ if "action" in query_params:
         st.query_params.clear()
         st.rerun()
 
-# 🛠️ [ยิงโครงสร้างแบบ Pure HTML Flexbox] จัดตำแหน่งริมซ้าย-ขวาสุดอย่างมีเอกเทศ บล็อกตายตัวไม่มีตกขอบแน่นอน
+# 🛠️ [ยิงโครงสร้างแบบ Pure HTML Flexbox] ล็อกตำแหน่งปุ่ม Home และ Logout ขอบบนถาวร ป้องกันตกแถวทับโลโก้
 st.markdown("""
     <div class="pure-html-top-navbar">
         <a href="?action=go_home" target="_self" class="pure-nav-btn">🏠 Home</a>
@@ -363,8 +362,26 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# ส่วนหัวแอปพลิเคชันและวงกลม LOGO (อยู่บรรทัดล่างอย่างเป็นสัดส่วน)
 st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
+
+# FOLDER LINK MAP เวอร์ชันแก้ไขคำว่า slate_title -> slave_title ของหน้า C ครบถ้วน
+FOLDER_LINK_MAP = {
+    "A": {
+        260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
+        261: {"main_url": "https://drive.google.com/drive/folders/1phKW7eXcijB4U6P95JHnJm6BgG2bcKyQ", "main_title": "A_261", "slave_url": "https://drive.google.com/drive/folders/1n5KGFnub6z3urE09taiJh4TaUJXqElCF", "slave_title": "SA_261"},
+        380: {"main_url": "https://drive.google.com/drive/folders/1-77ViPZrWhRXiYMvpa2gTp63CDjxIcHu", "main_title": "A_380", "slave_url": "https://drive.google.com/drive/folders/1DlKAZot6QPHXdvuVu8ro_TIk26NsznDz", "slave_title": "SA_380"}
+    },
+    "B": {
+        260: {"main_url": "https://drive.google.com/drive/folders/1NVgoWHj_WTOU7PDdKyozBYJKL7Ap-s4J", "main_title": "B_260", "slave_url": "https://drive.google.com/drive/folders/1mFPvOUYkuH57QSwkw0nOmFUNsQKhl3Tf", "slave_title": "SB_260"},
+        261: {"main_url": "https://drive.google.com/drive/folders/1q3Kb3ClsvnfulRCug33FoBYlyUvhKz-o", "main_title": "B_261", "slave_url": "https://drive.google.com/drive/folders/1Kf7jjhN1RIcaQG60uIs6bkDs2aafK8OQ", "slave_title": "SB_261"},
+        380: {"main_url": "https://drive.google.com/drive/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "main_title": "B_380", "slave_url": "https://drive.google.com/drive/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "SB_380"}
+    },
+    "C": {
+        260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
+        261: {"main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slave_title": "SC_261"},
+        380: {"main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slave_title": "SC_380"}
+    }
+}
 
 # ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
@@ -482,7 +499,7 @@ elif current_page == "defect_view":
     st.markdown('</div>', unsafe_allow_html=True)
 
     # ส่วนที่ 1: ข้อความอธิบายใต้แผนภูมิสถิติทันที
-    st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-top:5px; margin-bottom:12px;'>📊 เลือก Material จากกราฟ</h5>", unsafe_allow_html=True)
+    st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-top:5px; margin-bottom:12px;'>📊 เลือก Material จากกิราฟ</h5>", unsafe_allow_html=True)
 
     # โซนกรอบเงารมดำมาตรฐานตัวที่สอง (โซน Before)
     st.markdown('<div class="glass-section-divider-card">📁  เลือกข้อมูล และแนบรูป ส่วนของ Before</div>', unsafe_allow_html=True)
@@ -502,7 +519,7 @@ elif current_page == "defect_view":
     box_defect = st.text_input("errortype (คอลัมน์ F):", value=short_defect, disabled=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ส่วนประมวลผลฟังก์ชันแนบรูปและช่องอัปโหลดเมื่อเปิดพิกัดหน้างานสำเร็จ
+    # 🛠️ [แก้ไขล็อก NameError สำเร็จ] ตรวจสอบความถูกต้องของตัวแปร face_char ดึงค่าคอลัมน์จาก FOLDER_LINK_MAP
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"] and selected_material != "ไม่มีข้อมูล":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]

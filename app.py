@@ -13,7 +13,7 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งแผงควบคุมโปร่งแสงยาวกรอบเดียวกัน
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลพรีเมียม (เคลียร์ปัญหากล่องขาวว่างเปล่าออกแล้ว)
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -146,6 +146,9 @@ st.markdown("""
         border: 2px solid #059669 !important;
         box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
     }
+    div.stButton > button[key^="save_btn_"]:hover {
+        background-color: #059669 !important;
+    }
     
     .error-pastel-box {
         background-color: rgba(239, 68, 68, 0.15) !important;
@@ -162,7 +165,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🌐 ฟังก์ชันดึงข้อมูลพนักงาน
+# 🌐 ฟังก์ชันดึงข้อมูลพนักงานจาก Google Sheet
 def get_employee_from_sheet(input_id):
     sheet_id = "1sRher870S-P1w_kUVfryy-OqM67WjGpwek9y9wm29Ps"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
@@ -180,7 +183,7 @@ def get_employee_from_sheet(input_id):
         pass
     return {"status": "success", "found": False}
 
-# 📊 ฟังก์ชันดึงข้อมูลดิบสถิติหลัก
+# 📊 ฟังก์ชันดึงข้อมูลดิบจากลิงก์ Google Sheet สถิติหลัก
 @st.cache_data(ttl=60)
 def load_real_defect_data():
     sheet_url = "https://docs.google.com/spreadsheets/d/1qKY4ZBWYXM81Y8BZSMjOf7z1hJXeJFCjB5KeRPQBe4c/export?format=csv&gid=0"
@@ -285,9 +288,9 @@ elif current_page == "defect_view":
         qty_col = "rework quantity"
         filtered_df = chart_data.copy()
 
-    # 📊 แผงกราฟสถิติ
+    # 📊 แผงกราฟสถิติรวมศูนย์
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#1e293b; font-size:14px; display:block; text-align:center;'>🍕 รายงาน 10 อันดับ Defect {defect} ที่พบ</b>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:#1e293b; font-size:14px; font-weight:bold; text-align:center; margin-bottom:5px;'>🍕 รายงาน 10 อันดับ Defect {defect} ที่พบ</p>", unsafe_allow_html=True)
 
     if not chart_data.empty:
         pastel_palette = px.colors.qualitative.Pastel
@@ -298,7 +301,7 @@ elif current_page == "defect_view":
         if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
             st.session_state[state_key] = list_of_materials[0]
 
-        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - ย้ายกลับขึ้นมาอยู่ด้านบนสุดตามต้องการ
+        # 🍕 [✨ แก้ไขท่อนวิกฤตความสวยงาม] 1. ย้ายแผนภูมิวงกลม (Pie Chart) ขึ้นด้านบนสุดตามรูปที่ 1 และใช้ค่ารวม chart_data 
         fig_pie = go.Figure(data=[go.Pie(
             labels=chart_data["Material"], 
             values=chart_data[qty_col], 
@@ -309,7 +312,7 @@ elif current_page == "defect_view":
         fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=False, paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_pie, use_container_width=True)
 
-        # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - อยู่ด้านล่างวงกลม ใช้ดักจับการคลิกได้อย่างลื่นไหล
+        # 📊 2. แผนภูมิแท่งแนวตั้ง (Bar Chart) - อยู่ตำแหน่งด้านล่างวงกลมพอดี
         bars_list = []
         for mat in list_of_materials:
             val = chart_data[chart_data['Material'] == mat][qty_col].values[0]
@@ -317,12 +320,13 @@ elif current_page == "defect_view":
         fig_bar = go.Figure(data=bars_list)
         fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, xaxis=dict(type='category', tickangle=45), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         
-        # 🛠️ ใช้ on_select="rerun" ดักจับเฉพาะตอนคลิกชิ้นงาน ทำให้สลับข้อมูลและอัปเดต Target Material รวดเร็วทันใจ
+        # 🛠️ ใช้กลไกการเปลี่ยนค่าแบบเรียลไทม์ รวดเร็ว ลื่นไหล สลับตามจิ้มได้ทันที
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             clicked_mat = selected_bar["selection"]["points"][0]["x"]
             if clicked_mat != st.session_state[state_key]:
                 st.session_state[state_key] = clicked_mat
+                st.rerun()
 
         selected_material = st.session_state[state_key]
 
@@ -333,7 +337,7 @@ elif current_page == "defect_view":
     # 🔘 ส่วนฟิลเตอร์เลือกพิกัดหน้างาน
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
 
-    # 🛠️ สถานะกล่องล็อกข้อความระบบหน้าบ้าน
+    # 🛠️ สถานะกล่องล็อกข้อความระบบหน้าบ้าน (ลบกล่องขาวว่าง ๆ ออกเพื่อความแนบเนียนสอดคล้องกับพลาสติกสีส้มแล้วครับ)
     st.markdown('<div class="login-card" style="padding: 10px 15px;">', unsafe_allow_html=True)
     st.markdown("<p style='font-size:12px; font-weight:bold; color:#64748b; margin-bottom:2px;'>⚙️ สถานะกล่องรับข้อมูลระบบหน้าจอ (ตรวจสอบความพร้อมก่อนส่ง):</p>", unsafe_allow_html=True)
     

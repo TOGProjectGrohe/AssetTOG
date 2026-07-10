@@ -61,19 +61,24 @@ st.markdown("""
         background-color: #7dd3fc !important;
     }
 
+    /* 🛠️ [จุดแก้ไขสำคัญตามบรีฟ] ปรับขนาดวงกลม TOG ให้ใหญ่ขึ้นสมมาตร บาลานซ์สายตาพรีเมียม */
     .tog-logo-circle {
-        width: 50px !important; 
-        height: 50px !important; 
-        background-color: rgba(0, 0, 0, 0.2) !important; 
-        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        width: 110px !important; 
+        height: 110px !important; 
+        background: rgba(0, 0, 0, 0.18) !important; 
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
+        border: 2px solid rgba(0, 0, 0, 0.15) !important;
         border-radius: 50% !important; 
         display: flex !important; 
         justify-content: center !important; 
         align-items: center !important; 
         color: #000000 !important; 
-        font-weight: bold !important; 
-        font-size: 15px !important; 
-        margin: 0 auto 8px auto !important;
+        font-weight: 900 !important; 
+        font-size: 26px !important; 
+        margin: 5px auto 12px auto !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+        letter-spacing: 1px !important;
     }
 
     .center-header-block {
@@ -354,6 +359,7 @@ with col_top_r:
         handle_navigation_reset()
 
 st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
+# ตัวบล็อกกลางหัวข้อแอปพรีเมียม ยิงคลาส .tog-logo-circle ตัวใหม่ขยายใหญ่สวยเด่นทันทีครับ
 st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------
@@ -468,7 +474,7 @@ elif current_page == "defect_view":
     # ส่วนที่ 2: กล่องหัวข้อกระจกเงารมดำพรีเมียมของ Before
     st.markdown('<div class="glass-section-divider-card">📁  เลือกข้อมูล และแนบรูป ส่วนของ Before</div>', unsafe_allow_html=True)
 
-    # ส่วนที่ 3: กล่องสีเขียว TARGET MATERIAL SELECTED วางล็อกไว้ใต้กล่อง Before ทันทีตามรูปที่ 1 ของรอบก่อนหน้า
+    # ส่วนที่ 3: กล่องสีเขียว TARGET MATERIAL SELECTED วางล็อกไว้ใต้กล่อง Before ทันทีตามรูปที่ 1
     st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; margin-bottom: 20px;"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
 
     # ส่วนที่ 4: ตัวเลือกเลือกพิกัดหน้างาน (หน้า A, B, C)
@@ -550,14 +556,13 @@ elif current_page == "defect_view":
     render_employee_details_footer()
     st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
     
-    # 🛠️ แบ่งคอลัมน์ครึ่งซ้าย-ขวา วางปุ่ม Save (ซ้าย) และปุ่มเปลี่ยนประเภทงานย้อนกลับ (ขวา) คู่กันอย่างลงล็อกสมดุล
+    # 🛠️ แบ่งคอลัมน์ครึ่งซ้าย-ขวา เท่ากัน วางปุ่ม Save ไว้ซ้าย และปุ่มเปลี่ยนประเภทงานย้อนกลับไว้ขวาคู่กันอย่างลงล็อกสมบูรณ์
     col_btn_save, col_btn_back = st.columns([1, 1])
     
     with col_btn_save:
         btn_save_clicked = st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}")
         
     with col_btn_back:
-        # 🛠️ [จุดแก้ไขสเปกสำคัญ] ปรับ wording บนปุ่มฝั่งขวาเหลือเพียง "🔙 เลือก Defect" เพื่อให้มิติและขนาดปุ่มเท่ากันพอดีเป๊ะ ไม่ตัดตกบรรทัด
         if st.button("🔙 เลือก Defect", key=f"back_defect_btn_{defect}"):
             st.session_state.page = "select_defect"
             st.rerun()

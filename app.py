@@ -18,6 +18,13 @@ app_lock = get_global_app_lock()
 # ⚠️ ลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
 
+# 🛠️ [ย้ายจุดประกาศสเตตัสขึ้นมาบนสุด] ล็อกค่าความปลอดภัย ป้องกันปัญหา AttributeError ค้นหาตัวแปรไม่เจอ 100%
+if 'page' not in st.session_state: st.session_state.page = "login"
+if 'user_info' not in st.session_state: st.session_state.user_info = None
+if 'current_defect' not in st.session_state: st.session_state.current_defect = None
+
+current_page = st.session_state.page
+
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
@@ -256,7 +263,7 @@ st.markdown("""
         border-left: 5px solid #10b981 !important;
     }
 
-    /* 🔹 ปรับแต่งความพรีเมียมของปุ่มหน้าสองและหน้าสามให้โปร่งแสงและยึดโครงขอบแก้วสวยงาม */
+    /* 🔹 ปรับแต่งความพรีเมียมของปุ่มหน้าสองและหน้าสามให้โปร่งแสงและยึดโครงขอบแก้วสวยงามยาว 100% บาลานซ์ */
     div.stButton > button[key^="defect_btn_"], div[element-context="full_width_btn_wrapper"] button {
         background-color: rgba(255, 255, 255, 0.25) !important;
         backdrop-filter: blur(14px) !important;
@@ -268,7 +275,7 @@ st.markdown("""
         border-radius: 22px !important;
         padding: 16px 20px !important;
         margin-bottom: 16px !important;
-        width: 100% !important; /* สั่งให้ยืดเต็มกรอบ */
+        width: 100% !important; 
         box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
         transition: cubic-bezier(0.25, 0.8, 0.25, 1) 0.3s !important;
     }
@@ -364,9 +371,7 @@ FOLDER_LINK_MAP = {
     }
 }
 
-current_page = st.session_state.page
-
-# แบ่งสัดส่วนคอลัมน์ด้านบนสุด ปุ่มกดจะไม่ลอยไปทับแถวสไลด์การ์ดโปร่งแสงด้านล่าง
+# ---------------- NAVIGATION TOP NAVBAR (BAR แถวบนสุด) ----------------
 col_top_l, col_top_space, col_top_r = st.columns([3, 4, 3])
 with col_top_l:
     if st.button("🏠 Home", key="nav_top_home_btn"):
@@ -377,7 +382,7 @@ with col_top_r:
     if st.button("🚪 Logout", key="nav_top_logout_btn"):
         handle_navigation_reset()
 
-# นำส่วนเว้นช่องว่างมาร์จิ้นเดิมออก และใช้คอมโพเนนต์ดันขึ้นชิดแบบไร้รอยต่อ
+# ส่วนหัวแอปพลิเคชัน
 st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------
@@ -399,11 +404,10 @@ if current_page == "login":
             st.markdown('<div class="error-pastel-box">❌ ไม่พบข้อมูล โปรดคีย์ ID อีกครั้ง</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสอง: คัดเลือก Defect (ปรับตัวแปรครอบปุ่มแบบเนทีฟให้ยาวเท่ากัน 100%) ----------------
+# ---------------- หน้าสอง: คัดเลือก Defect ----------------
 elif current_page == "select_defect":
     st.markdown('<div class="defect-header-card">🎯 โปรดเลือกประเภท Defect</div>', unsafe_allow_html=True)
     
-    # 🛠️ [ปฏิวัติความกว้าง 100% ไร้บั๊กแคชบราวเซอร์] ห่อหุ้มปุ่มด้วย HTML Container เพื่อบังคับให้ขยายกว้างชิดขอบเท่ากันเป๊ะทุกปุ่ม
     st.markdown('<div element-context="full_width_btn_wrapper">', unsafe_allow_html=True)
     if st.button("🟠 Defect 260 (Rough Lines)", key="defect_btn_260"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()

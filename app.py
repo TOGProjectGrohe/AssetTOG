@@ -460,43 +460,44 @@ elif current_page == "defect_view":
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🛠️ [✨ แก้ไขจุดการจัดเรียงลำดับหัวข้อตามรูปที่ 2] 
-    # 1. แสดงคำว่า "📊 เลือก Material จากกราฟ" ใต้ตัวการ์ดแผนภูมิสถิติทันที
+    # ตัวแปรสำหรับเก็บไฟล์และตรวจจับสถานะรูปภาพหลัก
+    session_img_key = f"stored_main_img_{defect}"
+    if session_img_key not in st.session_state:
+        st.session_state[session_img_key] = None
+
+    # 🛠️ [ปฏิวัติจัดเรียงลำดับใหม่หมดจดตามรูปที่ 1 เป๊ะ ๆ] 🛠️
+    
+    # ส่วนที่ 1: คำสั่งบอกพนักงานจิ้มเลือกชิ้นงานบนกราฟ (อยู่ใต้บล็อกแสดงผลกราฟทันที)
     st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-top:5px; margin-bottom:12px;'>📊 เลือก Material จากกราฟ</h5>", unsafe_allow_html=True)
 
-    # 🔘 ส่วนฟิลเตอร์เลือกพิกัดหน้างาน
+    # ส่วนที่ 2: กล่องหัวข้อดำเงารมดำสไตล์พรีเมียมของ Before 
+    st.markdown('<div class="glass-section-divider-card">📁  เลือกข้อมูล และแนบรูป ส่วนของ Before</div>', unsafe_allow_html=True)
+
+    # ส่วนที่ 3: กล่องสีเขียวแสดงผลชื่อชิ้นงานที่เลือก ล็อกพิกัดมาแปะติดอยู่ใต้กล่อง Before ทันทีตามรูปที่ 1
+    st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; margin-bottom: 20px;"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
+
+    # ส่วนที่ 4: ตัวเลือกเลือกพิกัดหน้างาน (หน้า A, B, C) และตารางแสดงสถานะหลังบ้าน ย้ายลงมาด้านล่างสุดของโซน
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
 
-    # 🛠️ Status กล่องล็อกข้อมูลระบบหน้าบ้าน
+    # แผงกล่องล็อกข้อมูลระบบหน้าบ้าน (Improvement type และ errortype)
     st.markdown('<div class="login-card" style="padding: 10px 15px;">', unsafe_allow_html=True)
     st.markdown("<p style='font-size:12px; font-weight:bold; color:#64748b; margin-bottom:2px;'>⚙️  สถานะกล่องรับข้อมูลระบบหน้าจอ (ตรวจสอบความพร้อมก่อนส่ง):</p>", unsafe_allow_html=True)
-    
     short_face = str(selected_face).replace("หน้า", "").strip()
     box_face = st.text_input("Improvement type (คอลัมน์ G):", value=short_face, disabled=True)
-    
     short_defect = "".join(filter(str.isdigit, str(defect)))
     box_defect = st.text_input("errortype (คอลัมน์ F):", value=short_defect, disabled=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # ส่วนประมวลผลฟังก์ชันแนบรูปและช่องอัปโหลดเมื่อเปิดพิกัดหน้างานสำเร็จ
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"] and selected_material != "ไม่มีข้อมูล":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
-
-        # 2. ถัดมาเป็นกล่องพรีเมียมรมดำโปร่งแสงสำหรับหัวข้อ Before
-        st.markdown('<div class="glass-section-divider-card">📁  เลือกข้อมูล และแนบรูป ส่วนของ Before</div>', unsafe_allow_html=True)
-
-        # 3. วางกล่องสีเขียวสะท้อนแสง TARGET MATERIAL SELECTED ล็อกสลัดให้อยู่ภายใต้กรอบ Before พอดีเป๊ะตามรูปตัวอย่างที่ 2
-        st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a; margin-bottom: 15px;"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
 
         # 📁 1. คลังภาพหลักชิ้นงาน
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
         
-        session_img_key = f"stored_main_img_{defect}"
-        if session_img_key not in st.session_state:
-            st.session_state[session_img_key] = None
-
         if st.session_state[session_img_key] is None:
             st.markdown('<div element-context="main_uploader_wrapper">', unsafe_allow_html=True)
             uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่ (จำกัด 1 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=False, key=f"uploader_main_{defect}")
@@ -511,19 +512,18 @@ elif current_page == "defect_view":
             if st.button("❌ กดลบรูปภาพนี้เพื่อเลือกใหม่", key=f"clear_image_btn_{defect}"):
                 st.session_state[session_img_key] = None
                 st.rerun()
-                
         st.markdown('</div>', unsafe_allow_html=True)
 
         # 📁 2. คลังรูปรายละเอียดจุดย่อย
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
-        st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info['slave_title']} ↗️</a>', unsafe_allow_html=True)
         uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (อย่างน้อย 3 รูป สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
         if uploaded_slaves:
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🛠️ แนวแบ่งโซนหัวข้อ After สไตล์กระจกเงารมดำมาตรฐานเดียวกัน
+    # 🛠️ แนวแบ่งโซนหัวข้อ After สไตล์กระจกเงารมดำมาตรฐานเดียวกันเด่นชัด
     st.markdown('<div class="glass-section-divider-card after-zone">✨ ส่วนอัปเดตงาน After</div>', unsafe_allow_html=True)
 
     # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
@@ -551,7 +551,7 @@ elif current_page == "defect_view":
     render_employee_details_footer()
     st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
     
-    # 🛠️ แบ่งคอลัมน์ครึ่งซ้าย-ขวา เท่ากัน วางปุ่ม Save ไว้ซ้าย และปุ่มกลับไปเลือก Defect ไว้ขวาคู่กันอย่างลงล็อกสวยงาม
+    # 🛠️ แผงปุ่มด้านล่างสุด วางปุ่ม Save คู่กับ ปุ่มเปลี่ยนประเภทงานย้อนกลับ
     col_btn_save, col_btn_back = st.columns([1, 1])
     
     with col_btn_save:
@@ -587,7 +587,7 @@ elif current_page == "defect_view":
                         # ดึงไฟล์ภาพเดี่ยว Picture Master (Before) จากหน่วยความจำ Session State
                         before_master_base64 = base64.b64encode(st.session_state[session_img_key]).decode('utf-8')
 
-                        # 🛠 แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
+                        # แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
                         before_slaves_base64 = []
                         if uploaded_slaves:
                             for img in uploaded_slaves[:5]:

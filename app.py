@@ -5,10 +5,16 @@ import json
 import base64
 import plotly.express as px
 import plotly.graph_objects as go
+import threading
 from datetime import datetime
 
+# 🔐 [แก้ปัญหาบันทึกพร้อมกัน] สร้างกุญแจจัดคิวส่วนกลางป้องกันระบบเขียนทับข้อมูลชนกันเมื่อกด Save พร้อมกัน
+if 'app_lock' not in st.globals:
+    st.globals['app_lock'] = threading.Lock()
+lock = st.globals['app_lock']
+
 # ⚠️ ฝังลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์ลงในระบบเรียบร้อยครับ
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
@@ -321,7 +327,7 @@ elif current_page == "defect_view":
 
     # 🛠️ สถานะกล่องล็อกข้อมูลระบบหน้าบ้าน
     st.markdown('<div class="login-card" style="padding: 10px 15px;">', unsafe_allow_html=True)
-    st.markdown("<p style='font-size:12px; font-weight:bold; color:#64748b; margin-bottom:2px;'>⚙️ สถานะกล่องรับข้อมูลระบบหน้าจอ (ตรวจสอบความพร้อมก่อนส่ง):</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:12px; font-weight:bold; color:#64748b; margin-bottom:2px;'>⚙️ Status กล่องรับข้อมูลระบบหน้าจอ (ตรวจสอบความพร้อมก่อนส่ง):</p>", unsafe_allow_html=True)
     
     short_face = str(selected_face).replace("หน้า", "").strip()
     box_face = st.text_input("Improvement type (คอลัมน์ G):", value=short_face, disabled=True)

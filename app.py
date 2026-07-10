@@ -256,8 +256,8 @@ st.markdown("""
         border-left: 5px solid #10b981 !important;
     }
 
-    /* 🔹 [🛠️ ปรับปรุงความพรีเมียมตามบรีฟ] สั่งให้ปุ่มที่มีคีย์ขึ้นต้นด้วย defect_btn_ กางตัวยาวเท่ากัน 100% บาลานซ์ขอบกระจกใส */
-    div.stButton > button[key^="defect_btn_"] {
+    /* 🔹 ปรับแต่งความพรีเมียมของปุ่มหน้าสองและหน้าสามให้โปร่งแสงและยึดโครงขอบแก้วสวยงาม */
+    div.stButton > button[key^="defect_btn_"], div[element-context="full_width_btn_wrapper"] button {
         background-color: rgba(255, 255, 255, 0.25) !important;
         backdrop-filter: blur(14px) !important;
         -webkit-backdrop-filter: blur(14px) !important;
@@ -268,11 +268,11 @@ st.markdown("""
         border-radius: 22px !important;
         padding: 16px 20px !important;
         margin-bottom: 16px !important;
-        width: 100% !important; /* 👈 บังคับขยายปุ่มให้เต็มความกว้างโทรศัพท์ เท่ากันเป๊ะทุกปุ่มครับ */
+        width: 100% !important; /* สั่งให้ยืดเต็มกรอบ */
         box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
         transition: cubic-bezier(0.25, 0.8, 0.25, 1) 0.3s !important;
     }
-    div.stButton > button[key^="defect_btn_"]:hover {
+    div.stButton > button[key^="defect_btn_"]:hover, div[element-context="full_width_btn_wrapper"] button:hover {
         background-color: rgba(255, 255, 255, 0.55) !important;
         color: #000000 !important;
         border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
@@ -399,17 +399,21 @@ if current_page == "login":
             st.markdown('<div class="error-pastel-box">❌ ไม่พบข้อมูล โปรดคีย์ ID อีกครั้ง</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- หน้าสอง: คัดเลือก Defect (กระจกเงารมดำหรูวิ้ง) ----------------
+# ---------------- หน้าสอง: คัดเลือก Defect (ปรับตัวแปรครอบปุ่มแบบเนทีฟให้ยาวเท่ากัน 100%) ----------------
 elif current_page == "select_defect":
     st.markdown('<div class="defect-header-card">🎯 โปรดเลือกประเภท Defect</div>', unsafe_allow_html=True)
     
-    # 👈 ปุ่มทั้ง 3 ปุ่มตรงนี้จะถูกดึงยืดออกไปยาวขอบชิดกันเท่ากันเป๊ะ สวยสมมาตรตามสั่งทันทีครับ
+    # 🛠️ [ปฏิวัติความกว้าง 100% ไร้บั๊กแคชบราวเซอร์] ห่อหุ้มปุ่มด้วย HTML Container เพื่อบังคับให้ขยายกว้างชิดขอบเท่ากันเป๊ะทุกปุ่ม
+    st.markdown('<div element-context="full_width_btn_wrapper">', unsafe_allow_html=True)
     if st.button("🟠 Defect 260 (Rough Lines)", key="defect_btn_260"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
+        
     if st.button("🔵 Defect 261 (Grinding Structure)", key="defect_btn_261"):
         st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
+        
     if st.button("⚫ Defect 380 (Contour/Design Fault)", key="defect_btn_380"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     render_employee_details_footer()

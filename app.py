@@ -297,7 +297,7 @@ def render_employee_details_footer():
             </div>
         """, unsafe_allow_html=True)
 
-# ฟังก์ชัน導 NAVIGATION RESET
+# ฟังก์ชัน NAVIGATION RESET
 def handle_navigation_reset():
     st.session_state.page = "login"
     st.session_state.user_info = None
@@ -405,7 +405,7 @@ elif current_page == "defect_view":
         qty_col = "rework quantity"
         filtered_df = chart_data.copy()
 
-    # 🛠️ [✨ เพิ่มข้อความแจ้งเตือนกลางกราฟ] 
+    # 📊 ข้อความเตือนใจกลางแผนภูมิ
     st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-bottom:2px;'>📊 เลือก Material จากกราฟ</h5>", unsafe_allow_html=True)
 
     # 📊 แผงกราฟสถิติ
@@ -448,6 +448,7 @@ elif current_page == "defect_view":
 
         selected_material = st.session_state[state_key]
 
+        # 🛠️ [ขยับสล็อตเรียงลำดับใหม่] ย้ายกล่องสีเขียวสะท้อนแสงขึ้นมาแสดงผลต่อจากแผนภูมิสถิติทันทีเพื่อให้สายตาเลื่อนไหลได้ถูกต้องตามระบบงาน
         st.markdown("<hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'>", unsafe_allow_html=True)
         st.markdown(f'<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 12px; text-align: center; font-size:14px; color:#16a34a;"><b>🔍 TARGET MATERIAL SELECTED:</b> <span style="font-size:16px; font-weight:bold; color:#007bc3;">{selected_material}</span></div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -470,7 +471,7 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
 
-        # 🛠️ [✨ เพิ่มแนวแบ่งโซนหัวข้อ Before สไตล์กรอบดำเงาตามสั่ง]
+        # 🛠️ [จัดโซนขอบตัดน้ำเงิน] แนวแบ่งโซนหัวข้อ Before สไตล์กระจกเงารมดำพรีเมียม
         st.markdown('<div class="glass-section-divider-card">📁 เลือกข้อมูล และแนบรูป ส่วนของ Before</div>', unsafe_allow_html=True)
 
         # 📁 1. คลังภาพหลักชิ้นงาน
@@ -508,7 +509,7 @@ elif current_page == "defect_view":
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🛠️ [✨ เพิ่มแนวแบ่งโซนหัวข้อ After สไตล์กรอบดำเงามาตรฐานเดียวกับ Before]
+    # 🛠️ [จัดโซนขอบตัดเขียว] แนวแบ่งโซนหัวข้อ After สไตล์กระจกเงารมดำมาตรฐานเดียวกับ Before เป๊ะ ๆ
     st.markdown('<div class="glass-section-divider-card after-zone">✨ ส่วนอัปเดตงาน After</div>', unsafe_allow_html=True)
 
     # 🔲 ส่วนสรุปรายละเอียดงาน AFTER

@@ -53,20 +53,20 @@ st.markdown("""
         background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
     }
     
-    /* 🛠️ [แก้ไขโครงสร้างปุ่มแถวบน] ปรับแต่ง CSS ให้ปุ่ม Home และ Logout ล็อกอยู่แถวเดียวกัน ไม่ตกขอบในมือถือ */
-    div[data-testid="stHorizontalBlock"]:has(button[key^="nav_top_"]) {
+    /* 🛠️ [ระบบจัดระเบียบปุ่มแถวบนสุดแบบ Auto Responsive] 
+       บังคับล็อกโครงปุ่ม Home และ Logout ให้อยู่ริมซ้าย-ขวาสุดของโทรศัพท์ ไม่พึ่งตารางคอลัมน์ดั้งเดิม */
+    .responsive-top-navbar-container {
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
         align-items: center !important;
-        gap: 10px !important;
         width: 100% !important;
-        margin-bottom: 5px !important;
+        padding: 0px 4px !important;
+        margin-bottom: 12px !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(button[key^="nav_top_"]) > div {
-        width: auto !important;
+    .responsive-top-navbar-container > div {
         flex: 1 !important;
-        min-width: 0 !important;
+        max-width: 46% !important;
     }
     
     div.stButton > button[key^="nav_top_"] {
@@ -74,19 +74,20 @@ st.markdown("""
         color: #000000 !important; 
         border: 1px solid rgba(0,0,0,0.05) !important;
         border-radius: 20px !important; 
-        padding: 6px 10px !important; 
-        font-size: 12px !important; 
+        padding: 8px 12px !important; 
+        font-size: 13px !important; 
         font-weight: bold !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
         width: 100% !important;
         min-height: auto !important;
         white-space: nowrap !important;
+        display: block !important;
     }
     div.stButton > button[key^="nav_top_"]:hover {
         background-color: #7dd3fc !important;
     }
 
-    /* วงกลม TOG ขนาดใหญ่สมมาตร บาลานซ์สายตาพรีเมียมชิดขอบบน */
+    /* วงกลม TOG ขนาดใหญ่สมมาตร บาลานซ์สายตาพรีเมียมแยกโซนด้านล่างปุ่มชัดเจน */
     .tog-logo-circle {
         width: 110px !important; 
         height: 110px !important; 
@@ -101,19 +102,19 @@ st.markdown("""
         color: #000000 !important; 
         font-weight: 900 !important; 
         font-size: 26px !important; 
-        margin: 0px auto 4px auto !important;
+        margin: 5px auto 4px auto !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
         letter-spacing: 1px !important;
     }
 
-    /* จัดกึ่งกลางกลุ่มหัวข้อให้ขยับขึ้นชิดติดแถวบน และลดระยะห่างระหว่างบล็อกถัดไป */
+    /* จัดกึ่งกลางกลุ่มหัวข้อและลดระยะห่างระหว่างบล็อกถัดไป */
     .center-header-block {
         display: flex !important; 
         flex-direction: column !important; 
         align-items: center !important; 
         justify-content: center !important; 
         text-align: center !important; 
-        margin-top: -5px !important;   
+        margin-top: 5px !important;   
         margin-bottom: 12px !important; 
         width: 100% !important;
     }
@@ -365,18 +366,21 @@ FOLDER_LINK_MAP = {
     }
 }
 
-# ---------------- NAVIGATION TOP NAVBAR ----------------
-# 🛠️ [แก้ไขโครงสร้างคอลัมน์แถวบน] เปลี่ยนเป็น 2 คอลัมน์ซ้ายขวา บังคับให้อยู่บรรทัดเดียวกันเสมอ
-col_top_l, col_top_r = st.columns([1, 1])
-with col_top_l:
+# 🛠️ [สถาปัตยกรรมทางเลือกระบบ Auto Responsive] 
+# สร้างกรอบ HTML ครอบบล็อกปุ่มเนาเพื่อสั่งคำนวณ Auto ป้องกันการตกเลื่อนของ Logout แน่นอน 100%
+st.markdown('<div class="responsive-top-navbar-container">', unsafe_allow_html=True)
+col_nav_l, col_nav_r = st.columns(2)
+with col_nav_l:
     if st.button("🏠 Home", key="nav_top_home_btn"):
         if st.session_state.user_info:
             st.session_state.page = "select_defect"
             st.rerun()
-with col_top_r:
+with col_nav_r:
     if st.button("🚪 Logout", key="nav_top_logout_btn"):
         handle_navigation_reset()
+st.markdown('</div>', unsafe_allow_html=True)
 
+# ส่วนแสดงโลโก้กลางหน้าจอ (ขยับเข้าใกล้แถวบนขึ้นเรียบร้อย)
 st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------
@@ -597,13 +601,13 @@ elif current_page == "defect_view":
     # ส่วนประมวลผลเมื่อมีการกดปุ่ม Save ข้อมูล
     if btn_save_clicked:
         if not after_text.strip():
-            st.error("⚠️ โปรดกรอกรายละเอียดการปรับปรุงหรือข้อเสนอแนะ After ก่อนกดบันทึก!")
+            st.error("⚠️  โปรดกรอกรายละเอียดการปรับปรุงหรือข้อเสนอแนะ After ก่อนกดบันทึก!")
         else:
             slave_count = len(uploaded_slaves) if uploaded_slaves else 0
             if slave_count < 3:
-                st.error(f"⚠️ บันทึกไม่สำเร็จ! โปรดแนบรูปรายละเอียดจุดย่อยในหัวข้อ 2 อย่างน้อย 3 ภาพ (ปัจจุบันมี {slave_count} ภาพ)")
+                st.error(f"⚠️  บันทึกไม่สำเร็จ! โปรดแนบรูปรายละเอียดจุดย่อยในหัวข้อ 2 อย่างน้อย 3 ภาพ (ปัจจุบันมี {slave_count} ภาพ)")
             elif st.session_state[session_img_key] is None:
-                st.error("⚠️ บันทึกไม่สำเร็จ! โปรดแนบรูปภาพหลักชิ้นงาน in หัวข้อ 1 ก่อนกดบันทึก!")
+                st.error("⚠️  บันทึกไม่สำเร็จ! โปรดแนบรูปภาพหลักชิ้นงาน in หัวข้อ 1 ก่อนกดบันทึก!")
             else:
                 with st.spinner("⏳ กำลังบันทึกข้อมูล โปรดรอสักครู่..."):
                     with app_lock:
@@ -657,6 +661,6 @@ elif current_page == "defect_view":
                             else:
                                 st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
                         except Exception as ex:
-                            st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
+                            st.error(f"⚠️  เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
                     
     st.markdown('</div>', unsafe_allow_html=True)

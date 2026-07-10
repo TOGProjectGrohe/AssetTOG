@@ -16,7 +16,7 @@ def get_global_app_lock():
 app_lock = get_global_app_lock()
 
 # ⚠️ ลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
@@ -266,7 +266,8 @@ if current_page == "login":
 
 # ---------------- หน้าสอง: คัดเลือก Defect ----------------
 elif current_page == "select_defect":
-    st.markdown('<div class="login-card" style="text-align:center;"><b>🎯 โปรดเลือกประเภท Defect เพื่อตรวจสอบคลังงาน:</b></div>', unsafe_allow_html=True)
+    # 🛠️ [จุดแก้ไข] เปลี่ยนข้อความอ้างอิงให้สั้นกระชับ สวยงามตรงตามรูปภาพตัวอย่างล่าสุด
+    st.markdown('<div class="login-card" style="text-align:center;"><b>🎯 โปรดเลือกประเภท Defect</b></div>', unsafe_allow_html=True)
     if st.button("🟠 ดูข้อมูล Defect 260 (Rough Lines)"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
     if st.button("🔵 ดูข้อมูล Defect 261 (Grinding Structure)"):
@@ -274,7 +275,6 @@ elif current_page == "select_defect":
     if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
     
-    # 📊 แสดงรายละเอียดชื่อผู้ใช้ที่ด้านล่างของหน้าสองตามคำขอ
     st.markdown("<br>", unsafe_allow_html=True)
     render_employee_details_footer()
 
@@ -469,7 +469,6 @@ elif current_page == "defect_view":
                         if response.status_code == 200:
                             st.success(f"🎉 บันทึกข้อมูลและจัดส่งรูปภาพเข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยแล้วครับ!")
                             
-                            # 🛠️ [จุดแก้ไขเพิ่มความสะดวกพนักงาน] เซฟเสร็จล้างค่าหน้ากระดาษและส่งเด้งกลับหน้า 2 ทันที
                             st.session_state.page = "select_defect"
                             st.rerun()
                         else:

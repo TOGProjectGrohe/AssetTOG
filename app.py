@@ -8,10 +8,12 @@ import plotly.graph_objects as go
 import threading
 from datetime import datetime
 
-# 🔐 [แก้ปัญหาบันทึกพร้อมกัน] สร้างกุญแจจัดคิวส่วนกลางป้องกันระบบเขียนทับข้อมูลชนกันเมื่อกด Save พร้อมกัน
-if 'app_lock' not in st.globals:
-    st.globals['app_lock'] = threading.Lock()
-lock = st.globals['app_lock']
+# 🔐 [กลไกจัดคิวอัจฉริยะ] ฟังก์ชันสร้างระบบกุญแจล็อกคิวสำหรับผู้ใช้หลายคนผ่าน cache_resource ของ Streamlit จริง
+@st.cache_resource
+def get_global_app_lock():
+    return threading.Lock()
+
+app_lock = get_global_app_lock()
 
 # ⚠️ ฝังลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์ลงในระบบเรียบร้อยครับ
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
@@ -291,7 +293,7 @@ elif current_page == "defect_view":
         if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
             st.session_state[state_key] = list_of_materials[0]
 
-        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - อยู่บนสุด
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart)
         fig_pie = go.Figure(data=[go.Pie(
             labels=chart_data["Material"], 
             values=chart_data[qty_col], 
@@ -327,7 +329,7 @@ elif current_page == "defect_view":
 
     # 🛠️ สถานะกล่องล็อกข้อมูลระบบหน้าบ้าน
     st.markdown('<div class="login-card" style="padding: 10px 15px;">', unsafe_allow_html=True)
-    st.markdown("<p style='font-size:12px; font-weight:bold; color:#64748b; margin-bottom:2px;'>⚙️ Status กล่องรับข้อมูลระบบหน้าจอ (ตรวจสอบความพร้อมก่อนส่ง):</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:12px; font-weight:bold; color:#64748b; margin-bottom:2px;'>⚙️ สถานะกล่องรับข้อมูลระบบหน้าจอ (ตรวจสอบความพร้อมก่อนส่ง):</p>", unsafe_allow_html=True)
     
     short_face = str(selected_face).replace("หน้า", "").strip()
     box_face = st.text_input("Improvement type (คอลัมน์ G):", value=short_face, disabled=True)
@@ -403,56 +405,58 @@ elif current_page == "defect_view":
         if not after_text.strip():
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
         else:
-            save_timestamp = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            date_string = str(datetime.now().strftime("%Y%m%d"))
-            
-            send_position = str(emp_position_val).strip()
-            send_material = str(selected_material).strip()
-            send_errortype = str(box_defect).strip()
-            send_improvement_type = str(box_face).strip()
-            send_details = str(after_text).strip()
+            # 🔐 จัดคิวผู้ใช้งานผ่านระบบ Lock ความปลอดภัยสูงสุด ข้อมูลไม่ชนทับกันแน่นอน
+            with lock:
+                save_timestamp = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                date_string = str(datetime.now().strftime("%Y%m%d"))
+                
+                send_position = str(emp_position_val).strip()
+                send_material = str(selected_material).strip()
+                send_errortype = str(box_defect).strip()
+                send_improvement_type = str(box_face).strip()
+                send_details = str(after_text).strip()
 
-            # 🛠️ แปลงไฟล์ภาพเดี่ยว Picture Master (Before) เป็น Base64
-            before_master_base64 = ""
-            if uploaded_main:
-                before_master_base64 = base64.b64encode(uploaded_main.getvalue()).decode('utf-8')
+                # 🛠️ แปลงไฟล์ภาพเดี่ยว Picture Master (Before) เป็น Base64
+                before_master_base64 = ""
+                if uploaded_main:
+                    before_master_base64 = base64.b64encode(uploaded_main.getvalue()).decode('utf-8')
 
-            # 🛠️ แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
-            before_slaves_base64 = []
-            if uploaded_slaves:
-                for img in uploaded_slaves[:5]:
-                    before_slaves_base64.append(base64.b64encode(img.getvalue()).decode('utf-8'))
+                # 🛠️ แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
+                before_slaves_base64 = []
+                if uploaded_slaves:
+                    for img in uploaded_slaves[:5]:
+                        before_slaves_base64.append(base64.b64encode(img.getvalue()).decode('utf-8'))
 
-            # 🛠️ แปลงไฟล์ภาพหลักผลงาน After เป็น Base64
-            after_pic_base64 = ""
-            if camera_after_file:
-                after_pic_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
-            elif uploaded_after_file:
-                after_pic_base64 = base64.b64encode(uploaded_after_file.getvalue()).decode('utf-8')
+                # 🛠️ แปลงไฟล์ภาพหลักผลงาน After เป็น Base64
+                after_pic_base64 = ""
+                if camera_after_file:
+                    after_pic_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
+                elif uploaded_after_file:
+                    after_pic_base64 = base64.b64encode(uploaded_after_file.getvalue()).decode('utf-8')
 
-            # 🛠️ ลบเครื่องหมายคอมเมนต์สไตล์ JavaScript (//) ออกแล้วเปลี่ยนมาใช้รูปแบบก้อนพาร์สปกติของ Python สำเร็จเรียบร้อยครับ
-            payload = {
-                "timestamp": save_timestamp,
-                "date_str": date_string,
-                "employee_id": str(emp_id_val),
-                "employee_name": str(emp_name_val),
-                "position": send_position,
-                "material": send_material,
-                "errortype": send_errortype,
-                "improvement_type": send_improvement_type,
-                "improvement_details": send_details,
-                "before_master": before_master_base64,
-                "before_slaves": before_slaves_base64,
-                "after_pic": after_pic_base64
-            }
-            
-            try:
-                response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
-                if response.status_code == 200:
-                    st.success(f"🎉 บันทึกข้อมูลและจัดส่งชื่อรูปภาพ เข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยแล้วครับ!")
-                else:
-                    st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
-            except Exception as ex:
-                st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
+                # 🛠️ เคลียร์รหัส Syntax แก้ไขคอมเมนต์ด้วยเครื่องหมายพาสเวิร์ด Python (#) เรียบร้อย
+                payload = {
+                    "timestamp": save_timestamp,
+                    "date_str": date_string,
+                    "employee_id": str(emp_id_val),
+                    "employee_name": str(emp_name_val),
+                    "position": send_position,
+                    "material": send_material,
+                    "errortype": send_errortype,
+                    "improvement_type": send_improvement_type,
+                    "improvement_details": send_details,
+                    "before_master": before_master_base64,
+                    "before_slaves": before_slaves_base64,
+                    "after_pic": after_pic_base64
+                }
+                
+                try:
+                    response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
+                    if response.status_code == 200:
+                        st.success(f"🎉 บันทึกข้อมูลและจัดส่งรูปภาพเข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยแล้วครับ!")
+                    else:
+                        st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
+                except Exception as ex:
+                    st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
                 
     st.markdown('</div>', unsafe_allow_html=True)

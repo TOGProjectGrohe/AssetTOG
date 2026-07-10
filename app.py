@@ -18,7 +18,7 @@ app_lock = get_global_app_lock()
 # ⚠️ ลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
 
-# 🛠️ [ย้ายจุดประกาศสเตตัสขึ้นมาบนสุด] ล็อกค่าความปลอดภัย ป้องกันปัญหา AttributeError ค้นหาตัวแปรไม่เจอ 100%
+# 🛠️ [ประกาศสเตตัสเริ่มต้น] ป้องกันปัญหา AttributeError ค้นหาตัวแปรไม่เจอ
 if 'page' not in st.session_state: st.session_state.page = "login"
 if 'user_info' not in st.session_state: st.session_state.user_info = None
 if 'current_defect' not in st.session_state: st.session_state.current_defect = None
@@ -148,26 +148,28 @@ st.markdown("""
         color: #334155 !important;
     }
 
-    /* 💾 ปุ่มกดมาตรฐานในระบบ */
+    /* 💾 ปุ่มกดมาตรฐานในระบบทั้งหมด */
     div.stButton > button {
-        background-color: rgba(186, 230, 253, 0.5) !important; 
-        backdrop-filter: blur(6px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
-        color: #000000 !important;
+        background-color: rgba(255, 255, 255, 0.25) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        color: #1e293b !important;
         font-weight: bold !important;
-        font-size: 14px !important;
-        border: 2px solid rgba(255, 255, 255, 0.7) !important; 
-        border-radius: 16px !important;
-        width: 100% !important; 
-        padding: 12px 20px !important;
-        margin-bottom: 12px !important;
-        display: block !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.02), inset 0 1px 2px rgba(255,255,255,0.3) !important;
-        transition: all 0.2s ease !important;
+        font-size: 14.5px !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+        border-radius: 22px !important;
+        padding: 16px 20px !important;
+        margin-bottom: 4px !important; /* เปลี่ยนมาร์จิ้นล่างให้กระชับพิกัด */
+        width: 100% !important; /* สั่งให้ยืดกางเต็มพื้นที่ 100% */
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
+        transition: cubic-bezier(0.25, 0.8, 0.25, 1) 0.3s !important;
     }
     div.stButton > button:hover {
-        background-color: rgba(125, 211, 252, 0.7) !important;
-        border: 2px solid rgba(255, 255, 255, 0.9) !important;
+        background-color: rgba(255, 255, 255, 0.55) !important;
+        color: #000000 !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1) !important;
+        transform: translateY(-2px) !important;
     }
     
     /* สไตล์ปุ่ม Save */
@@ -262,30 +264,6 @@ st.markdown("""
     .glass-section-divider-card.after-zone {
         border-left: 5px solid #10b981 !important;
     }
-
-    /* 🔹 ปรับแต่งความพรีเมียมของปุ่มหน้าสองและหน้าสามให้โปร่งแสงและยึดโครงขอบแก้วสวยงามยาว 100% บาลานซ์ */
-    div.stButton > button[key^="defect_btn_"], div[element-context="full_width_btn_wrapper"] button {
-        background-color: rgba(255, 255, 255, 0.25) !important;
-        backdrop-filter: blur(14px) !important;
-        -webkit-backdrop-filter: blur(14px) !important;
-        color: #1e293b !important;
-        font-weight: bold !important;
-        font-size: 14.5px !important;
-        border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
-        border-radius: 22px !important;
-        padding: 16px 20px !important;
-        margin-bottom: 16px !important;
-        width: 100% !important; 
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
-        transition: cubic-bezier(0.25, 0.8, 0.25, 1) 0.3s !important;
-    }
-    div.stButton > button[key^="defect_btn_"]:hover, div[element-context="full_width_btn_wrapper"] button:hover {
-        background-color: rgba(255, 255, 255, 0.55) !important;
-        color: #000000 !important;
-        border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1) !important;
-        transform: translateY(-2px) !important;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -371,7 +349,7 @@ FOLDER_LINK_MAP = {
     }
 }
 
-# ---------------- NAVIGATION TOP NAVBAR (BAR แถวบนสุด) ----------------
+# ---------------- NAVIGATION TOP NAVBAR ----------------
 col_top_l, col_top_space, col_top_r = st.columns([3, 4, 3])
 with col_top_l:
     if st.button("🏠 Home", key="nav_top_home_btn"):
@@ -382,7 +360,6 @@ with col_top_r:
     if st.button("🚪 Logout", key="nav_top_logout_btn"):
         handle_navigation_reset()
 
-# ส่วนหัวแอปพลิเคชัน
 st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------
@@ -408,18 +385,24 @@ if current_page == "login":
 elif current_page == "select_defect":
     st.markdown('<div class="defect-header-card">🎯 โปรดเลือกประเภท Defect</div>', unsafe_allow_html=True)
     
-    st.markdown('<div element-context="full_width_btn_wrapper">', unsafe_allow_html=True)
-    if st.button("🟠 Defect 260 (Rough Lines)", key="defect_btn_260"):
-        st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
-        
-    if st.button("🔵 Defect 261 (Grinding Structure)", key="defect_btn_261"):
-        st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
-        
-    if st.button("⚫ Defect 380 (Contour/Design Fault)", key="defect_btn_380"):
-        st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    # 🛠️ [ปฏิวัติระบบความกว้าง 100% สำเร็จแน่นอน] 
+    # ใช้คอมโพเนนต์ย่อยเดี่ยวครอบตัวแปรปุ่ม บังคับยืดให้กางเต็มแนวขอบสมาร์ทโฟน เท่ากันเป๊ะ 100% ไร้ข้อกังขา
+    col_width_1 = st.columns(1)[0]
+    with col_width_1:
+        if st.button("🟠 Defect 260 (Rough Lines)", key="defect_btn_260"):
+            st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
+            
+    col_width_2 = st.columns(1)[0]
+    with col_width_2:
+        if st.button("🔵 Defect 261 (Grinding Structure)", key="defect_btn_261"):
+            st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
+            
+    col_width_3 = st.columns(1)[0]
+    with col_width_3:
+        if st.button("⚫ Defect 380 (Contour/Design Fault)", key="defect_btn_380"):
+            st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
     
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
     render_employee_details_footer()
 
 # ---------------- หน้าสาม: บอร์ดสถิติและการอัปเดต After ----------------
@@ -620,7 +603,7 @@ elif current_page == "defect_view":
                         # ดึงไฟล์ภาพเดี่ยว Picture Master (Before) จากหน่วยความจำ Session State
                         before_master_base64 = base64.b64encode(st.session_state[session_img_key]).decode('utf-8')
 
-                        # แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
+                        # box_defect
                         before_slaves_base64 = []
                         if uploaded_slaves:
                             for img in uploaded_slaves[:5]:

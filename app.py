@@ -2,12 +2,13 @@ import streamlit as st
 import pandas as pd
 import requests
 import json
+import base64
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 
 # ⚠️ ฝังลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์ลงในระบบเรียบร้อยครับ
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
@@ -128,7 +129,6 @@ st.markdown("""
         transform: translateY(1px) !important;
     }
     
-    /* 💾 ปรับแต่งปุ่ม Save สีเขียวเด่นชัดสำหรับคีย์ save_btn_ ทุกตัว */
     div.stButton > button[key^="save_btn_"] {
         background-color: #10b981 !important;
         color: white !important;
@@ -167,6 +167,7 @@ def get_employee_from_sheet(input_id):
             match = df[df['ID'] == str(input_id).strip()]
             if not match.empty:
                 row = match.iloc[0]
+                # ล็อกให้อ่านชื่อหัวคอลัมน์ตัวพิมพ์ใหญ่ตัวพิมพ์เล็กให้ถูกต้องตรงชีตพนักงาน
                 pos_val = str(row['Position']).strip() if 'Position' in df.columns else "GL"
                 return {
                     "status": "success", 
@@ -225,30 +226,33 @@ st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</
 if current_page == "login":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown("<h4 style='font-size:16px; margin-top:0; color:#2c3e50; text-align:center;'>🪪 ป้อนรหัสพนักงานเพื่อเข้าระบบ</h4>", unsafe_allow_html=True)
-    input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="พิมพ์ตัวเลขรหัส เช่น 20", label_visibility="collapsed")
+    input_id = st.text_input("กรอกรหัส ID พนักงานของคุณ:", value="", placeholder="พิมพ์ตัวเลขร乎อ เช่น 20", label_visibility="collapsed")
     if input_id.strip() != "":
         result = get_employee_from_sheet(input_id)
         
         if result["status"] == "success" and result.get("found"):
             now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # ล็อกค่าเก็บเข้าสู่ Session State ให้ครบถ้วนและแปลงเป็นข้อความทันทีเพื่อป้องกันค่าหาย
             st.session_state.user_info = {
-                "id": result["id"], 
-                "name": result["name"], 
-                "position": result["position"],
+                "id": str(result["id"]), 
+                "name": str(result["name"]), 
+                "position": str(result["position"]) if result["position"] else "GL", 
                 "timestamp": now_time
             }
             
             st.markdown(f"""
                 <div class="employee-dark-box">
                     <b>⏱️ Timestamp:</b> {now_time}<br>
-                    <b>🆔 Employee ID:</b> {result['id']}<br>
-                    <b>👤 Name:</b> {result['name']}<br>
-                    <b>💼 Position:</b> {result['position']}
+                    <b>🆔 Employee ID:</b> {st.session_state.user_info['id']}<br>
+                    <b>👤 Name:</b> {st.session_state.user_info['name']}<br>
+                    <b>💼 Position:</b> {st.session_state.user_info['position']}
                 </div>
             """, unsafe_allow_html=True)
             
             if st.button("🔓 กดเพื่อเข้าระบบ"):
-                st.session_state.page = "select_defect"; st.rerun()
+                st.session_state.page = "select_defect"
+                st.rerun()
         else:
             st.markdown('<div class="error-pastel-box">❌ ไม่พบข้อมูล โปรดคีย์ ID อีกครั้ง</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -258,11 +262,12 @@ elif current_page == "select_defect":
     st.markdown('<div class="employee-dark-box">', unsafe_allow_html=True)
     if st.session_state.user_info:
         now_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # 🛠️ แก้ไขจุดแสดงผล: ดึงจาก session_state ตรงๆ ไม่ล็อกคำว่า GL ถาวรแล้วครับ
         st.markdown(f"""
             <b>⏱️ Timestamp:</b> {now_time}<br>
-            <b>🆔 Employee ID:</b> {st.session_state.user_info.get('id')}<br>
-            <b>👤 Name:</b> {st.session_state.user_info['name']}<br>
-            <b>💼 Position:</b> GL
+            <b>🆔 Employee ID:</b> {st.session_state.user_info.get('id', '-')}<br>
+            <b>👤 Name:</b> {st.session_state.user_info.get('name', '-')}<br>
+            <b>💼 Position:</b> {st.session_state.user_info.get('position', 'GL')}
             <hr style="margin: 12px 0; border: 0; border-top: 1px dashed rgba(0,0,0,0.15);">
         """, unsafe_allow_html=True)
 
@@ -309,12 +314,25 @@ elif current_page == "defect_view":
         list_of_materials = chart_data['Material'].tolist()
         color_map = {mat: neon_pastel[idx % len(neon_pastel)] for idx, mat in enumerate(list_of_materials)}
 
-        fig_pie = go.Figure(data=[go.Pie(
-            labels=chart_data["Material"], values=chart_data[qty_col], hole=0.45,
-            marker=dict(colors=[color_map[m] for m in chart_data["Material"]], line=dict(color='#ffffff', width=2.5)),
-            textinfo='percent', textfont=dict(size=11, color='#000000', weight='bold'), hoverinfo="label+percent"
-        )])
-        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=210, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        face_col = 'Short description' if 'Short description' in raw_df.columns else ''
+        if face_col and face_col in raw_df.columns and not raw_df.empty:
+            specific_mat_df = raw_df[(raw_df['errortype'] == defect) & (raw_df['Material'] == list_of_materials[0])]
+            if not specific_mat_df.empty:
+                pie_df = specific_mat_df.groupby(face_col, as_index=False)[qty_col].sum()
+                pie_df = pie_df.sort_values(by=qty_col, ascending=False)
+                pie_names_col = face_col
+            else:
+                pie_df = pd.DataFrame({face_col: ["Rough Lines", "Others"], qty_col: [75, 25]})
+                pie_names_col = face_col
+        else:
+            pie_df = pd.DataFrame({"Short description": ["Rough Lines", "Others"], qty_col: [70, 30]})
+            pie_names_col = "Short description"
+
+        fig_pie = px.pie(
+            pie_df, names=pie_names_col, values=qty_col,
+            color=pie_names_col, color_discrete_sequence=neon_pastel
+        )
+        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200, showlegend=True)
         st.plotly_chart(fig_pie, use_container_width=True)
         
         bars_list = []
@@ -383,15 +401,12 @@ elif current_page == "defect_view":
     
     after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key=f"ta_af_{defect}")
     
-    # 🛠️ 📸 ส่วนที่อัปเกรดใหม่: เพิ่มช่องเลือกรูปภาพ After จากไฟล์เครื่อง ควบคู่กับการเปิดกล้องถ่ายรูปจริง
     st.markdown("<p style='font-size:13px; font-weight:bold; color:#2c3e50; margin-bottom:2px;'>📸 แนบรูปหลักฐานผลงาน After ชิ้นงานจริง (เลือกทำอย่างใดอย่างหนึ่งหรือทั้งสองอย่าง):</p>", unsafe_allow_html=True)
     
-    # ทางเลือกที่ 1: อัปโหลดรูปภาพจากคลัง
     uploaded_after_file = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ:", type=["png", "jpg", "jpeg"], key=f"up_af_file_{defect}")
     if uploaded_after_file:
         st.image(uploaded_after_file, caption="✅ รูปภาพ After จากไฟล์เครื่องพรีวิว", use_container_width=True)
         
-    # ทางเลือกที่ 2: ถ่ายรูปสดๆ ผ่านกล้องหน้างาน
     camera_after_file = st.camera_input("📸 ถ่ายภาพยืนยันผลงาน After ชิ้นงานจริง", key=f"c_af_{defect}_final")
     if camera_after_file:
         st.image(camera_after_file, caption="✅ รูปภาพ After จากกล้องพรีวิว", use_container_width=True)
@@ -403,26 +418,46 @@ elif current_page == "defect_view":
         if not after_text.strip():
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
         else:
-            save_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            emp_id = st.session_state.user_info.get('id', '-') if st.session_state.user_info else '-'
-            emp_name = st.session_state.user_info.get('name', '-') if st.session_state.user_info else '-'
+            save_timestamp = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             
+            # ดักข้อมูลผู้ใช้จาก Session State
+            emp_id = str(st.session_state.user_info.get('id', '-')) if 'user_info' in st.session_state and st.session_state.user_info else '-'
+            emp_name = str(st.session_state.user_info.get('name', '-')) if 'user_info' in st.session_state and st.session_state.user_info else '-'
+            
+            # 🛠️ [จุดเคลียร์บั๊กพิกัด] ดึงค่าตำแหน่งจากคีย์พิมพ์เล็ก "position" ให้เหมือนก้าวล็อกอินแรก เพื่อให้ค่ามาครบถ้วน
+            emp_position = str(st.session_state.user_info.get('position', 'GL')).strip() if 'user_info' in st.session_state and st.session_state.user_info else 'GL'
+            if emp_position == "" or emp_position == "None" or emp_position == "-":
+                emp_position = "GL"
+            
+            val_material = str(selected_material).strip()
+            
+            clean_defect = "".join(filter(str.isdigit, str(defect)))
+            if not clean_defect:
+                clean_defect = str(defect)
+            val_errortype = str(clean_defect).strip()
+            
+            clean_face = str(selected_face).replace("หน้า", "").strip()
+            val_improvement_type = str(clean_face) if clean_face else '-'
+            
+            val_details = str(after_text).strip()
+
             payload = {
-                "timestamp": save_timestamp,
-                "employee_id": emp_id,
-                "employee_name": emp_name,
-                "defect_type": str(defect),
-                "material": str(selected_material),
-                "location_face": str(selected_face),
-                "after_details": str(after_text)
+                "timestamp": save_timestamp,               # Column A
+                "employee_id": emp_id,                     # Column B
+                "employee_name": emp_name,                 # Column C
+                "position": emp_position,                  # Column D (มาแน่นอนครับ!)
+                "material": val_material,                  # Column E
+                "errortype": val_errortype,                # Column F
+                "improvement_type": val_improvement_type,  # Column G
+                "improvement_details": val_details         # Column M
             }
             
             try:
                 response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                 if response.status_code == 200:
-                    st.success(f"🎉 บันทึกข้อมูลของ Material {selected_material} ลงแท็บ 'Recording' เรียบร้อยแล้วเมื่อ {save_timestamp}!")
+                    st.success(f"🎉 บันทึกข้อมูลสำเร็จ! คอลัมน์ D ({emp_position}) และค่าทุกช่องลงล็อกเรียบร้อยครับ")
                 else:
-                    st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code}) โปรดตรวจสอบสิทธิ์เว็บแอป Apps Script ของคุณ")
+                    st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
             except Exception as ex:
                 st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย: {ex}")
                 

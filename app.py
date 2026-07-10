@@ -7,13 +7,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 
-# ⚠️ ฝังลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์ลงในระบบเรียบร้อยครับ
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
+# 🌐 ลิงก์ Web App URL ตัวจริงของคุณวีรพันธ์
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งแผงควบคุมโปร่งแสงยาวกรอบเดียวกัน
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์ธีมพาสเทลพรีเมียม
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -38,37 +38,16 @@ st.markdown("""
     .custom-top-navbar {
         position: absolute !important; top: 20px !important; left: 20px !important; right: 20px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; z-index: 999999 !important;
     }
-    
     .nav-btn-link {
-        background-color: #bae6fd !important; 
-        color: #000000 !important; 
-        border: 1px solid rgba(0,0,0,0.05) !important;
-        border-radius: 20px !important; 
-        padding: 8px 16px !important; 
-        font-size: 13px !important; 
-        font-weight: bold !important; 
-        text-decoration: none !important;
+        background-color: #bae6fd !important; color: #000000 !important; border: 1px solid rgba(0,0,0,0.05) !important;
+        border-radius: 20px !important; padding: 8px 16px !important; font-size: 13px !important; font-weight: bold !important; text-decoration: none !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
     }
-    .nav-btn-link:hover {
-        background-color: #7dd3fc !important;
-    }
-
+    .nav-btn-link:hover { background-color: #7dd3fc !important; }
     .tog-logo-circle {
-        width: 50px !important; 
-        height: 50px !important; 
-        background-color: rgba(0, 0, 0, 0.2) !important; 
-        border: 1px solid rgba(0, 0, 0, 0.1) !important;
-        border-radius: 50% !important; 
-        display: flex !important; 
-        justify-content: center !important; 
-        align-items: center !important; 
-        color: #000000 !important; 
-        font-weight: bold !important; 
-        font-size: 15px !important; 
-        margin: 0 auto 8px auto !important;
+        width: 50px !important; height: 50px !important; background-color: rgba(0, 0, 0, 0.2) !important; border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        border-radius: 50% !important; display: flex !important; justify-content: center !important; align-items: center !important; color: #000000 !important; font-weight: bold !important; font-size: 15px !important; margin: 0 auto 8px auto !important;
     }
-
     .center-header-block {
         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; margin-top: 10px !important; margin-bottom: 25px !important; width: 100% !important;
     }
@@ -77,74 +56,20 @@ st.markdown("""
         font-weight: bold !important; padding: 12px 20px !important; border-radius: 12px !important; text-decoration: none !important;
         margin: 12px 0 !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; font-size: 14px !important;
     }
-
-    /* 📊 กรอบ Employee Details */
     .employee-details-container {
-        border: 2px solid #3b82f6 !important;
-        border-radius: 8px !important;
-        margin-top: 15px !important;
-        margin-bottom: 15px !important;
-        overflow: hidden !important;
-        background-color: #ffffff !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+        border: 2px solid #3b82f6 !important; border-radius: 8px !important; margin-top: 15px !important; margin-bottom: 15px !important; overflow: hidden !important; background-color: #ffffff !important; box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
     }
     .employee-details-header {
-        background-color: #aec6cf !important;
-        color: #000000 !important;
-        font-weight: bold !important;
-        text-align: center !important;
-        padding: 8px !important;
-        font-size: 14px !important;
-        border-bottom: 2px solid #3b82f6 !important;
-        letter-spacing: 0.5px;
+        background-color: #aec6cf !important; color: #000000 !important; font-weight: bold !important; text-align: center !important; padding: 8px !important; font-size: 14px !important; border-bottom: 2px solid #3b82f6 !important; letter-spacing: 0.5px;
     }
     .employee-details-sub-grid {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr 1fr 1fr !important;
-        text-align: center !important;
-        background-color: #ffffff !important;
-        font-size: 12px !important;
-        font-weight: bold !important;
-        border-bottom: 1px solid #e2e8f0 !important;
-        padding: 6px 0 !important;
+        display: grid !important; grid-template-columns: 1fr 1fr 1fr 1fr !important; text-align: center !important; background-color: #ffffff !important; font-size: 12px !important; font-weight: bold !important; border-bottom: 1px solid #e2e8f0 !important; padding: 6px 0 !important;
     }
     .employee-details-row-data {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr 1fr 1fr !important;
-        text-align: center !important;
-        font-size: 11px !important;
-        padding: 8px 0 !important;
-        background-color: #f8fafc !important;
-        color: #334155 !important;
+        display: grid !important; grid-template-columns: 1fr 1fr 1fr 1fr !important; text-align: center !important; font-size: 11px !important; padding: 8px 0 !important; background-color: #f8fafc !important; color: #334155 !important;
     }
-
-    div.stButton > button {
-        background-color: rgba(186, 230, 253, 0.5) !important; 
-        backdrop-filter: blur(6px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
-        color: #000000 !important;
-        font-weight: bold !important;
-        font-size: 14px !important;
-        border: 2px solid rgba(255, 255, 255, 0.7) !important; 
-        border-radius: 16px !important;
-        width: 100% !important; 
-        padding: 12px 20px !important;
-        margin-bottom: 12px !important;
-        display: block !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.02), inset 0 1px 2px rgba(255,255,255,0.3) !important;
-        transition: all 0.2s ease !important;
-    }
-    div.stButton > button:hover {
-        background-color: rgba(125, 211, 252, 0.7) !important;
-        border: 2px solid rgba(255, 255, 255, 0.9) !important;
-    }
-    
     div.stButton > button[key^="save_btn_"] {
-        background-color: #10b981 !important;
-        color: white !important;
-        font-size: 16px !important;
-        border: 2px solid #059669 !important;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+        background-color: #10b981 !important; color: white !important; font-size: 16px !important; font-weight: bold !important; border-radius: 12px !important; width: 100% !important; padding: 12px !important; box-shadow: 0 4px 12px rgba(16,185,129,0.3) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -206,8 +131,6 @@ st.markdown('<div class="custom-top-navbar"><a href="?nav=reset" target="_self" 
 if st.query_params.get("nav") == "reset":
     st.session_state.page = "login"; st.session_state.user_info = None; st.session_state.current_defect = None
     st.query_params.clear(); st.rerun()
-
-st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
 
 # ---------------- หน้าแรก: Login ----------------
 if current_page == "login":
@@ -285,7 +208,7 @@ elif current_page == "defect_view":
         if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
             st.session_state[state_key] = list_of_materials[0]
 
-        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - ย้ายขึ้นบนสุดสวยงามลื่นไหล
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - ย้ายขึ้นบนสุด
         fig_pie = go.Figure(data=[go.Pie(
             labels=chart_data["Material"], 
             values=chart_data[qty_col], 
@@ -319,32 +242,35 @@ elif current_page == "defect_view":
     # 🔘 ส่วนฟิลเตอร์เลือกพิกัดหน้างาน
     selected_face = st.radio("เลือกพิกัดหน้างาน:", ["หน้า A", "หน้า B", "หน้า C"], horizontal=True, key=f"rf_{defect}")
 
-    # 🛠️ สถานะกล่องล็อกข้อมูลระบบหน้าบ้าน (ไม่มีกล่องขาวกวนใจแล้วครับ)
+    # 🛠️ สถานะกล่องล็อกข้อมูลระบบหน้าบ้าน (แมตช์หัวตารางใหม่)
     st.markdown('<div class="login-card" style="padding: 10px 15px;">', unsafe_allow_html=True)
     st.markdown("<p style='font-size:12px; font-weight:bold; color:#64748b; margin-bottom:2px;'>⚙️ สถานะกล่องรับข้อมูลระบบหน้าจอ (ตรวจสอบความพร้อมก่อนส่ง):</p>", unsafe_allow_html=True)
     
     short_face = str(selected_face).replace("หน้า", "").strip()
-    box_face = st.text_input("Improvement type (คอลัมน์ G):", value=short_face, disabled=True)
+    box_face = st.text_input("Improvement type(A,B,C) (คอลัมน์ G):", value=short_face, disabled=True)
     
     short_defect = "".join(filter(str.isdigit, str(defect)))
     box_defect = st.text_input("errortype (คอลัมน์ F):", value=short_defect, disabled=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # 📥 [แผนปรับปรุงใหม่ - โหมดภาพ Before] 📥
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"] and selected_material != "ไม่มีข้อมูล":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
 
+        # 📁 1. คลังภาพหลักชิ้นงาน (ภาพเดียว -> Picture Master เข้าคอลัมน์ H)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
-        uploaded_main = st.file_uploader(f"แนบรูปภาพหลักที่เลือกของ {selected_material} ที่นี่:", type=["png", "jpg", "jpeg"], key="up_main_work")
+        uploaded_main = st.file_uploader(f"📸 แนบรูปภาพหลัก Picture Master (Before คอลัมน์ H):", type=["png", "jpg", "jpeg"], key="up_main_work")
         if uploaded_main: st.image(uploaded_main, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
+        # 📁 2. คลังรูปรายละเอียดจุดย่อย (สูงสุด 5 ภาพ -> Picture 1-5 เข้าคอลัมน์ I-M)
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
-        st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info['slave_title']} ↗️</a>', unsafe_allow_html=True)
-        uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
+        st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info["slave_title"]} ↗️</a>', unsafe_allow_html=True)
+        uploaded_slaves = st.file_uploader("📸 แนบรูปรายละเอียดจุดย่อย Before (สูงสุด 5 รูป เข้าคอลัมน์ I-L):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
         if uploaded_slaves:
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -392,7 +318,7 @@ elif current_page == "defect_view":
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 💾 ปุ่มบันทึกข้อมูล
+    # 💾 ปุ่มบันทึกข้อมูลดึงค่าจากหน้า 3 ไร้กังวลเรื่องบั๊กหลุดช่อง
     if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
         if not after_text.strip():
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
@@ -406,18 +332,28 @@ elif current_page == "defect_view":
             send_improvement_type = str(box_face).strip()
             send_details = str(after_text).strip()
 
-            document_no = "1" 
-            custom_image_name = f"{send_errortype}_{send_improvement_type}_{date_string}_{document_no}.png"
+            # 🛠️ แปลงไฟล์ภาพเดี่ยว Picture Master (Before) เป็น Base64
+            before_master_base64 = ""
+            if uploaded_main:
+                before_master_base64 = base64.b64encode(uploaded_main.getvalue()).decode('utf-8')
 
-            # 🛠️ [จุดแก้ไขซ่อมแซมเรื่องรูปภาพหลัก] ดึงค่าฐาน Base64 จากกล้อง camera_input_after_live หรือไฟล์อัปโหลดจริงให้ตรงคีย์
-            img_base64 = ""
+            # 🛠️ แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
+            before_slaves_base64 = []
+            if uploaded_slaves:
+                for img in uploaded_slaves[:5]:
+                    before_slaves_base64.append(base64.b64encode(img.getvalue()).decode('utf-8'))
+
+            # 🛠️ แปลงไฟล์ภาพหลักผลงาน After เป็น Base64
+            after_pic_base64 = ""
             if camera_after_file:
-                img_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
+                after_pic_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')
             elif uploaded_after_file:
-                img_base64 = base64.b64encode(uploaded_after_file.getvalue()).decode('utf-8')
+                after_pic_base64 = base64.b64encode(uploaded_after_file.getvalue()).decode('utf-8')
 
+            # ประกอบร่างโครงสร้างกล่องพัสดุ Payload ส่งออกหลังบ้าน
             payload = {
                 "timestamp": save_timestamp,
+                "date_str": date_string,
                 "employee_id": str(emp_id_val),
                 "employee_name": str(emp_name_val),
                 "position": send_position,
@@ -425,14 +361,15 @@ elif current_page == "defect_view":
                 "errortype": send_errortype,
                 "improvement_type": send_improvement_type,
                 "improvement_details": send_details,
-                "image_name": custom_image_name,
-                "pic1": img_base64                  # ขยายล็อกข้อมูลรูปส่งออกหลังบ้านครบถ้วน
+                "before_master": before_master_base64,      // ภาพหลัก Before (คอลัมน์ H)
+                "before_slaves": before_slaves_base64,      // อาเรย์ภาพย่อย Before (คอลัมน์ I-M)
+                "after_pic": after_pic_base64               // ภาพหลัก After (คอลัมน์ O)
             }
             
             try:
                 response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                 if response.status_code == 200:
-                    st.success(f"🎉 บันทึกข้อมูลและรูปภาพสำเร็จ! บันทึกชื่อภาพ '{custom_image_name}' ลงตารางครบถ้วนแล้วครับ")
+                    st.success(f"🎉 บันทึกข้อมูลและจัดส่งไฟล์รูปภาพ Before & After เข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยครบถ้วนแล้วครับ!")
                 else:
                     st.error(f"❌ บันทึกไม่สำเร็จ (Error Code: {response.status_code})")
             except Exception as ex:

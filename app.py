@@ -16,12 +16,12 @@ def get_global_app_lock():
 app_lock = get_global_app_lock()
 
 # ⚠️ ลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
 
 # 1. ตั้งค่าหน้าเว็บสไตล์สมาร์ทโฟน
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
-# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และปรับแต่งแผงควบคุมโปร่งแสงยาวกรอบเดียวกัน
+# 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์และการปรับแต่งสไตล์โปร่งแสงหรูหราเฉพาะหน้าเลือก Defect
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -126,6 +126,7 @@ st.markdown("""
         color: #334155 !important;
     }
 
+    /* 💾 ปุ่มกดมาตรฐานในระบบ */
     div.stButton > button {
         background-color: rgba(186, 230, 253, 0.5) !important; 
         backdrop-filter: blur(6px) !important;
@@ -172,6 +173,44 @@ st.markdown("""
     /* 🛠️ ซ่อนปุ่มเครื่องหมายบวก (+) ของกล่องหัวข้อ 1 เพื่อบังคับรูปเดี่ยว */
     div[element-context="main_uploader_wrapper"] button[data-testid="baseButton-secondary"] {
         display: none !important;
+    }
+
+    /* 🖤 [กล่องหัวข้อดำโปร่งแสงหรูหรา] Glassmorphic Dark Card สำหรับหน้าเลือก Defect */
+    .defect-header-card {
+        background-color: rgba(30, 41, 59, 0.75) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+        border-radius: 20px !important;
+        padding: 16px !important;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2) !important;
+        margin-bottom: 20px !important;
+        text-align: center !important;
+        font-size: 16px !important;
+    }
+
+    /* 🔹 [ปุ่มกดสามปุ่มสีฟ้าโปร่งแสงสวยงาม] Glassmorphic Sky Blue Buttons สำหรับหน้าเลือก Defect */
+    div.stButton > button[key^="defect_btn_"] {
+        background-color: rgba(14, 165, 233, 0.35) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        color: #0369a1 !important;
+        font-weight: bold !important;
+        font-size: 14px !important;
+        border: 1.5px solid rgba(14, 165, 233, 0.5) !important;
+        border-radius: 20px !important;
+        padding: 14px 20px !important;
+        margin-bottom: 14px !important;
+        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.1) !important;
+        transition: all 0.25s ease !important;
+    }
+    div.stButton > button[key^="defect_btn_"]:hover {
+        background-color: rgba(14, 165, 233, 0.6) !important;
+        color: #ffffff !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3) !important;
+        transform: translateY(-1px) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -245,7 +284,7 @@ FOLDER_LINK_MAP = {
         380: {"main_url": "https://drive.google.com/drive/folders/1b8jDU2ZJwWuFGihYFVqzbpIVgkH61bhK", "main_title": "B_380", "slave_url": "https://drive.google.com/drive/folders/179CQ6uNpDen5hao1a949EXpmYLOCu4LQ", "slave_title": "SB_380"}
     },
     "C": {
-        260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slave_title": "SC_260"},
+        260: {"main_url": "https://drive.google.com/drive/folders/13k1E0lDkRw4BQWKXCz637gHxo5ou7z3V", "main_title": "C_260", "slave_url": "https://drive.google.com/drive/folders/1P3qw10mB6zs4yC4w3Jd2rOXN6KnmuzNr", "slate_title": "SC_260"},
         261: {"main_url": "https://drive.google.com/drive/folders/1slgqqMbiRttmRd70hbPkV_DAKoiqGbht", "main_title": "C_261", "slave_url": "https://drive.google.com/drive/folders/1FzfsI-xDgUQPnB_6kDrQ8iGxI5_N075P", "slate_title": "SC_261"},
         380: {"main_url": "https://drive.google.com/drive/folders/14jkMpOZG-bIN6h0EYbZ3UrqiFAYUQ7A1", "main_title": "C_380", "slave_url": "https://drive.google.com/drive/folders/11OR4QaWPaLcM6EPaSPrMkQTQrpfqMMJT", "slate_title": "SC_380"}
     }
@@ -285,12 +324,15 @@ if current_page == "login":
 
 # ---------------- หน้าสอง: คัดเลือก Defect ----------------
 elif current_page == "select_defect":
-    st.markdown('<div class="login-card" style="text-align:center;"><b>🎯 โปรดเลือกประเภท Defect</b></div>', unsafe_allow_html=True)
-    if st.button("🟠 ดูข้อมูล Defect 260 (Rough Lines)"):
+    # 🖤 [แก้จุดที่ 1] ปรับกรอบข้อความโปร่งแสงสีดำตามที่ต้องการแบบเนียนตา
+    st.markdown('<div class="defect-header-card"><b>🎯 โปรดเลือกประเภท Defect</b></div>', unsafe_allow_html=True)
+    
+    # 🔹 [แก้จุดที่ 2] เอาคำว่า "ดูข้อมูล" ออก และผูกสไตล์ปุ่มสีฟ้าโปร่งแสงโดยใช้ keyดัก "defect_btn_"
+    if st.button("🟠 Defect 260 (Rough Lines)", key="defect_btn_260"):
         st.session_state.current_defect = 260; st.session_state.page = "defect_view"; st.rerun()
-    if st.button("🔵 ดูข้อมูล Defect 261 (Grinding Structure)"):
+    if st.button("🔵 Defect 261 (Grinding Structure)", key="defect_btn_261"):
         st.session_state.current_defect = 261; st.session_state.page = "defect_view"; st.rerun()
-    if st.button("⚫ ดูข้อมูล Defect 380 (Contour/Design Fault)"):
+    if st.button("⚫ Defect 380 (Contour/Design Fault)", key="defect_btn_380"):
         st.session_state.current_defect = 380; st.session_state.page = "defect_view"; st.rerun()
     
     st.markdown("<br>", unsafe_allow_html=True)
@@ -363,7 +405,7 @@ elif current_page == "defect_view":
         fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, xaxis=dict(type='category', tickangle=45), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
-        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
+        if selected_bar wire and "selection" in selected_bar and selected_bar["selection"]["points"]:
             clicked_mat = selected_bar["selection"]["points"][0]["x"]
             if clicked_mat != st.session_state[state_key]:
                 st.session_state[state_key] = clicked_mat
@@ -392,7 +434,7 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
 
-        # 📁 1. คลังภาพหลักชิ้นงาน (จำกัด 1 รูปกระชับสายตาด้วย State control ปลอดภัย 100%)
+        # 📁 1. คลังภาพหลักชิ้นงาน
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["main_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพใหญ่ {folder_info["main_title"]} ↗️</a>', unsafe_allow_html=True)
@@ -418,12 +460,10 @@ elif current_page == "defect_view":
                 
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # 📁 2. คลังรูปรายละเอียดจุดย่อย (🛠️ แก้ไข Wording ตรงตามใบงานล่าสุดเรียบร้อย!)
+        # 📁 2. คลังรูปรายละเอียดจุดย่อย
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#007bc3; font-size:14px;'>📁 2. คลังรูปรายละเอียดจุดย่อย ({folder_info['slave_title']})</b>", unsafe_allow_html=True)
         st.markdown(f'<a href="{folder_info["slave_url"]}" target="_blank" class="drive-link-button">🖼️ กดเปิดคลังภาพย่อย {folder_info['slave_title']} ↗️</a>', unsafe_allow_html=True)
-        
-        # 📌 แก้ไขประโยคอธิบายหน้างานเป็น "แนบรูปรายละเอียดจุดย่อย (อย่างน้อย 3 รูป สูงสุด 5 รูป):"
         uploaded_slaves = st.file_uploader("แนบรูปรายละเอียดจุดย่อย (อย่างน้อย 3 รูป สูงสุด 5 รูป):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="up_slave_work")
         if uploaded_slaves:
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
@@ -454,7 +494,7 @@ elif current_page == "defect_view":
     render_employee_details_footer()
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 💾 ปุ่มบันทึกข้อมูล
+    # 💾 ปุ่มบันทึกข้อมูล พร้อมเงื่อนไขดักตรวจสอบภาพหัวข้อ 2
     if not after_text.strip():
         if st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}"):
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")

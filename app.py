@@ -16,7 +16,7 @@ def get_global_app_lock():
 app_lock = get_global_app_lock()
 
 # ⚠️ ลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
 
 # 🛠️ [ประกาศสเตตัสเริ่มต้น] ป้องกันปัญหา AttributeError ค้นหาตัวแปรไม่เจอ
 if 'page' not in st.session_state: st.session_state.page = "login"

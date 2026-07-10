@@ -293,7 +293,7 @@ elif current_page == "defect_view":
         if state_key not in st.session_state or st.session_state[state_key] not in list_of_materials:
             st.session_state[state_key] = list_of_materials[0]
 
-        # 🍕 1. แผนภูมิวงกลม (Pie Chart)
+        # 🍕 1. แผนภูมิวงกลม (Pie Chart) - อยู่บนสุด
         fig_pie = go.Figure(data=[go.Pie(
             labels=chart_data["Material"], 
             values=chart_data[qty_col], 
@@ -406,7 +406,8 @@ elif current_page == "defect_view":
             st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
         else:
             # 🔐 จัดคิวผู้ใช้งานผ่านระบบ Lock ความปลอดภัยสูงสุด ข้อมูลไม่ชนทับกันแน่นอน
-            with lock:
+            # 🛠️ [จุดแก้ไข NameError] เปลี่ยนกุญแจจัดคิวจาก lock ให้แมตช์ตรงกับคำว่า app_lock ที่ประกาศไว้ด้านบนสุดของไฟล์ครับ
+            with app_lock:
                 save_timestamp = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 date_string = str(datetime.now().strftime("%Y%m%d"))
                 
@@ -434,7 +435,6 @@ elif current_page == "defect_view":
                 elif uploaded_after_file:
                     after_pic_base64 = base64.b64encode(uploaded_after_file.getvalue()).decode('utf-8')
 
-                # 🛠️ เคลียร์รหัส Syntax แก้ไขคอมเมนต์ด้วยเครื่องหมายพาสเวิร์ด Python (#) เรียบร้อย
                 payload = {
                     "timestamp": save_timestamp,
                     "date_str": date_string,

@@ -22,7 +22,6 @@ APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4
 st.set_page_config(page_title="TOG App", layout="centered", initial_sidebar_state="collapsed")
 
 # 2. 🎨 CSS ตกแต่งหน้าจอโทรศัพท์สไตล์กระจกแก้วใส (Pure Glassmorphism)
-# 🛠️ [ลบ Absolute Position ออก] เคลียร์คำสั่งสไตล์เดิมที่ทำให้ปุ่ม Home/Logout ลอยไปทับกล่องข้อความออกเรียบร้อย
 st.markdown("""
     <style>
     .stDeployButton, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], header, footer, #MainMenu {
@@ -126,7 +125,7 @@ st.markdown("""
         color: #334155 !important;
     }
 
-    /* 💾 ปุ่มกดมาตรฐานในหน้าจอที่สาม */
+    /* 💾 ปุ่มกดมาตรฐานในระบบ */
     div.stButton > button {
         background-color: rgba(186, 230, 253, 0.5) !important; 
         backdrop-filter: blur(6px) !important;
@@ -166,6 +165,9 @@ st.markdown("""
         border-radius: 12px !important;
         box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2) !important;
     }
+    div.stButton > button[key="clear_image_btn"]:hover {
+        background-color: #dc2626 !important;
+    }
     
     /* 🛠️ ซ่อนปุ่มเครื่องหมายบวก (+) ของกล่องหัวข้อ 1 เพื่อบังคับรูปเดี่ยว */
     div[element-context="main_uploader_wrapper"] button[data-testid="baseButton-secondary"] {
@@ -189,6 +191,30 @@ st.markdown("""
         letter-spacing: 0.5px;
     }
 
+    /* ✨ [กรอบเงารมดำมาตรฐานเดียวกันสูงสุดสำหรับแนวแบ่งโซนภาพ] Glassmorphic Block Standard */
+    .glass-section-divider-card {
+        background-color: rgba(15, 23, 42, 0.7) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        border-left: 5px solid #0ea5e9 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+        border-radius: 16px !important;
+        padding: 14px 16px !important;
+        font-size: 14.5px !important;
+        font-weight: bold !important;
+        margin-top: 20px !important;
+        margin-bottom: 15px !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    /* สไตล์สีจำเพาะของเส้นขอบ After ให้เป็นสีเขียวพรีเมียมเรืองแสงแยกโซน */
+    .glass-section-divider-card.after-zone {
+        border-left: 5px solid #10b981 !important;
+    }
+
     /* 🔹 [ปุ่มสามภาพเป็นกระจกใสเคลือบแก้วเนียนตา] Pure Glassmorphic Buttons */
     div.stButton > button[key^="defect_btn_"] {
         background-color: rgba(255, 255, 255, 0.25) !important;
@@ -210,9 +236,6 @@ st.markdown("""
         border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1) !important;
         transform: translateY(-2px) !important;
-    }
-    div.stButton > button[key^="defect_btn_"]:active {
-        transform: translateY(0px) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -274,7 +297,7 @@ def render_employee_details_footer():
             </div>
         """, unsafe_allow_html=True)
 
-# 🛠️ [ฟังก์ชันควบคุมการ Reset หน้าด้วยปุ่มเนทีฟ]
+# ฟังก์ชัน導 NAVIGATION RESET
 def handle_navigation_reset():
     st.session_state.page = "login"
     st.session_state.user_info = None
@@ -301,7 +324,6 @@ FOLDER_LINK_MAP = {
 
 current_page = st.session_state.page
 
-# 🛠️ [วิธีที่ 1 - จัดทางเดินข้อมูลปุ่มลบนอกระบบดั้งเดิม]
 # แบ่งสัดส่วนคอลัมน์ด้านบนสุดอย่างเป็นเอกเทศ ปุ่มกดจะไม่ลอยไปทับแถวสไลด์การ์ดโปร่งแสงด้านล่าง
 col_top_l, col_top_space, col_top_r = st.columns([3, 4, 3])
 with col_top_l:
@@ -383,6 +405,9 @@ elif current_page == "defect_view":
         qty_col = "rework quantity"
         filtered_df = chart_data.copy()
 
+    # 🛠️ [✨ เพิ่มข้อความแจ้งเตือนกลางกราฟ] 
+    st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-bottom:2px;'>📊 เลือก Material จากกราฟ</h5>", unsafe_allow_html=True)
+
     # 📊 แผงกราฟสถิติ
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#1e293b; font-size:14px; display:block; text-align:center;'>🍕 รายงาน 10 อันดับ Defect {defect} ที่พบ</b>", unsafe_allow_html=True)
@@ -445,6 +470,9 @@ elif current_page == "defect_view":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
 
+        # 🛠️ [✨ เพิ่มแนวแบ่งโซนหัวข้อ Before สไตล์กรอบดำเงาตามสั่ง]
+        st.markdown('<div class="glass-section-divider-card">📁 เลือกข้อมูล และแนบรูป ส่วนของ Before</div>', unsafe_allow_html=True)
+
         # 📁 1. คลังภาพหลักชิ้นงาน
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown(f"<b style='color:#005aab; font-size:14px;'>📁 1. คลังภาพหลักชิ้นงาน ({folder_info['main_title']}) ของ {selected_material}</b>", unsafe_allow_html=True)
@@ -480,9 +508,12 @@ elif current_page == "defect_view":
             for idx, img_file in enumerate(uploaded_slaves[:5]): st.image(img_file, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
+    # 🛠️ [✨ เพิ่มแนวแบ่งโซนหัวข้อ After สไตล์กรอบดำเงามาตรฐานเดียวกับ Before]
+    st.markdown('<div class="glass-section-divider-card after-zone">✨ ส่วนอัปเดตงาน After</div>', unsafe_allow_html=True)
+
     # 🔲 ส่วนสรุปรายละเอียดงาน AFTER
-    st.markdown('<div class="login-card" style="border-top: 4px solid #10b981;">', unsafe_allow_html=True)
-    st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>✨ ส่วนอัปเดตงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
+    st.markdown('<div class="login-card">', unsafe_allow_html=True)
+    st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>สรุปรายละเอียดผลงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     
     after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key="text_area_improvement_details")
     
@@ -563,7 +594,6 @@ elif current_page == "defect_view":
                             response = requests.post(APPS_SCRIPT_URL, data=json.dumps(payload), headers={"Content-Type": "application/json"})
                             if response.status_code == 200:
                                 st.success(f"🎉 บันทึกข้อมูลและจัดส่งรูปภาพเข้าโฟลเดอร์ส่วนกลางสำเร็จเรียบร้อยแล้วครับ!")
-                                # เคลียร์รูปภาพหลักหลังส่งข้อมูลสำเร็จ
                                 st.session_state[session_img_key] = None
                                 st.session_state.page = "select_defect"
                                 st.rerun()

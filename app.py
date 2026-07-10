@@ -53,7 +53,7 @@ st.markdown("""
         background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
     }
     
-    /* 🛠️ [นวัตกรรมระบบปุ่มนำทางลอยตัวอัจฉริยะ] บังคับล็อกโครงปุ่มไม่ให้ตกแถวทับโลโก้บนมือถือเด็ดขาด */
+    /* 🛠️ [นวัตกรรมระบบปุ่มนำทางลอยตัวอัจฉริยะแถวบน] */
     .pure-html-top-navbar {
         display: flex !important;
         flex-direction: row !important;
@@ -84,7 +84,63 @@ st.markdown("""
         color: #000000 !important;
     }
 
-    /* วงกลม TOG ขนาดใหญ่สมมาตร บาลานซ์สายตาพรีเมียมแยกโซนชัดเจน */
+    /* 🛠️ [นวัตกรรมปุ่มคู่ลอยตัวอัจฉริยะแถวล่างสุด] 
+       สั่งตรึงโครงสร้างให้ปุ่มบันทึก (Save) และปุ่มย้อนกลับล็อกอยู่ในระนาบแถวเดียวกัน 100% ไม่ตกขอบหล่นสองบรรทัด */
+    .pure-html-bottom-navbar {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        gap: 12px !important;
+        margin-top: 15px !important;
+        margin-bottom: 5px !important;
+    }
+    
+    .pure-bottom-btn-container {
+        flex: 1 !important;
+        width: 50% !important;
+    }
+    
+    .pure-bottom-btn {
+        display: block !important;
+        width: 100% !important;
+        text-decoration: none !important;
+        text-align: center !important;
+        font-weight: bold !important;
+        font-size: 14px !important;
+        padding: 14px 10px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    /* สไตล์ปุ่มบันทึกข้อมูลสีเขียวพรีเมียม */
+    .pure-bottom-btn.save-style {
+        background-color: #10b981 !important;
+        color: white !important;
+        border: 2px solid #059669 !important;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25) !important;
+    }
+    .pure-bottom-btn.save-style:hover {
+        background-color: #059669 !important;
+    }
+    
+    /* สไตล์ปุ่มย้อนกลับกระจกโปร่งแสง */
+    .pure-bottom-btn.back-style {
+        background-color: rgba(255, 255, 255, 0.4) !important;
+        backdrop-filter: blur(6px) !important;
+        -webkit-backdrop-filter: blur(6px) !important;
+        color: #000000 !important;
+        border: 2px solid rgba(255, 255, 255, 0.7) !important;
+    }
+    .pure-bottom-btn.back-style:hover {
+        background-color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    /* วงกลม TOG ขนาดใหญ่สมมาตร บาลานซ์สายตาพรีเมียมแยกโซนด้านล่างปุ่มชัดเจน */
     .tog-logo-circle {
         width: 110px !important; 
         height: 110px !important; 
@@ -162,7 +218,7 @@ st.markdown("""
         color: #334155 !important;
     }
 
-    /* 💾 ปุ่มกดมาตรฐานในระบบทั้งหมด */
+    /* 💾 ปุ่มกดมาตรฐานในระบบ */
     div.stButton > button {
         background-color: rgba(255, 255, 255, 0.25) !important;
         backdrop-filter: blur(14px) !important;
@@ -184,51 +240,6 @@ st.markdown("""
         border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1) !important;
         transform: translateY(-2px) !important;
-    }
-    
-    /* สไตล์ปุ่ม Save */
-    div.stButton > button[key^="save_btn_"] {
-        background-color: #10b981 !important;
-        color: white !important;
-        font-size: 15px !important;
-        border: 2px solid #059669 !important;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
-        margin-bottom: 0px !important;
-    }
-
-    /* 🎨 สไตล์ปุ่ม ย้อนกลับไปเลือก Defect อื่น */
-    div.stButton > button[key^="back_defect_btn_"] {
-        background-color: rgba(255, 255, 255, 0.4) !important;
-        backdrop-filter: blur(6px) !important;
-        -webkit-backdrop-filter: blur(6px) !important;
-        color: #000000 !important;
-        border: 2px solid rgba(255, 255, 255, 0.7) !important; 
-        font-size: 15px !important;
-        border-radius: 16px !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
-        margin-bottom: 0px !important;
-    }
-    div.stButton > button[key^="back_defect_btn_"]:hover {
-        background-color: rgba(255, 255, 255, 0.6) !important;
-    }
-
-    /* 🎨 ปุ่มลบรูปภาพเดี่ยวสีแดงในหัวข้อที่ 1 */
-    div.stButton > button[key^="clear_image_btn_"] {
-        background-color: #ef4444 !important;
-        color: white !important;
-        border: 1px solid #dc2626 !important;
-        padding: 8px 15px !important;
-        font-size: 13px !important;
-        border-radius: 12px !important;
-        box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2) !important;
-    }
-    div.stButton > button[key^="clear_image_btn_"]:hover {
-        background-color: #dc2626 !important;
-    }
-    
-    /* 🛠️ ซ่อนปุ่มเครื่องหมายบวก (+) ของกล่องหัวข้อ 1 เพื่อบังคับรูปเดี่ยว */
-    div[element-context="main_uploader_wrapper"] button[data-testid="baseButton-secondary"] {
-        display: none !important;
     }
 
     /* 🖤 [กล่องหัวข้อดำโปร่งแสงสไตล์กระจกเงารมดำพรีเมียม] */
@@ -338,23 +349,28 @@ def render_employee_details_footer():
             </div>
         """, unsafe_allow_html=True)
 
-# ฟังก์ชันดักจับ URL ควบคุมการเปลี่ยนหน้าความเร็วสูง
+# 🛠️ [กลไกจัดระเบียบส่งคำสั่งผ่าน URL ลิงก์ดั้งเดิม]
 query_params = st.query_params
 if "action" in query_params:
     action_val = query_params["action"]
     if action_val == "go_home":
         if st.session_state.get('user_info'):
             st.session_state.page = "select_defect"
-        st.query_params.clear()
-        st.rerun()
+        st.query_params.clear(); st.rerun()
     elif action_val == "go_logout":
         st.session_state.page = "login"
         st.session_state.user_info = None
         st.session_state.current_defect = None
-        st.query_params.clear()
-        st.rerun()
+        st.query_params.clear(); st.rerun()
+    elif action_val == "back_to_select_defect":
+        st.session_state.page = "select_defect"
+        st.query_params.clear(); st.rerun()
+    elif action_val == "trigger_save_data":
+        # รับค่าและสั่งประมวลผลคำสั่งบันทึกงานจริงแบบดักสัญญาณซ้อน
+        st.session_state["save_trigger_signal"] = True
+        st.query_params.clear(); st.rerun()
 
-# 🛠️ [ยิงโครงสร้างแบบ Pure HTML Flexbox] ล็อกตำแหน่งปุ่ม Home และ Logout ขอบบนถาวร ป้องกันตกแถวทับโลโก้
+# แถวปุ่มกดนำทางด้านบนสุด (Pure HTML ล็อกตายตัวหมดปัญหาตกแถว)
 st.markdown("""
     <div class="pure-html-top-navbar">
         <a href="?action=go_home" target="_self" class="pure-nav-btn">🏠 Home</a>
@@ -364,7 +380,6 @@ st.markdown("""
 
 st.markdown('<div class="center-header-block"><div class="tog-logo-circle">TOG</div><span style="font-size:18px; font-weight:bold; color:black;">TOG App</span></div>', unsafe_allow_html=True)
 
-# FOLDER LINK MAP เวอร์ชันแก้ไขคำว่า slate_title -> slave_title ของหน้า C ครบถ้วน
 FOLDER_LINK_MAP = {
     "A": {
         260: {"main_url": "https://drive.google.com/drive/folders/1QTQuQR8e7DUAYQF0yyYreCi9_bGcX6z0", "main_title": "A_260", "slave_url": "https://drive.google.com/drive/folders/1DQWgtMsVcPbpNGRH8WQX65VKfJkCxlp5", "slave_title": "SA_260"},
@@ -499,7 +514,7 @@ elif current_page == "defect_view":
     st.markdown('</div>', unsafe_allow_html=True)
 
     # ส่วนที่ 1: ข้อความอธิบายใต้แผนภูมิสถิติทันที
-    st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-top:5px; margin-bottom:12px;'>📊 เลือก Material จากกิราฟ</h5>", unsafe_allow_html=True)
+    st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-top:5px; margin-bottom:12px;'>📊 เลือก Material จากกราฟ</h5>", unsafe_allow_html=True)
 
     # โซนกรอบเงารมดำมาตรฐานตัวที่สอง (โซน Before)
     st.markdown('<div class="glass-section-divider-card">📁  เลือกข้อมูล และแนบรูป ส่วนของ Before</div>', unsafe_allow_html=True)
@@ -519,7 +534,7 @@ elif current_page == "defect_view":
     box_defect = st.text_input("errortype (คอลัมน์ F):", value=short_defect, disabled=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🛠️ [แก้ไขล็อก NameError สำเร็จ] ตรวจสอบความถูกต้องของตัวแปร face_char ดึงค่าคอลัมน์จาก FOLDER_LINK_MAP
+    # ดึงค่าพิกัดโฟลเดอร์ปลายทาง
     if selected_face in ["หน้า A", "หน้า B", "หน้า C"] and selected_material != "ไม่มีข้อมูล":
         face_char = selected_face.split()[-1]
         folder_info = FOLDER_LINK_MAP[face_char][defect]
@@ -565,7 +580,6 @@ elif current_page == "defect_view":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>สรุปรายละเอียดผลงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     
-    # พิมพ์รายละเอียดการปรับปรุงหรือข้อเสนอแนะ After:
     after_text = st.text_area("พิมพ์รายละเอียดการปรับปรุงหรือข้อเสนอแนะ After:", value="", key="text_area_improvement_details")
     
     uploaded_after_file = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ:", type=["png", "jpg", "jpeg"], key="up_after_file_machine")
@@ -585,27 +599,31 @@ elif current_page == "defect_view":
         emp_id_val, emp_name_val, emp_position_val = "-", "-", "GL"
 
     render_employee_details_footer()
-    st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top:5px;'></div>", unsafe_allow_html=True)
     
-    # แบ่งคอลัมน์ครึ่งซ้าย-ขวา เท่ากัน วางปุ่ม Save ไว้ซ้าย และปุ่มเปลี่ยนประเภทงานย้อนกลับไว้ขวาคู่กันอย่างลงล็อกสมบูรณ์
-    col_btn_save, col_btn_back = st.columns([1, 1])
-    
-    with col_btn_save:
-        btn_save_clicked = st.button("💾 บันทึกข้อมูล", key=f"save_btn_{defect}")
-        
-    with col_btn_back:
-        if st.button("🔙 เลือก Defect", key=f"back_defect_btn_{defect}"):
-            st.session_state.page = "select_defect"
-            st.rerun()
+    # 🛠️ [จุดแก้ไขพิฆาตบั๊กขอบล่างตกแถว] 🛠️
+    # เปลี่ยนระบบปุ่มคู่ดั้งเดิมมาใช้ Pure HTML + CSS ล็อกพิกัดซ้ายขวา บาลานซ์ช่องไฟขนาด 50% เท่ากันเป๊ะ ไม่มีวันตกขอบในมือถือ
+    st.markdown("""
+        <div class="pure-html-bottom-navbar">
+            <div class="pure-bottom-btn-container">
+                <a href="?action=trigger_save_data" target="_self" class="pure-bottom-btn save-style">💾 บันทึกข้อมูล</a>
+            </div>
+            <div class="pure-bottom-btn-container">
+                <a href="?action=back_to_select_defect" target="_self" class="pure-bottom-btn back-style">🔙 เลือก Defect</a>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
-    # ส่วนประมวลผลเมื่อมีการกดปุ่ม Save ข้อมูล
-    if btn_save_clicked:
+    # 💾 ส่วนดักรับสัญญาณธงเพื่อประมวลผลเซฟข้อมูล หลังพนักงานคลิกปุ่มลิงก์ HTML
+    if st.session_state.get("save_trigger_signal"):
+        st.session_state["save_trigger_signal"] = False # ล้างค่าสัญญาณธง
+        
         if not after_text.strip():
             st.error("⚠️  โปรดกรอกรายละเอียดการปรับปรุงหรือข้อเสนอแนะ After ก่อนกดบันทึก!")
         else:
-            slave_count = len(uploaded_slaves) if uploaded_slaves else 0
-            if slave_count < 3:
-                st.error(f"⚠️  บันทึกไม่สำเร็จ! โปรดแนบรูปรายละเอียดจุดย่อยในหัวข้อ 2 อย่างน้อย 3 ภาพ (ปัจจุบันมี {slave_count} ภาพ)")
+            slave_count = len(uploaded_slaves) if 'uploaded_slaves' in locals() and uploaded_slaves else 0
+            if 'uploaded_slaves' in locals() and slave_count < 3:
+                st.error(f"⚠️  บันทึกไม่สำเร็จ! โปรดแนบรูปรายละเอียดจุดย่อยในหัวข้อ 2 อย่างน้อย 3 ภาพ")
             elif st.session_state[session_img_key] is None:
                 st.error("⚠️  บันทึกไม่สำเร็จ! โปรดแนบรูปภาพหลักชิ้นงาน in หัวข้อ 1 ก่อนกดบันทึก!")
             else:
@@ -620,16 +638,13 @@ elif current_page == "defect_view":
                         send_improvement_type = str(box_face).strip()
                         send_details = str(after_text).strip()
 
-                        # ดึงไฟล์ภาพเดี่ยว Picture Master (Before) จากหน่วยความจำ Session State
                         before_master_base64 = base64.b64encode(st.session_state[session_img_key]).decode('utf-8')
 
-                        # แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
                         before_slaves_base64 = []
-                        if uploaded_slaves:
+                        if 'uploaded_slaves' in locals() and uploaded_slaves:
                             for img in uploaded_slaves[:5]:
                                 before_slaves_base64.append(base64.b64encode(img.getvalue()).decode('utf-8'))
 
-                        # แปลงไฟล์ภาพหลักผลงาน After เป็น Base64
                         after_pic_base64 = ""
                         if camera_after_file:
                             after_pic_base64 = base64.b64encode(camera_after_file.getvalue()).decode('utf-8')

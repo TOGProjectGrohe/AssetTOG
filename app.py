@@ -159,8 +159,8 @@ st.markdown("""
         border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
         border-radius: 22px !important;
         padding: 16px 20px !important;
-        margin-bottom: 4px !important; /* เปลี่ยนมาร์จิ้นล่างให้กระชับพิกัด */
-        width: 100% !important; /* สั่งให้ยืดกางเต็มพื้นที่ 100% */
+        margin-bottom: 4px !important;
+        width: 100% !important;
         box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
         transition: cubic-bezier(0.25, 0.8, 0.25, 1) 0.3s !important;
     }
@@ -385,8 +385,6 @@ if current_page == "login":
 elif current_page == "select_defect":
     st.markdown('<div class="defect-header-card">🎯 โปรดเลือกประเภท Defect</div>', unsafe_allow_html=True)
     
-    # 🛠️ [ปฏิวัติระบบความกว้าง 100% สำเร็จแน่นอน] 
-    # ใช้คอมโพเนนต์ย่อยเดี่ยวครอบตัวแปรปุ่ม บังคับยืดให้กางเต็มแนวขอบสมาร์ทโฟน เท่ากันเป๊ะ 100% ไร้ข้อกังขา
     col_width_1 = st.columns(1)[0]
     with col_width_1:
         if st.button("🟠 Defect 260 (Rough Lines)", key="defect_btn_260"):
@@ -470,7 +468,7 @@ elif current_page == "defect_view":
         fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, xaxis=dict(type='category', tickangle=45), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
-        if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
+        if selected_bar and "selection" in selected_bar tracking and selected_bar["selection"]["points"]:
             clicked_mat = selected_bar["selection"]["points"][0]["x"]
             if clicked_mat != st.session_state[state_key]:
                 st.session_state[state_key] = clicked_mat
@@ -479,7 +477,7 @@ elif current_page == "defect_view":
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ข้อความอธิบายใต้แผนภูมิสถิติทันที
+    # ส่วนที่ 1: ข้อความอธิบายใต้แผนภูมิสถิติทันที
     st.markdown("<h5 style='text-align:center; color:#1e293b; font-weight:bold; margin-top:5px; margin-bottom:12px;'>📊 เลือก Material จากกราฟ</h5>", unsafe_allow_html=True)
 
     # โซนกรอบเงารมดำมาตรฐานตัวที่สอง (โซน Before)
@@ -546,7 +544,8 @@ elif current_page == "defect_view":
     st.markdown('<div class="login-card">', unsafe_allow_html=True)
     st.markdown(f"<b style='color:#10b981; font-size:14px; display:block; margin-bottom:5px;'>สรุปรายละเอียดผลงาน After ({defect_title} - {selected_material})</b>", unsafe_allow_html=True)
     
-    after_text = st.text_area("พิมพ์ข้อความสรุปรายละเอียดผลงาน After:", value="", key="text_area_improvement_details")
+    # 🛠️ [จุดแก้ไข Wording ตามบรีฟ] เปลี่ยนหัวข้อช่องข้อความเป็น "พิมพ์รายละเอียดการปรับปรุงหรือข้อเสนอแนะ After:"
+    after_text = st.text_area("พิมพ์รายละเอียดการปรับปรุงหรือข้อเสนอแนะ After:", value="", key="text_area_improvement_details")
     
     uploaded_after_file = st.file_uploader("📂 เลือกไฟล์ภาพ After จากเครื่องของคุณ:", type=["png", "jpg", "jpeg"], key="up_after_file_machine")
     if uploaded_after_file: st.image(uploaded_after_file, caption="✅ รูปภาพ After จากไฟล์เครื่องพรีวิว", use_container_width=True)
@@ -581,7 +580,7 @@ elif current_page == "defect_view":
     # ส่วนประมวลผลเมื่อมีการกดปุ่ม Save ข้อมูล
     if btn_save_clicked:
         if not after_text.strip():
-            st.error("⚠️ โปรดกรอกข้อความสรุปรายละเอียดผลงาน After ก่อนกดบันทึก!")
+            st.error("⚠️ โปรดกรอกรายละเอียดการปรับปรุงหรือข้อเสนอแนะ After ก่อนกดบันทึก!")
         else:
             slave_count = len(uploaded_slaves) if uploaded_slaves else 0
             if slave_count < 3:
@@ -603,7 +602,7 @@ elif current_page == "defect_view":
                         # ดึงไฟล์ภาพเดี่ยว Picture Master (Before) จากหน่วยความจำ Session State
                         before_master_base64 = base64.b64encode(st.session_state[session_img_key]).decode('utf-8')
 
-                        # box_defect
+                        # แปลงไฟล์ภาพย่อย Picture 1-5 (Before) เป็นลิสต์ Base64 (สูงสุด 5 ภาพ)
                         before_slaves_base64 = []
                         if uploaded_slaves:
                             for img in uploaded_slaves[:5]:

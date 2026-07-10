@@ -16,7 +16,7 @@ def get_global_app_lock():
 app_lock = get_global_app_lock()
 
 # ⚠️ ลิงก์ Google Apps Script ตัวจริงของคุณวีรพันธ์
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznvtGilprFX4wuoCQHM_d-bYwwz9Ck7S0RK8JcxIXpzfoFnlcg-A8iflC50Ay0NbPPSQ/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6phYpdneqbZ45maoAX4lPxWlEeaZhBO_D1QICqkogRdyTt3dRcI_mLx-MxuZ5pPB3xQ/exec"
 
 # 🛠️ [ประกาศสเตตัสเริ่มต้น] ป้องกันปัญหา AttributeError ค้นหาตัวแปรไม่เจอ
 if 'page' not in st.session_state: st.session_state.page = "login"
@@ -53,18 +53,34 @@ st.markdown("""
         background-color: rgba(0,0,0,0) !important; border: none !important; padding: 5px !important; margin-bottom: 15px !important; width: 100% !important;
     }
     
-    /* สไตล์ปุ่มกด Home และ Logout ด้านบนสุด */
+    /* 🛠️ [แก้ไขโครงสร้างปุ่มแถวบน] ปรับแต่ง CSS ให้ปุ่ม Home และ Logout ล็อกอยู่แถวเดียวกัน ไม่ตกขอบในมือถือ */
+    div[data-testid="stHorizontalBlock"]:has(button[key^="nav_top_"]) {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 10px !important;
+        width: 100% !important;
+        margin-bottom: 5px !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(button[key^="nav_top_"]) > div {
+        width: auto !important;
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+    
     div.stButton > button[key^="nav_top_"] {
         background-color: #bae6fd !important; 
         color: #000000 !important; 
         border: 1px solid rgba(0,0,0,0.05) !important;
         border-radius: 20px !important; 
-        padding: 6px 12px !important; 
-        font-size: 13px !important; 
+        padding: 6px 10px !important; 
+        font-size: 12px !important; 
         font-weight: bold !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
         width: 100% !important;
         min-height: auto !important;
+        white-space: nowrap !important;
     }
     div.stButton > button[key^="nav_top_"]:hover {
         background-color: #7dd3fc !important;
@@ -350,7 +366,8 @@ FOLDER_LINK_MAP = {
 }
 
 # ---------------- NAVIGATION TOP NAVBAR ----------------
-col_top_l, col_top_space, col_top_r = st.columns([3, 4, 3])
+# 🛠️ [แก้ไขโครงสร้างคอลัมน์แถวบน] เปลี่ยนเป็น 2 คอลัมน์ซ้ายขวา บังคับให้อยู่บรรทัดเดียวกันเสมอ
+col_top_l, col_top_r = st.columns([1, 1])
 with col_top_l:
     if st.button("🏠 Home", key="nav_top_home_btn"):
         if st.session_state.user_info:
@@ -468,7 +485,6 @@ elif current_page == "defect_view":
         fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False, xaxis=dict(type='category', tickangle=45), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         
         selected_bar = st.plotly_chart(fig_bar, use_container_width=True, on_select="rerun")
-        # 🛠️ [แก้ไขบั๊กบรรทัดนี้] ตัดคำว่า tracking ที่เกินออก เพื่อให้โค้ดรันได้สมบูรณ์
         if selected_bar and "selection" in selected_bar and selected_bar["selection"]["points"]:
             clicked_mat = selected_bar["selection"]["points"][0]["x"]
             if clicked_mat != st.session_state[state_key]:
